@@ -1,40 +1,3 @@
-# fsmc
-Finite State Machine Compiler
-
-The Finit State Machine Compiler compile a C/C++ source code with embedded
-Finite State Machines (FSMs) into C/C++ code and optionally .dot files.
-
-Source code format:
-
-```
-<C/C++ source>
-#fsm <name>
-<fsm definitions>
-#end
-<C/C++ source>
-```
-FSM definitions
-
-```
-[*]<state name>
-{
-  <statement list>
-}
-...
-```
-
-The * mark the initial state. &lt;statement list&gt; are C/C++ statements to
-executed in the given state.
-
-To change to a new state use the syntax
-
-```
--> <new state name>;
-```
-
-Example:
-
-```
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -78,4 +41,3 @@ int main(int argc, const char *argv[])
 
   return 0;
 }
-```

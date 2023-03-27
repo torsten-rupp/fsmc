@@ -1,0 +1,233 @@
+/***********************************************************************\
+*
+* Contents: Finit State Machine compiler
+* Systems: all
+*
+\***********************************************************************/
+
+/****************************** Includes *******************************/
+#include <stdio.h>
+
+#include <iostream>
+#include <fstream>
+#include <exception>
+#include <regex>
+
+#include "scanner.h"
+#include "parser.h"
+#include "ast.h"
+#include "codegenerator.h"
+#include "dotgenerator.h"
+
+using namespace FSM;
+
+/****************** Conditional compilation switches *******************/
+
+/***************************** Constants *******************************/
+
+/***************************** Datatypes *******************************/
+
+/***************************** Variables *******************************/
+
+/***************************** Forwards ********************************/
+
+
+/***************************** Functions *******************************/
+
+int main(int argc, const char *argv[])
+{
+  int exitCode = 0;
+  try
+  {
+    // parse arguments
+    std::string inputFilePath;
+    std::string outputFilePath;
+    std::string dotDirectoryPath;
+    int i = 1;
+    while (i < argc)
+    {
+      std::string argument(argv[i]);
+      if      ((argument == "-h") || (argument == "--help"))
+      {
+        fprintf(stdout, "Usage: %s [-o <output file>] [-d <dot file>] [<input file>]\n", argv[0]);
+        return 0;
+      }
+      else if ((argument == "-o") || (argument == "--output"))
+      {
+        if (i >= argc) throw std::runtime_error("missing parameter for option --output");
+        outputFilePath = argv[i+1];
+        i += 2;
+      }
+      else if ((argument == "-d") || (argument == "--dot"))
+      {
+        if (i >= argc) throw std::runtime_error("missing parameter for option --dot-directory");
+        dotDirectoryPath = argv[i+1];
+        i += 2;
+      }
+      else
+      {
+        inputFilePath = argv[i];
+        i += 1;
+      }
+    }
+
+    // open input file/stdin
+    std::ifstream inputFile;
+    std::istream  *input;
+    if (!inputFilePath.empty())
+    {
+      inputFile = std::ifstream(inputFilePath);
+      if (!inputFile.is_open())
+      {
+        throw std::runtime_error("cannot open file '" + inputFilePath + "'");
+      }
+      input = &inputFile;
+    }
+    else
+    {
+      input = &std::cin;
+    }
+    
+    // open output file/stdout
+    std::ofstream outputFile;
+    std::ostream *output;
+    if (!outputFilePath.empty())
+    {
+      outputFile = std::ofstream(outputFilePath);
+      if (!outputFile.is_open())
+      {
+        throw std::runtime_error("cannot open file '" + outputFilePath + "'");
+      }
+      output = &outputFile;
+    }
+    else
+    {
+      output = &std::cout;
+    }
+
+    // scan for FSMs and compile
+    uint  lineNb         = 0;
+    bool  fsm            = false;
+    uint  fsmIndent      = 0;
+    uint  fsmStartLineNb = 0;
+    while (!input->eof())
+    {
+      // scan for FSM
+      const std::regex COMMENT("^(.*)\\s*//$");
+      const std::regex FSM_START("^(\\s*)#fsm\\s+(.*)$");
+      const std::regex FSM_END("^\\s*#end$");
+      
+      std::stringstream fsmSource;
+      while (!input->eof())
+      {
+        std::smatch match;
+
+        // get line
+        std::string line;
+        std::getline(*input, line);
+        lineNb++;
+        
+        // strip comment
+        std::string s;
+        if (std::regex_match(line, match, COMMENT))
+        {
+          s = match[1].str();
+        }
+        else
+        {
+          s = line;
+        }
+
+        // match line
+        if      (std::regex_match(s, match, FSM_START))
+        {
+          fsmSource << line << std::endl;
+          fsm            = true;
+          fsmIndent      = match[1].str().length();
+          fsmStartLineNb = lineNb;
+        }
+        else if (std::regex_match(s, match, FSM_END))
+        {
+          fsmSource << line << std::endl;
+          fsm = false;
+          break;
+        }
+        else if (fsm)
+        {
+          fsmSource << line << std::endl;
+        }
+        else
+        {
+          *output << line << std::endl;
+        }        
+      }
+      if (fsm)
+      {
+        throw std::runtime_error("end of FSM not found");
+      }
+
+      if (!fsmSource.str().empty())
+      {
+        // init scanner
+        Scanner scanner;
+        scanner.switch_streams(&fsmSource, nullptr);
+        scanner.setLineNumber(fsmStartLineNb);
+        
+        // parse FSM
+        AST ast;
+        Parser parser(scanner, ast);
+if (getenv("DEBUG") != nullptr) parser.set_debug_level(1);
+        if (parser.parse() != 0)
+        {
+          throw std::runtime_error("parsing failed");
+        }
+//ast.print();
+
+        // generate code
+        CodeGenerator codeGenerator(*output);
+        codeGenerator.generate(ast, fsmIndent);
+
+        // generate .dot file
+        if (!dotDirectoryPath.empty())
+        {
+          std::string filePath = dotDirectoryPath+"/"+ast.getFSMName()+".dot";
+          std::ofstream output(filePath);
+          if (!output.is_open())
+          if (!outputFile.is_open())
+          {
+            throw std::runtime_error("cannot open file '" + filePath + "'");
+          }
+
+          DotGenerator dotGenerator(output);
+          dotGenerator.generate(ast);
+
+          output.close();
+        }
+      }
+    }
+
+    // close files
+    if (outputFile.is_open())
+    {
+      outputFile.close();
+    }
+    if (inputFile.is_open())
+    {
+      inputFile.close();
+    }
+  }
+  catch (const std::runtime_error &error)
+  {
+    fprintf(stderr, "ERROR: %s!\n", error.what());
+    exitCode = 1;
+  }
+  catch (...)
+  {
+    fprintf(stderr, "INTERNAL ERROR: unhandled exception!\n");
+    exitCode = 127;
+  }
+  
+  return exitCode;
+}
+
+/* end of file */
