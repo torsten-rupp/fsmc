@@ -45,14 +45,15 @@ scanner.cpp: scanner.l
 parser.cpp parser.hpp: parser.y
 	bison -o parser.cpp parser.y
 
-main.o: main.cpp scanner.h parser.hpp
+main.o: main.cpp scanner.h parser.hpp ast.h
 scanner.o: scanner.cpp scanner.h parser.hpp
 parser.o: parser.cpp parser.hpp scanner.h ast.h
-ast.o: ast.cpp ast.h
+ast.o: ast.cpp ast.h visitor.h
+visitor.o: visitor.cpp visitor.h
 codegenerator.o: codegenerator.cpp codegenerator.h ast.h visitor.h
-dotgenerator.o: dotgenerator.cpp dotgenerator.h ast.h
+dotgenerator.o: dotgenerator.cpp dotgenerator.h ast.h visitor.h
 
-fsmc: main.o scanner.o parser.o ast.o codegenerator.o dotgenerator.o
+fsmc: main.o scanner.o parser.o ast.o visitor.o codegenerator.o dotgenerator.o
 	g++ -g $^ -o fsmc
 
 .PHONY: test

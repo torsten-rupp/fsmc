@@ -50,11 +50,46 @@ class TextBlock
     uint                     columns;
 };
 
+class State;
+class StateList;
+
+class Expression;
+class PrimaryExpression;
+class PostfixExpression;
+class UnaryExpression;
+class CastExpression;
+class MultiplicativeExpression;
+class AdditiveExpression;
+class ShiftExpression;
+class RelationalExpression;
+class EqualityExpression;
+class AndExpression;
+class ExclusiveOrExpression;
+class InclusiveOrExpression;
+class LogicalAndExpression;
+class LogicalOrExpression;
+class ConditionalExpression;
+class AssignmentExpression;
+
+class StorageClassSpecifier;
+//class StorageClassSpecifiers;
+class TypeQualifier;
+class TypeSpecifier;
+class DeclarationSpecifier;
+class DeclarationSpecifiers;
+class Declaration;
+class DirectDeclarator;
+class Declarator;
+class Initializer;
+class InitDeclarator;
+
+class Statement;
+class DeclarationStatement;
+class DeclarationStatementList;
+class TypeAttributeList;
 class TypeDeclaration;
 class Expression;
-class StateList;
-class State;
-class BlockStatement;
+class CompoundStatement;
 class VariableDeclarationStatement;
 class AssignmentStatement;
 class IfStatement;
@@ -62,6 +97,7 @@ class ForStatement;
 class WhileStatement;
 class DoStatement;
 class ExpressionStatement;
+class JumpStatement;
 class NewStateStatement;
 class AST;
 class Visitor
@@ -69,8 +105,8 @@ class Visitor
   public:
     enum class Phases
     {
-      ENTER,
-      LEAVE
+      PRE,
+      POST
     };
 
     Visitor()
@@ -79,12 +115,13 @@ class Visitor
 //    Visitor(const Visitor &) = delete;
 //    Visitor(const Visitor &&) = delete;
 
-    void run(const AST &ast);
+// TODO: AST const &ast
+    void run(AST &ast);
 
     void indent(uint n)
     {
       indentions.push_back(indentions.back()+n);
-      
+
       indentString.clear();
       indentString.append(indentions.back(), ' ');
     }
@@ -96,33 +133,78 @@ class Visitor
       indentString.clear();
       indentString.append(indentions.back(), ' ');
     }
-    
+
     void indent(uint n,std::function<void(void)> code)
     {
       indent(2);
       code();
       unindent();
     }
-    
+
     std::string indent() const
     {
       return indentString;
     }
 
-    virtual void accept(Phases phase, const TypeDeclaration &typeDeclaration) = 0;
-    virtual void accept(Phases phase, const Expression &expression) = 0;
-    virtual void accept(Phases phase, const BlockStatement &blockStatement) = 0;
-    virtual void accept(Phases phase, const VariableDeclarationStatement &variableDeclarationStatement) = 0;
-    virtual void accept(Phases phase, const AssignmentStatement &assignmentStatement) = 0;
-    virtual void accept(Phases phase, const IfStatement &ifStatement) = 0;
-    virtual void accept(Phases phase, const ForStatement &forStatement) = 0;
-    virtual void accept(Phases phase, const WhileStatement &whileStatement) = 0;
-    virtual void accept(Phases phase, const DoStatement &doStatement) = 0;
-    virtual void accept(Phases phase, const ExpressionStatement &expressionStatement) = 0;
-    virtual void accept(Phases phase, const NewStateStatement &newStateStatement) = 0;
-    virtual void accept(Phases phase, const State &state) = 0;
-    virtual void accept(Phases phase, const StateList &stateList) = 0;
-  
+    #define ACCEPT(type) \
+      virtual bool accept(const type &) \
+      { \
+        return false; \
+      }; \
+      virtual bool accept(Phases phase, const type &) \
+      { \
+        return false; \
+      }
+
+    ACCEPT(State);
+
+    ACCEPT(Expression);
+    ACCEPT(PrimaryExpression);
+    ACCEPT(PostfixExpression);
+    ACCEPT(UnaryExpression);
+    ACCEPT(CastExpression);
+    ACCEPT(MultiplicativeExpression);
+    ACCEPT(AdditiveExpression);
+    ACCEPT(ShiftExpression);
+    ACCEPT(RelationalExpression);
+    ACCEPT(EqualityExpression);
+    ACCEPT(AndExpression);
+    ACCEPT(ExclusiveOrExpression);
+    ACCEPT(InclusiveOrExpression);
+    ACCEPT(LogicalAndExpression);
+    ACCEPT(LogicalOrExpression);
+    ACCEPT(ConditionalExpression);
+    ACCEPT(AssignmentExpression);
+
+    ACCEPT(StorageClassSpecifier);
+//    ACCEPT(StorageClassSpecifiers);
+    ACCEPT(TypeQualifier);
+    ACCEPT(TypeSpecifier);
+    ACCEPT(DeclarationSpecifier);
+    ACCEPT(DeclarationSpecifiers);
+    ACCEPT(Declaration);
+    ACCEPT(DirectDeclarator);
+    ACCEPT(Declarator);
+    ACCEPT(Initializer);
+    ACCEPT(InitDeclarator);
+
+    ACCEPT(Statement);
+    ACCEPT(DeclarationStatement);
+    ACCEPT(DeclarationStatementList);
+//    virtual bool accept(Phases phase, const TypeAttributeList &typeAttributeList) = 0;
+    ACCEPT(TypeDeclaration);
+    ACCEPT(CompoundStatement);
+//    virtual bool accept(Phases phase, const VariableDeclarationStatement &variableDeclarationStatement) = 0;
+//    virtual bool accept(Phases phase, const AssignmentStatement &assignmentStatement) = 0;
+    ACCEPT(IfStatement);
+    ACCEPT(ForStatement);
+    ACCEPT(WhileStatement);
+    ACCEPT(DoStatement);
+    ACCEPT(ExpressionStatement);
+    ACCEPT(JumpStatement);
+    ACCEPT(NewStateStatement);
+    virtual bool accept(Phases phase, const StateList &stateList) = 0;
+
   private:
     std::vector<uint> indentions{0};
     std::string       indentString;

@@ -87,7 +87,7 @@ int main(int argc, const char *argv[])
     {
       input = &std::cin;
     }
-    
+
     // open output file/stdout
     std::ofstream outputFile;
     std::ostream *output;
@@ -116,7 +116,7 @@ int main(int argc, const char *argv[])
       const std::regex COMMENT("^(.*)\\s*//$");
       const std::regex FSM_START("^(\\s*)#fsm\\s+(.*)$");
       const std::regex FSM_END("^\\s*#end$");
-      
+
       std::stringstream fsmSource;
       while (!input->eof())
       {
@@ -126,7 +126,7 @@ int main(int argc, const char *argv[])
         std::string line;
         std::getline(*input, line);
         lineNb++;
-        
+
         // strip comment
         std::string s;
         if (std::regex_match(line, match, COMMENT))
@@ -159,7 +159,7 @@ int main(int argc, const char *argv[])
         else
         {
           *output << line << std::endl;
-        }        
+        }
       }
       if (fsm)
       {
@@ -172,11 +172,12 @@ int main(int argc, const char *argv[])
         Scanner scanner;
         scanner.switch_streams(&fsmSource, nullptr);
         scanner.setLineNumber(fsmStartLineNb);
-        
+
         // parse FSM
         AST ast;
-        Parser parser(scanner, ast);
-if (getenv("DEBUG") != nullptr) parser.set_debug_level(1);
+        Parser parser(!inputFilePath.empty() ? inputFilePath : "<stdin>", scanner, ast);
+const char *DEBUG = getenv("DEBUG");
+if ((DEBUG != nullptr) && (strcmp(DEBUG,"1") == 0)) parser.set_debug_level(1);
         if (parser.parse() != 0)
         {
           throw std::runtime_error("parsing failed");
@@ -223,10 +224,14 @@ if (getenv("DEBUG") != nullptr) parser.set_debug_level(1);
   }
   catch (...)
   {
-    fprintf(stderr, "INTERNAL ERROR: unhandled exception!\n");
+    std::exception_ptr exception = std::current_exception();
+
+//std::cout << exception;
+    fprintf(stderr, "INTERNAL ERROR: unhandled exception: %s!\n", exception.__cxa_exception_type()->name());
+fprintf(stderr,"%s:%d: %p\n",__FILE__,__LINE__,exception);
     exitCode = 127;
   }
-  
+
   return exitCode;
 }
 

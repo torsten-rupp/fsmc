@@ -1,6 +1,6 @@
 /***********************************************************************\
 *
-* Contents: 
+* Contents:
 * Systems: all
 *
 \***********************************************************************/
@@ -37,6 +37,11 @@ void AST::clear()
   stateList.clear();
 }
 
+void AST::traverse(Visitor &visitor)
+{
+  stateList.travers(visitor);
+}
+
 void AST::print() const
 {
   std::cout << "AST:" << std::endl;
@@ -45,9 +50,9 @@ void AST::print() const
   for (const State &state : stateList)
   {
       std::cout << "  " << state.name << ":" << std::endl;
-      for (const Statement *statement : state.statementList)
+      for (const DeclarationStatement &declarationStatement : state.compoundStatement->declarationStatementList)
       {
-        std::cout << "  " << statement << std::endl;
+        std::cout << "  " << declarationStatement << std::endl;
       }
       std::cout << std::endl;
   }
@@ -56,11 +61,6 @@ void AST::print() const
 void AST::addState(FSM::State state)
 {
   stateList.add(state);
-}
-
-void Visitor::run(const AST &ast)
-{
-  ast.stateList.accept(*this);
 }
 
 /* end of file */

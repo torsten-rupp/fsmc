@@ -29,7 +29,8 @@ class CodeGenerator
     {
     }
 
-  void generate(const AST &ast, uint indent);
+// TODO:const AST
+  void generate(AST &ast, uint indent);
 
   private:
     std::ostream &output;
