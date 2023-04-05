@@ -32,24 +32,54 @@
 
   static std::unordered_map<std::string, FSM::Parser::token::yytokentype> KEY_WORDS =
   {
-    { "if",    FSM::Parser::token::yytokentype::TOKEN_KEYWORD_IF    },
-    { "else",  FSM::Parser::token::yytokentype::TOKEN_KEYWORD_ELSE  },
-    { "for",   FSM::Parser::token::yytokentype::TOKEN_KEYWORD_FOR   },
-    { "while", FSM::Parser::token::yytokentype::TOKEN_KEYWORD_WHILE },
-    { "do",    FSM::Parser::token::yytokentype::TOKEN_KEYWORD_DO    },
-  };   
+    { "if",       FSM::Parser::token::yytokentype::TOKEN_KEYWORD_IF       },
+    { "else",     FSM::Parser::token::yytokentype::TOKEN_KEYWORD_ELSE     },
+    { "for",      FSM::Parser::token::yytokentype::TOKEN_KEYWORD_FOR      },
+    { "while",    FSM::Parser::token::yytokentype::TOKEN_KEYWORD_WHILE    },
+    { "do",       FSM::Parser::token::yytokentype::TOKEN_KEYWORD_DO       },
+    { "switch",   FSM::Parser::token::yytokentype::TOKEN_KEYWORD_SWITCH   },
+    { "case",     FSM::Parser::token::yytokentype::TOKEN_KEYWORD_CASE     },
+    { "default",  FSM::Parser::token::yytokentype::TOKEN_KEYWORD_DEFAULT  },
+    { "break",    FSM::Parser::token::yytokentype::TOKEN_KEYWORD_BREAK    },
+    { "continue", FSM::Parser::token::yytokentype::TOKEN_KEYWORD_CONTINUE },
+    { "return",   FSM::Parser::token::yytokentype::TOKEN_KEYWORD_RETURN   },
+    { "sizeof",   FSM::Parser::token::yytokentype::TOKEN_KEYWORD_SIZEOF   },
+
+    { "auto",     FSM::Parser::token::yytokentype::TOKEN_KEYWORD_AUTO     },
+    { "register", FSM::Parser::token::yytokentype::TOKEN_KEYWORD_REGISTER },
+    { "static",   FSM::Parser::token::yytokentype::TOKEN_KEYWORD_STATIC   },
+    { "extern",   FSM::Parser::token::yytokentype::TOKEN_KEYWORD_EXTERN   },
+    { "typedef",  FSM::Parser::token::yytokentype::TOKEN_KEYWORD_TYPEDEF  },
+
+    { "void",     FSM::Parser::token::yytokentype::TOKEN_KEYWORD_VOID     },
+    { "char",     FSM::Parser::token::yytokentype::TOKEN_KEYWORD_CHAR     },
+    { "short",    FSM::Parser::token::yytokentype::TOKEN_KEYWORD_SHORT    },
+    { "int",      FSM::Parser::token::yytokentype::TOKEN_KEYWORD_INT      },
+    { "long",     FSM::Parser::token::yytokentype::TOKEN_KEYWORD_LONG     },
+    { "float",    FSM::Parser::token::yytokentype::TOKEN_KEYWORD_FLOAT    },
+    { "double",   FSM::Parser::token::yytokentype::TOKEN_KEYWORD_DOUBLE   },
+    { "signed",   FSM::Parser::token::yytokentype::TOKEN_KEYWORD_SIGNED   },
+    { "unsigned", FSM::Parser::token::yytokentype::TOKEN_KEYWORD_UNSIGNED },
+
+    { "struct",   FSM::Parser::token::yytokentype::TOKEN_KEYWORD_STRUCT   },
+    { "union",    FSM::Parser::token::yytokentype::TOKEN_KEYWORD_UNION    },
+
+    { "const",    FSM::Parser::token::yytokentype::TOKEN_KEYWORD_CONST    },
+    { "volatile", FSM::Parser::token::yytokentype::TOKEN_KEYWORD_VOLATILE },
+    { "struct",   FSM::Parser::token::yytokentype::TOKEN_KEYWORD_STRUCT   },
+  };
 
   static struct
   {
     uint line;
-    uint column;   
+    uint column;
   } first, last;
-  
+
   // get current token location (line, column)
   static FSM::location currentLocation()
   {
     return FSM::location(FSM::position(YY_NULLPTR,first.line,first.column));
-  } 
+  }
 %}
 
 /* stateList */
@@ -97,8 +127,13 @@
     else
     {
 //fprintf(stderr,"%s, %d: IDENTIFIER %s\n",__FILE__,__LINE__,yytext);
-      return FSM::Parser::make_IDENTIFIER(FSM::Identifier(yytext), currentLocation()); 
+      return FSM::Parser::make_IDENTIFIER(FSM::Identifier(yytext), currentLocation());
     }
+  }
+
+  /* char */
+  '.' {
+    return FSM::Parser::make_CHAR(yytext[1], currentLocation());
   }
 
   /* string */
@@ -120,22 +155,36 @@
     return FSM::Parser::make_INTEGER(number, currentLocation());
   }
 
-  /* operators */
-  "=" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_ASSIGN, currentLocation());
+  /* special operators */
+  "*=" {
+    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_MULTIPLY_ASSIGN, currentLocation());
   }
-
-  "+" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_PLUS, currentLocation());
+  "/=" {
+    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_DIVIDE_ASSIGN, currentLocation());
   }
-  "-" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_MINUS, currentLocation());
+  "%=" {
+    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_MODULO_ASSIGN, currentLocation());
   }
-  "*" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_MULTIPLY, currentLocation());
+  "+=" {
+    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_ADD_ASSIGN, currentLocation());
   }
-  "/" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_DIVIDE, currentLocation());
+  "-=" {
+    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_SUB_ASSIGN, currentLocation());
+  }
+  "<<=" {
+    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_SHIFT_LEFT_ASSIGN, currentLocation());
+  }
+  ">>=" {
+    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_SHIFT_RIGHT_ASSIGN, currentLocation());
+  }
+  "&=" {
+    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_XOR_ASSIGN, currentLocation());
+  }
+  "^=" {
+    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_AND_ASSIGN, currentLocation());
+  }
+  "|=" {
+    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_OR_ASSIGN, currentLocation());
   }
 
   "++" {
@@ -150,12 +199,14 @@
   "!=" {
     return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_NOT_EQUALS, currentLocation());
   }
+  /*
   "<" {
     return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_LOWER, currentLocation());
   }
   ">" {
     return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_LOWER_EQUALS, currentLocation());
   }
+  */
   "<=" {
     return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_GREATER, currentLocation());
   }
@@ -167,9 +218,6 @@
     return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_DEREFERENCE, currentLocation());
   }
 
-  "!" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_NOT, currentLocation());
-  }
   "&&" {
     return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_AND, currentLocation());
   }
@@ -178,6 +226,17 @@
   }
   "^" {
     return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_XOR, currentLocation());
+  }
+
+  "<<" {
+    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_SHIFT_LEFT, currentLocation());
+  }
+  ">>" {
+    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_SHIFT_RIGHT, currentLocation());
+  }
+
+  "..." {
+    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_ELLIPSIS, currentLocation());
   }
 
   /* any character */
@@ -208,7 +267,7 @@
 {
   "\""      { yy_pop_state();
               yytext[strlen(yytext)-1] = '\0';
-              return FSM::Parser::make_STRING(yytext, currentLocation()); 
+              return FSM::Parser::make_STRING(yytext, currentLocation());
             }
   [^"]      { yymore(); }
 }
