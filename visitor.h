@@ -72,11 +72,10 @@ class ConditionalExpression;
 class AssignmentExpression;
 
 class StorageClassSpecifier;
-//class StorageClassSpecifiers;
 class TypeQualifier;
 class TypeSpecifier;
 class DeclarationSpecifier;
-class DeclarationSpecifiers;
+class StorageClassDeclarationSpecifiers;
 class Declaration;
 class DirectDeclarator;
 class Declarator;
@@ -177,11 +176,10 @@ class Visitor
     ACCEPT(AssignmentExpression);
 
     ACCEPT(StorageClassSpecifier);
-//    ACCEPT(StorageClassSpecifiers);
     ACCEPT(TypeQualifier);
     ACCEPT(TypeSpecifier);
     ACCEPT(DeclarationSpecifier);
-    ACCEPT(DeclarationSpecifiers);
+    ACCEPT(StorageClassDeclarationSpecifiers);
     ACCEPT(Declaration);
     ACCEPT(DirectDeclarator);
     ACCEPT(Declarator);
@@ -191,11 +189,8 @@ class Visitor
     ACCEPT(Statement);
     ACCEPT(DeclarationStatement);
     ACCEPT(DeclarationStatementList);
-//    virtual bool accept(Phases phase, const TypeAttributeList &typeAttributeList) = 0;
     ACCEPT(TypeDeclaration);
     ACCEPT(CompoundStatement);
-//    virtual bool accept(Phases phase, const VariableDeclarationStatement &variableDeclarationStatement) = 0;
-//    virtual bool accept(Phases phase, const AssignmentStatement &assignmentStatement) = 0;
     ACCEPT(IfStatement);
     ACCEPT(ForStatement);
     ACCEPT(WhileStatement);

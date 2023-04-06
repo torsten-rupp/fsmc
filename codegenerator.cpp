@@ -9,6 +9,8 @@
 
 #include <iostream>
 #include <sstream>
+#include <random>
+#include <limits>
 
 #include "ast.h"
 #include "visitor.h"
@@ -41,58 +43,25 @@ class CVisitor : public Visitor
 //    CVisitor(const CVisitor &) = delete;
 //    CVisitor(const CVisitor &&) = delete;
 
-#if 0
-    bool accept(Phases phase, const TypeAttributeList &typeAttributeList)
-    {
-      switch (phase)
-      {
-        case Phases::PRE:
-          {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
-#if 0
-            for (TypeAttribute typeAttribute : typeAttributeList)
-            {
-              switch (typeAttribute)
-              {
-                case FSM::TypeAttribute::EXTERN:   output << "extern";   break;
-                case FSM::TypeAttribute::TYPEDEF:  output << "typedef";  break;
-                case FSM::TypeAttribute::CONST:    output << "const";    break;
-                case FSM::TypeAttribute::STATIC:   output << "static";   break;
-                case FSM::TypeAttribute::VOLATILE: output << "volatile"; break;
-                case FSM::TypeAttribute::STRUCT:   output << "struct";   break;
-              }
-              output << " ";
-            }
-#endif
-          }
-          break;
-        case Phases::POST:
-          break;
-      }
-    }
-
-    bool accept(Phases phase, const TypeDeclaration &typeDeclaration)
-    {
-      switch (phase)
-      {
-        case Phases::PRE:
-          accept(Phases::PRE, typeDeclaration.typeAttributeList);
-// TODO:
-output << typeDeclaration.name;
-          break;
-        case Phases::POST:
-          break;
-      }
-    }
-#endif
-
     bool accept(Phases phase, const State &state) override
     {
       switch (phase)
       {
         case Phases::PRE:
           indent(2);
-          output << indent() << "case " << state.name << ":" << std::endl;
+          switch (state.type)
+          {
+            case State::Type::START:
+              output << indent() << "case " << state.name << suffix << ":" << std::endl;
+              output << indent() << "case " << "STATE_START" << suffix << ":" << std::endl;
+              break;
+            case State::Type::DEFAULT:
+              output << indent() << "case " << "STATE_DEFAULT" << suffix << ":" << std::endl;
+              break;
+            case State::Type::CUSTOM:
+              output << indent() << "case " << state.name << suffix << ":" << std::endl;
+              break;
+          }
           indent(2);
           break;
         case Phases::POST:
@@ -111,33 +80,56 @@ output << typeDeclaration.name;
       {
         case Phases::PRE:
           {
+            // state type/variable suffix
+            std::random_device randomDevice;
+            std::mt19937       randomGenerator(randomDevice());
+            std::uniform_int_distribution<std::mt19937::result_type> random(0,std::numeric_limits<int>::max());
+            std::stringstream buffer;
+            buffer << "_" << random(randomGenerator);
+            suffix = buffer.str();
+
+            // states
             output << indent() << "typedef enum" << std::endl;
             output << indent() <<"{" << std::endl;
             indent(2,[&]()
             {
-              for (const State &state : stateList)
+              for (const State *state : stateList)
               {
-                output << indent() << state.name << "," << std::endl;
+                output << indent() << state->name << suffix << "," << std::endl;
               }
             });
-            output << indent() <<"} States;" << std::endl;
+            output << indent() <<"} States" << suffix << ";" << std::endl;
 
-            output << indent() << "static States state";
+            output << indent() << "static States" << suffix << " state" << suffix;
             std::string startState = ast.getStartState();
             if (!startState.empty())
             {
-              output << " = " << startState;
+              output << " = " << startState << suffix;
             }
             output << ";" << std::endl;
             output << std::endl;
 
-            output << indent() << "switch (state)" << std::endl;
+            output << indent() << "switch (state" << suffix << ")" << std::endl;
             output << indent() << "{" << std::endl;
           }
           break;
         case Phases::POST:
           output << indent() <<"}" << std::endl;
           break;
+      }
+
+      return true;
+    }
+
+    bool accept(const StorageClassSpecifier &storageClassSpecifier) override
+    {
+      switch (storageClassSpecifier.type)
+      {
+        case StorageClassSpecifier::Type::TYPEDEF:  output << "typedef";  break;
+        case StorageClassSpecifier::Type::EXTERN:   output << "extern";   break;
+        case StorageClassSpecifier::Type::STATIC:   output << "static";   break;
+        case StorageClassSpecifier::Type::AUTO:     output << "auto";     break;
+        case StorageClassSpecifier::Type::REGISTER: output << "register"; break;
       }
 
       return true;
@@ -161,13 +153,13 @@ output << typeDeclaration.name;
       }
     }
 
-    bool accept(const DeclarationSpecifiers &declarationSpecifiers) override
+    bool accept(const StorageClassDeclarationSpecifiers &storageClassDeclarationSpecifiers) override
     {
       bool first = true;
-      for (const DeclarationSpecifier *declarationSpecifier : declarationSpecifiers)
+      for (const StorageClassDeclarationSpecifier *storageClassDeclarationSpecifier : storageClassDeclarationSpecifiers)
       {
         if (!first) output << " ";
-        declarationSpecifier->travers(*this);
+        storageClassDeclarationSpecifier->traverse(*this);
         first = false;
       }
 
@@ -183,30 +175,30 @@ output << typeDeclaration.name;
 
     bool accept(const Declarator &declarator) override
     {
-      declarator.directDeclarator.travers(*this);
+      declarator.directDeclarator->traverse(*this);
 
       return true;
     }
 
     bool accept(const Initializer &initializer) override
     {
-      initializer.expression->travers(*this);
+      initializer.expression->traverse(*this);
 
       return true;
     }
 
     bool accept(const InitDeclarator &initDeclarator) override
     {
-      if (!initDeclarator.declarationSpecifiers.empty())
+      if (initDeclarator.storageClassDeclarationSpecifiers != nullptr)
       {
-        initDeclarator.declarationSpecifiers.travers(*this);
+        initDeclarator.storageClassDeclarationSpecifiers->traverse(*this);
         output << " ";
       }
-      initDeclarator.declarator.travers(*this);
+      initDeclarator.declarator->traverse(*this);
       if (initDeclarator.initializer != nullptr)
       {
         output << " = ";
-        initDeclarator.initializer->travers(*this);
+        initDeclarator.initializer->traverse(*this);
       }
 
       return true;
@@ -215,68 +207,13 @@ output << typeDeclaration.name;
     bool accept(const Declaration &declaration) override
     {
       output << indent();
-      if (!declaration.declarationSpecifiers.empty())
+      if (declaration.storageClassDeclarationSpecifiers != nullptr)
       {
-        declaration.declarationSpecifiers.travers(*this);
+        declaration.storageClassDeclarationSpecifiers->traverse(*this);
         output << " ";
       }
-      declaration.initDeclaratorList.travers(*this);
+      declaration.initDeclaratorList->traverse(*this);
       output << ";" << std::endl;
-
-      return true;
-    }
-
-    bool accept(const Expression &expression) override
-    {
-      switch (expression.operator_)
-      {
-        case Expression::Operator::IDENTIFIER:     output << expression.identifier; break;
-        case Expression::Operator::STRING:         output << "\"" << expression.string << "\""; break;
-        case Expression::Operator::NUMBER:         output << expression.number.toString(); break;
-
-        case Expression::Operator::ASSIGN:         expression.nodes[0]->travers(*this); output << " = "; expression.nodes[1]->travers(*this); break;
-
-        case Expression::Operator::NEGATIVE:       output << "-"; expression.nodes[0]->travers(*this); break;
-        case Expression::Operator::PLUS:           expression.nodes[0]->travers(*this); output << " + "; expression.nodes[1]->travers(*this); break;
-        case Expression::Operator::MINUS:          expression.nodes[0]->travers(*this); output << " - "; expression.nodes[1]->travers(*this); break;
-        case Expression::Operator::MULTIPLY:       expression.nodes[0]->travers(*this); output << " * "; expression.nodes[1]->travers(*this); break;
-        case Expression::Operator::DIVIDE:         expression.nodes[0]->travers(*this); output << " / "; expression.nodes[1]->travers(*this); break;
-        case Expression::Operator::INCREMENT:      expression.nodes[0]->travers(*this); output << "++"; break;
-        case Expression::Operator::DECREMENT:      expression.nodes[0]->travers(*this); output << "--"; break;
-
-        case Expression::Operator::EQUALS:         expression.nodes[0]->travers(*this); output << " == "; expression.nodes[1]->travers(*this); break;
-        case Expression::Operator::NOT_EQUALS:     expression.nodes[0]->travers(*this); output << " != "; expression.nodes[1]->travers(*this); break;
-        case Expression::Operator::LOWER:          expression.nodes[0]->travers(*this); output << " < "; expression.nodes[1]->travers(*this); break;
-        case Expression::Operator::GREATER:        expression.nodes[0]->travers(*this); output << " > "; expression.nodes[1]->travers(*this); break;
-        case Expression::Operator::LOWER_EQUALS:   expression.nodes[0]->travers(*this); output << " <= "; expression.nodes[1]->travers(*this); break;
-        case Expression::Operator::GREATER_EQUALS: expression.nodes[0]->travers(*this); output << " >= "; expression.nodes[1]->travers(*this); break;
-
-        case Expression::Operator::NOT:            output << "!"; expression.nodes[0]->travers(*this); break;
-        case Expression::Operator::AND:            expression.nodes[0]->travers(*this); output << " && "; expression.nodes[1]->travers(*this); break;
-        case Expression::Operator::OR:             expression.nodes[0]->travers(*this); output << " || "; expression.nodes[1]->travers(*this); break;
-        case Expression::Operator::XOR:            expression.nodes[0]->travers(*this); output << " ^ "; expression.nodes[1]->travers(*this); break;
-
-        case Expression::Operator::FUNCTION_CALL:
-          {
-            bool first = true;
-
-            output << expression.functionName << "(";
-            for (const Expression *argument : expression.argumentList)
-            {
-              if (!first) output << ", ";
-              output << argument;
-
-              first = false;
-            }
-            output << ")";
-          }
-          break;
-
-        case Expression::Operator::CAST:           output << "("; expression.nodes[0]->travers(*this); output << ")"; expression.nodes[1]->travers(*this); break;
-
-        default:
-          break;
-      }
 
       return true;
     }
@@ -287,10 +224,10 @@ output << typeDeclaration.name;
       {
         case PrimaryExpression::Type::IDENTIFIER: output << primaryExpression.identifier; break;
         case PrimaryExpression::Type::INTEGER:    output << primaryExpression.n; break;
-        case PrimaryExpression::Type::STRING:     output << primaryExpression.string; break;
+        case PrimaryExpression::Type::STRING:     output << "\"" << primaryExpression.string << "\""; break;
         case PrimaryExpression::Type::EXPRESSION:
           output << '(';
-          primaryExpression.expression->travers(*this);
+          primaryExpression.expression->traverse(*this);
           output << ')';
           break;
       }
@@ -303,22 +240,22 @@ output << typeDeclaration.name;
       switch (postfixExpression.type)
       {
         case PostfixExpression::Type::SUBSCRIPT:
-          postfixExpression.a->travers(*this);
+          postfixExpression.array->traverse(*this);
           output << "[";
-          postfixExpression.b->travers(*this);
+          postfixExpression.index->traverse(*this);
           output << "]";
           break;
         case PostfixExpression::Type::FUNCTION_CALL:
-          postfixExpression.a->travers(*this);
+          postfixExpression.call->traverse(*this);
           output << "(";
-          if (postfixExpression.b != nullptr)
+          if (postfixExpression.argumentExpressionList != nullptr)
           {
-            postfixExpression.b->travers(*this);
+            postfixExpression.argumentExpressionList->traverse(*this);
           }
           output << ")";
           break;
         case PostfixExpression::Type::MEMBER:
-          postfixExpression.a->travers(*this);
+          postfixExpression.structure->traverse(*this);
           output << "." << postfixExpression.identifier;
           break;
       }
@@ -337,7 +274,7 @@ output << typeDeclaration.name;
         case UnaryExpression::Operator::NOT:         output << "~"; break;
         case UnaryExpression::Operator::LOGICAL_NOT: output << "!"; break;
       }
-      unaryExpression.expression->travers(*this);
+      unaryExpression.expression->traverse(*this);
 
       return true;
     }
@@ -346,7 +283,7 @@ output << typeDeclaration.name;
     {
 //output << "castExpression";
 //fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
-      castExpression.expression->travers(*this);
+      castExpression.expression->traverse(*this);
 
       return true;
     }
@@ -354,13 +291,13 @@ output << typeDeclaration.name;
     bool accept(const MultiplicativeExpression &multiplicativeExpression) override
     {
 //output << "multiplicativeExpression";
-      multiplicativeExpression.a->travers(*this);
+      multiplicativeExpression.a->traverse(*this);
       switch (multiplicativeExpression.type)
       {
         case MultiplicativeExpression::Type::MULTIPLY: output << " * "; break;
         case MultiplicativeExpression::Type::DIVIDE:   output << " / "; break;
       }
-      multiplicativeExpression.b->travers(*this);
+      multiplicativeExpression.b->traverse(*this);
 
       return true;
     }
@@ -368,13 +305,13 @@ output << typeDeclaration.name;
     bool accept(const AdditiveExpression &additiveExpression) override
     {
 //output << "additiveExpression";
-      additiveExpression.a->travers(*this);
+      additiveExpression.a->traverse(*this);
       switch (additiveExpression.type)
       {
         case AdditiveExpression::Type::ADD:      output << " + "; break;
         case AdditiveExpression::Type::SUBTRACT: output << " - "; break;
       }
-      additiveExpression.b->travers(*this);
+      additiveExpression.b->traverse(*this);
 
       return true;
     }
@@ -382,7 +319,7 @@ output << typeDeclaration.name;
     bool accept(const ShiftExpression &shiftExpression) override
     {
 //output << "shiftExpression";
-      shiftExpression.a->travers(*this);
+      shiftExpression.a->traverse(*this);
       if (shiftExpression.b != nullptr)
       {
         switch (shiftExpression.type)
@@ -390,7 +327,7 @@ output << typeDeclaration.name;
           case ShiftExpression::Type::LEFT:  output << " << "; break;
           case ShiftExpression::Type::RIGHT: output << " >> "; break;
         }
-        shiftExpression.b->travers(*this);
+        shiftExpression.b->traverse(*this);
       }
 
       return true;
@@ -402,24 +339,24 @@ output << typeDeclaration.name;
       switch (relationalExpression.type)
       {
         case RelationalExpression::Type::LOWER:
-          relationalExpression.a->travers(*this);
+          relationalExpression.a->traverse(*this);
           output << " < ";
-          relationalExpression.b->travers(*this);
+          relationalExpression.b->traverse(*this);
           break;
         case RelationalExpression::Type::LOWER_EQUALS:
-          relationalExpression.a->travers(*this);
+          relationalExpression.a->traverse(*this);
           output << " <= ";
-          relationalExpression.b->travers(*this);
+          relationalExpression.b->traverse(*this);
           break;
         case RelationalExpression::Type::GREATER:
-          relationalExpression.a->travers(*this);
+          relationalExpression.a->traverse(*this);
           output << " > ";
-          relationalExpression.b->travers(*this);
+          relationalExpression.b->traverse(*this);
           break;
         case RelationalExpression::Type::GREATER_EQUALS:
-          relationalExpression.a->travers(*this);
+          relationalExpression.a->traverse(*this);
           output << " >= ";
-          relationalExpression.b->travers(*this);
+          relationalExpression.b->traverse(*this);
           break;
       }
 
@@ -432,14 +369,14 @@ output << typeDeclaration.name;
       switch (equalityExpression.type)
       {
         case EqualityExpression::Type::EQUALS:
-          equalityExpression.a->travers(*this);
+          equalityExpression.a->traverse(*this);
           output << " == ";
-          equalityExpression.b->travers(*this);
+          equalityExpression.b->traverse(*this);
           break;
         case EqualityExpression::Type::NOT_EQUALS:
-          equalityExpression.a->travers(*this);
+          equalityExpression.a->traverse(*this);
           output << " != ";
-          equalityExpression.b->travers(*this);
+          equalityExpression.b->traverse(*this);
           break;
       }
 
@@ -449,9 +386,9 @@ output << typeDeclaration.name;
     bool accept(const AndExpression &andExpression) override
     {
 //output << "andExpression";
-      andExpression.a->travers(*this);
+      andExpression.a->traverse(*this);
       output << " & ";
-      andExpression.b->travers(*this);
+      andExpression.b->traverse(*this);
 
       return true;
     }
@@ -459,9 +396,9 @@ output << typeDeclaration.name;
     bool accept(const ExclusiveOrExpression &exclusiveOrExpression) override
     {
 //output << "exclusiveOrExpression";
-      exclusiveOrExpression.a->travers(*this);
+      exclusiveOrExpression.a->traverse(*this);
       output << " ^ ";
-      exclusiveOrExpression.b->travers(*this);
+      exclusiveOrExpression.b->traverse(*this);
 
       return true;
     }
@@ -469,9 +406,9 @@ output << typeDeclaration.name;
     bool accept(const InclusiveOrExpression &inclusiveOrExpression) override
     {
 //output << "inclusiveOrExpression";
-      inclusiveOrExpression.a->travers(*this);
+      inclusiveOrExpression.a->traverse(*this);
       output << " | ";
-      inclusiveOrExpression.b->travers(*this);
+      inclusiveOrExpression.b->traverse(*this);
 
       return true;
     }
@@ -479,9 +416,9 @@ output << typeDeclaration.name;
     bool accept(const LogicalAndExpression &logicalAndExpression) override
     {
 //output << "logicalAndExpression";
-      logicalAndExpression.a->travers(*this);
+      logicalAndExpression.a->traverse(*this);
       output << " && ";
-      logicalAndExpression.b->travers(*this);
+      logicalAndExpression.b->traverse(*this);
 
       return true;
     }
@@ -489,9 +426,9 @@ output << typeDeclaration.name;
     bool accept(const LogicalOrExpression &logicalOrExpression) override
     {
 //output << "logicalOrExpression";
-      logicalOrExpression.a->travers(*this);
+      logicalOrExpression.a->traverse(*this);
       output << " || ";
-      logicalOrExpression.b->travers(*this);
+      logicalOrExpression.b->traverse(*this);
 
       return true;
     }
@@ -499,18 +436,18 @@ output << typeDeclaration.name;
     bool accept(const ConditionalExpression &conditionalExpression) override
     {
 //output << "conditionalExpression";
-      conditionalExpression.condition->travers(*this);
+      conditionalExpression.condition->traverse(*this);
       output << " ? ";
-      conditionalExpression.a->travers(*this);
+      conditionalExpression.a->traverse(*this);
       output << " : ";
-      conditionalExpression.b->travers(*this);
+      conditionalExpression.b->traverse(*this);
 
       return true;
     }
 
     bool accept(const AssignmentExpression &assignmentExpression) override
     {
-      assignmentExpression.a->travers(*this);
+      assignmentExpression.a->traverse(*this);
       switch (assignmentExpression.operator_)
       {
         case AssignmentExpression::Operator::ASSIGN:             output << " = ";   break;
@@ -528,7 +465,7 @@ default:
 fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
 break;
       }
-      assignmentExpression.b->travers(*this);
+      assignmentExpression.b->traverse(*this);
 
       return true;
     }
@@ -538,7 +475,10 @@ break;
       output << indent() << "{" << std::endl;
       indent(2,[&]()
       {
-        compoundStatement.declarationStatementList.travers(*this);
+        if (compoundStatement.declarationStatementList != nullptr)
+        {
+          compoundStatement.declarationStatementList->traverse(*this);
+        }
       });
       output << indent() << "}" << std::endl;
 
@@ -547,12 +487,12 @@ break;
 
     bool accept(const IfStatement &ifStatement) override
     {
-      output << indent() << "if ("; ifStatement.condition->travers(*this); output << ")" << std::endl;
-      ifStatement.ifStatement->travers(*this);
+      output << indent() << "if ("; ifStatement.condition->traverse(*this); output << ")" << std::endl;
+      ifStatement.ifStatement->traverse(*this);
       if (ifStatement.elseStatement != nullptr)
       {
         output << indent() << "else" << std::endl;
-        ifStatement.elseStatement->travers(*this);
+        ifStatement.elseStatement->traverse(*this);
       }
 
       return true;
@@ -561,29 +501,29 @@ break;
     bool accept(const ForStatement &forStatement) override
     {
       output << indent() << "for (";
-      forStatement.init->travers(*this);
+      forStatement.init->traverse(*this);
       output << "; ";
-      forStatement.condition->travers(*this);
+      forStatement.condition->traverse(*this);
       output << "; ";
-      forStatement.increment->travers(*this);
+      forStatement.increment->traverse(*this);
       output << ")" << std::endl;
-      forStatement.statement->travers(*this);
+      forStatement.statement->traverse(*this);
     }
 
     bool accept(const WhileStatement &whileStatement) override
     {
       output << indent() << "while (";
-      whileStatement.condition->travers(*this);
+      whileStatement.condition->traverse(*this);
       output << ")" << std::endl;
-      whileStatement.statement->travers(*this);
+      whileStatement.statement->traverse(*this);
     }
 
     bool accept(const DoStatement &doStatement) override
     {
       output << indent() << "do" << std::endl;
-      doStatement.statement->travers(*this);
+      doStatement.statement->traverse(*this);
       output << indent() << "while (";
-      doStatement.condition->travers(*this);
+      doStatement.condition->traverse(*this);
       output << ");" << std::endl;
 
       return true;
@@ -619,7 +559,7 @@ break;
           if (jumpStatement.expression != nullptr)
           {
             output << " ";
-            jumpStatement.expression->travers(*this);
+            jumpStatement.expression->traverse(*this);
           }
           output << ";" << std::endl;
         break;
@@ -630,7 +570,12 @@ break;
 
     bool accept(const NewStateStatement &newStateStatement) override
     {
-      output << indent() << "state = " << newStateStatement.name << ";" << std::endl;
+      switch (newStateStatement.type)
+      {
+        case NewStateStatement::Type::START:   output << indent() << "state" << suffix << " = " << ast.getStartState()    << suffix << ";" << std::endl; break;
+        case NewStateStatement::Type::DEFAULT: output << indent() << "state" << suffix << " = STATE_DEFAULT"              << suffix << ";" << std::endl; break;
+        case NewStateStatement::Type::CUSTOM:  output << indent() << "state" << suffix << " = " << newStateStatement.name << suffix << ";" << std::endl; break;
+      }
 
       return true;
     }
@@ -638,6 +583,7 @@ break;
   private:
     std::ostream &output;
     const AST    &ast;
+    std::string  suffix;
 };
 
 void CodeGenerator::generate(AST &ast, uint indent)

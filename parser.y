@@ -61,7 +61,7 @@
     return scanner.get_next_token();
   }
 
-  FSM::Identifier currentStateName;
+  FSM::Identifier  currentStateName;
 }
 
 // implementation
@@ -165,63 +165,50 @@
 %left PLUS MINUS
 %left MULTIPLY DIVIDE
 
-//%type <Statement*>            statementOrBlock;
-//%type <StructUnionSpecifier>  structOrUnion;
-//%type <TypeAttributeList>     typeAttributeList;
-//%type <TypeDeclaration>       type;
-//%type <Statement*>            variable;
-//%type <DeclarationList>         variableList;
-//%type <Statement*>            labeledStatement;
-//%type <Statement*>            expressionStatement;
-//%type <Statement*>            selectionStatement;
-//%type <Statement*>            iterationStatement;
-
-%type <StorageClassSpecifier*>         storageClassSpecifier;
-%type <TypeQualifier*>                 typeQualifier;
-%type <TypeQualifierList>              typeQualifierList;
-%type <TypeSpecifier*>                 typeSpecifier;
-%type <DeclarationSpecifiers>          declarationSpecifiers;
-%type <Declaration*>                   declaration;
-%type <Declarator>                     declarator;
-%type <DirectDeclarator>               directDeclarator;
-%type <Initializer>                    initializer;
-%type <InitDeclarator*>                initDeclarator;
-%type <InitDeclaratorList>             initDeclaratorList;
-%type <Declaration*>                   externalDeclaration;
-%type <DeclarationStatement*>          declarationStatement;
-%type <DeclarationStatementList>       declarationStatementList;
-
-%type <Expression*>                    primaryExpression;
-%type <Expression*>                    postfixExpression;
-%type <Expression*>                    unaryExpression;
-%type <UnaryExpression::Operator>      unaryOperator;
-%type <Expression*>                    castExpression;
-%type <Expression*>                    multiplicativeExpression;
-%type <Expression*>                    additiveExpression;
-%type <Expression*>                    shiftExpression;
-%type <Expression*>                    relationalExpression;
-%type <Expression*>                    equalityExpression;
-%type <Expression*>                    andExpression;
-%type <Expression*>                    exclusiveOrExpression;
-%type <Expression*>                    inclusiveOrExpression;
-%type <Expression*>                    logicalAndExpression;
-%type <Expression*>                    logicalOrExpression;
-%type <Expression*>                    conditionalExpression;
-%type <Expression*>                    assignmentExpression;
-%type <ArgumentExpressionList>         argumentExpressionList;
-%type <AssignmentExpression::Operator> assignmentOperator;
-%type <ExpressionList>                 expressionList;
-%type <Expression*>                    expression;
-
-%type <Statement*>                     statement;
-%type <Statement*>                     labeled_statement;
-%type <CompoundStatement*>             compoundStatement;
-%type <ExpressionStatement*>           expressionStatement;
-%type <Statement*>                     selectionStatement;
-%type <Statement*>                     iterationStatement;
-%type <NewStateStatement*>             newStateStatement;
-%type <JumpStatement*>                 jumpStatement;
-%type <Number>                         number;
+%type <StorageClassSpecifier*>             storageClassSpecifier;
+%type <TypeQualifier*>                     typeQualifier;
+%type <TypeQualifierList*>                 typeQualifierList;
+%type <TypeSpecifier*>                     typeSpecifier;
+%type <StorageClassDeclarationSpecifiers*> storageClassDeclarationSpecifiers;
+%type <Declaration*>                       declaration;
+%type <Declarator*>                        declarator;
+%type <DirectDeclarator*>                  directDeclarator;
+%type <Initializer*>                       initializer;
+%type <InitDeclarator*>                    initDeclarator;
+%type <InitDeclaratorList*>                initDeclaratorList;
+%type <Declaration*>                       externalDeclaration;
+%type <DeclarationStatementList*>          declarationStatementList;
+                                           
+%type <Expression*>                        primaryExpression;
+%type <Expression*>                        postfixExpression;
+%type <Expression*>                        unaryExpression;
+%type <UnaryExpression::Operator>          unaryOperator;
+%type <Expression*>                        castExpression;
+%type <Expression*>                        multiplicativeExpression;
+%type <Expression*>                        additiveExpression;
+%type <Expression*>                        shiftExpression;
+%type <Expression*>                        relationalExpression;
+%type <Expression*>                        equalityExpression;
+%type <Expression*>                        andExpression;
+%type <Expression*>                        exclusiveOrExpression;
+%type <Expression*>                        inclusiveOrExpression;
+%type <Expression*>                        logicalAndExpression;
+%type <Expression*>                        logicalOrExpression;
+%type <Expression*>                        conditionalExpression;
+%type <Expression*>                        assignmentExpression;
+%type <ArgumentExpressionList*>            argumentExpressionList;
+%type <AssignmentExpression::Operator>     assignmentOperator;
+%type <Expression*>                        expression;
+                                           
+%type <Statement*>                         statement;
+%type <Statement*>                         labeled_statement;
+%type <CompoundStatement*>                 compoundStatement;
+%type <ExpressionStatement*>               expressionStatement;
+%type <Statement*>                         selectionStatement;
+%type <Statement*>                         iterationStatement;
+%type <NewStateStatement*>                 newStateStatement;
+%type <JumpStatement*>                     jumpStatement;
+%type <double>                             number;
 
 %start start
 
@@ -259,14 +246,13 @@ stateDefinitions:
   ;
 
 stateDefinition:
-  | '*' IDENTIFIER[stateName]
+    '*' IDENTIFIER[stateName]
     {
       currentStateName = $stateName;
     }
     compoundStatement
     {
-      ast.addState(State($stateName,$compoundStatement));
-      ast.setStartState($stateName);
+      ast.addState(new State(State::Type::START,$stateName,$compoundStatement));
     }
   | IDENTIFIER[stateName]
     {
@@ -274,15 +260,11 @@ stateDefinition:
     }
     compoundStatement
     {
-      ast.addState(State($stateName,$compoundStatement));
+      ast.addState(new State(State::Type::CUSTOM,$stateName,$compoundStatement));
     }
-  | KEYWORD_DEFAULT
+  | KEYWORD_DEFAULT compoundStatement
     {
-      currentStateName = Identifier();
-    }
-    compoundStatement
-    {
-      ast.addState(State($compoundStatement));
+      ast.addState(new State(State::Type::DEFAULT,$compoundStatement));
     }
   ;
 
@@ -291,21 +273,21 @@ stateDefinition:
 declarationStatementList
   : declarationStatementList externalDeclaration
     {
-      $1.add($externalDeclaration);
+      $1->add($externalDeclaration);
       $$ = $1;
     }
   | externalDeclaration
     {
-      $$ = DeclarationStatementList($externalDeclaration);
+      $$ = new DeclarationStatementList($externalDeclaration);
     }
   | declarationStatementList statement
     {
-      $1.add($statement);
+      $1->add($statement);
       $$ = $1;
     }
   | statement
     {
-      $$ = DeclarationStatementList($statement);
+      $$ = new DeclarationStatementList($statement);
     }
   ;
 
@@ -325,38 +307,38 @@ declaration
     }
   ;
 
-declarationSpecifiers
-  : declarationSpecifiers storageClassSpecifier
+storageClassDeclarationSpecifiers
+  : storageClassDeclarationSpecifiers storageClassSpecifier
     {
 //      $2.prepend($1);
-      $1.add($2);
+      $1->add($2);
       $$ = $1;
 fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
     }
   | storageClassSpecifier
     {
-      $$ = DeclarationSpecifiers($storageClassSpecifier);
+      $$ = new StorageClassDeclarationSpecifiers($storageClassSpecifier);
     }
-//  : typeSpecifier declarationSpecifiers
-  | declarationSpecifiers typeSpecifier
+//  : typeSpecifier storageClassDeclarationSpecifiers
+  | storageClassDeclarationSpecifiers typeSpecifier
     {
 //      $2.prepend($1);
-      $1.add($2);
+      $1->add($2);
       $$ = $1;
     }
   | typeSpecifier
     {
-      $$ = DeclarationSpecifiers($typeSpecifier);
+      $$ = new StorageClassDeclarationSpecifiers($typeSpecifier);
     }
-//  | typeQualifier declarationSpecifiers
-  | declarationSpecifiers typeQualifier
+//  | typeQualifier storageClassDeclarationSpecifiers
+  | storageClassDeclarationSpecifiers typeQualifier
     {
-      $1.add($2);
+      $1->add($2);
       $$ = $1;
     }
   | typeQualifier
     {
-      $$ = DeclarationSpecifiers($typeQualifier);
+      $$ = new StorageClassDeclarationSpecifiers($typeQualifier);
     }
   ;
 
@@ -395,52 +377,52 @@ postfixExpression
     {
       $$ = new PostfixExpression(PostfixExpression::Type::FUNCTION_CALL, $a, $b);
     }
-  | postfixExpression[a] '.' IDENTIFIER[b]
+  | postfixExpression[a] '.' IDENTIFIER[name]
     {
-      $$ = new PostfixExpression(PostfixExpression::Type::MEMBER,$a,$b);
+      $$ = new PostfixExpression(PostfixExpression::Type::MEMBER,$a,$name);
     }
-  | postfixExpression POINTER IDENTIFIER
+  | postfixExpression[a] POINTER IDENTIFIER[name]
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+      $$ = new PostfixExpression(PostfixExpression::Type::POINTER,$a,$name);
     }
-  | postfixExpression INCREMENT
+  | postfixExpression[a] INCREMENT
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+      $$ = new PostfixExpression(PostfixExpression::Type::INCREMENT,$a);
     }
-  | postfixExpression DECREMENT
+  | postfixExpression[a] DECREMENT
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+      $$ = new PostfixExpression(PostfixExpression::Type::DECREMENT,$a);
     }
   | primaryExpression
     {
-      $$ = $1;
+      $$ = $primaryExpression;
     }
   ;
 
 unaryExpression
-  : INCREMENT unaryExpression
+  : INCREMENT unaryExpression[a]
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+      $$ = new UnaryExpression(UnaryExpression::Operator::INCREMENT, $a);
     }
-  | DECREMENT unaryExpression
+  | DECREMENT unaryExpression[a]
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+      $$ = new UnaryExpression(UnaryExpression::Operator::DECREMENT, $a);
     }
-  | unaryOperator castExpression
+  | unaryOperator castExpression[a]
     {
-      $$ = new UnaryExpression($unaryOperator, $castExpression);
+      $$ = new UnaryExpression($unaryOperator, $a);
     }
-  | KEYWORD_SIZEOF unaryExpression
+  | KEYWORD_SIZEOF unaryExpression[a]
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+      $$ = new UnaryExpression(UnaryExpression::Operator::SIZEOF, $a);
     }
   | KEYWORD_SIZEOF '(' type_name ')'
     {
 fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
     }
-  | postfixExpression
+  | postfixExpression[a]
     {
-      $$ = $postfixExpression;
+      $$ = $a;
     }
   ;
 
@@ -638,12 +620,12 @@ conditionalExpression
 argumentExpressionList
   : argumentExpressionList ',' assignmentExpression
     {
-      $1.add($3);
+      $1->add($3);
       $$ = $1;
     }
   | assignmentExpression
     {
-      $$ = ArgumentExpressionList($1);
+      $$ = new ArgumentExpressionList($1);
     }
   ;
 
@@ -726,23 +708,23 @@ constant_expression
 initDeclaratorList
   : initDeclaratorList ',' initDeclarator
     {
-      $1.add($initDeclarator);
+      $1->add($initDeclarator);
       $$ = $1;
     }
   | initDeclarator
     {
-      $$ = InitDeclaratorList($initDeclarator);
+      $$ = new InitDeclaratorList($initDeclarator);
     }
   ;
 
 initDeclarator
-  : declarationSpecifiers declarator '=' initializer
+  : storageClassDeclarationSpecifiers declarator '=' initializer
     {
-      $$ = new InitDeclarator($declarationSpecifiers, $declarator, $initializer);
+      $$ = new InitDeclarator($storageClassDeclarationSpecifiers, $declarator, $initializer);
     }
-  | declarationSpecifiers declarator
+  | storageClassDeclarationSpecifiers declarator
     {
-      $$ = new InitDeclarator($declarationSpecifiers, $declarator);
+      $$ = new InitDeclarator($storageClassDeclarationSpecifiers, $declarator);
     }
   ;
 
@@ -961,34 +943,57 @@ typeQualifier
 typeQualifierList
   : typeQualifierList typeQualifier
     {
-      $1.add($typeQualifier);
+      $1->add($typeQualifier);
       $$ = $1;
     }
   | typeQualifier
     {
-      $$ = TypeQualifierList($typeQualifier);
+      $$ = new TypeQualifierList($typeQualifier);
     }
   ;
 
 declarator
   : pointer directDeclarator
+    {
+// TODO:
+      $$ = new Declarator($directDeclarator);
+fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+    }
   | directDeclarator
     {
-      $$ = Declarator($directDeclarator);
+      $$ = new Declarator($directDeclarator);
     }
   ;
 
 directDeclarator
   : IDENTIFIER[name]
     {
-      $$ = DirectDeclarator($name);
+      $$ = new DirectDeclarator($name);
     }
   | '(' declarator ')'
+    {
+fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+    }
   | directDeclarator '[' constant_expression ']'
+    {
+fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+    }
   | directDeclarator '[' ']'
+    {
+fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+    }
   | directDeclarator '(' parameter_type_list ')'
+    {
+fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+    }
   | directDeclarator '(' identifier_list ')'
+    {
+fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+    }
   | directDeclarator '(' ')'
+    {
+fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+    }
   ;
 
 pointer
@@ -1033,26 +1038,26 @@ fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
   ;
 
 parameter_declaration
-  : declarationSpecifiers declarator
+  : storageClassDeclarationSpecifiers declarator
     {
 fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
     }
-  | declarationSpecifiers abstract_declarator
+  | storageClassDeclarationSpecifiers abstract_declarator
     {
 fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
     }
-  | declarationSpecifiers
+  | storageClassDeclarationSpecifiers
     {
 fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
     }
   ;
 
 identifier_list
-  : IDENTIFIER
+  : identifier_list ',' IDENTIFIER
     {
 fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
     }
-  | identifier_list ',' IDENTIFIER
+  | IDENTIFIER
     {
 fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
     }
@@ -1126,7 +1131,7 @@ fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
 initializer
   : assignmentExpression
     {
-      $$ = Initializer($assignmentExpression);
+      $$ = new Initializer($assignmentExpression);
     }
   | '{' initializer_list '}'
     {
@@ -1272,41 +1277,41 @@ jumpStatement
   ;
 
 newStateStatement:
-    DEREFERENCE IDENTIFIER[stateName] '{' STRING[label] ',' IDENTIFIER[color] ',' number[lineWidth] '}' ';'
+    DEREFERENCE IDENTIFIER[stateName] '(' STRING[label] ',' IDENTIFIER[color] ',' number[lineWidth] ')' ';'
     {
       NewStateStatement *newStateStatement = new NewStateStatement($stateName,$label,$color,$lineWidth);
-      ast.addStateTransition(currentStateName,*newStateStatement);
+      ast.addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
-  | DEREFERENCE IDENTIFIER[stateName] '{' STRING[label] ',' IDENTIFIER[color] '}' ';'
+  | DEREFERENCE IDENTIFIER[stateName] '(' STRING[label] ',' IDENTIFIER[color] ')' ';'
     {
       NewStateStatement *newStateStatement = new NewStateStatement($stateName,$label,$color);
-      ast.addStateTransition(currentStateName,*newStateStatement);
+      ast.addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
-  | DEREFERENCE IDENTIFIER[stateName] '{' STRING[label] '}' ';'
+  | DEREFERENCE IDENTIFIER[stateName] '(' STRING[label] ')' ';'
     {
       NewStateStatement *newStateStatement = new NewStateStatement($stateName,$label);
-      ast.addStateTransition(currentStateName,*newStateStatement);
+      ast.addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
-  | DEREFERENCE IDENTIFIER[stateName] '{' '}' ';'
+  | DEREFERENCE IDENTIFIER[stateName] '(' ')' ';'
     {
       NewStateStatement *newStateStatement = new NewStateStatement($stateName);
-      ast.addStateTransition(currentStateName,*newStateStatement);
+      ast.addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
   | DEREFERENCE IDENTIFIER[stateName] ';'
     {
       NewStateStatement *newStateStatement = new NewStateStatement($stateName);
-      ast.addStateTransition(currentStateName,*newStateStatement);
+      ast.addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
   ;
 
 //function_definition
-//: declarationSpecifiers declarator declarationList compoundStatement
-//| declarationSpecifiers declarator compoundStatement
+//: storageClassDeclarationSpecifiers declarator declarationList compoundStatement
+//| storageClassDeclarationSpecifiers declarator compoundStatement
 //| declarator declarationList compoundStatement
 //| declarator compoundStatement
 //;
@@ -1316,11 +1321,11 @@ newStateStatement:
 number:
     INTEGER[n]
     {
-      $$ = Number($n);
+      $$ = (double)$n;
     }
   | FLOAT[n]
     {
-      $$ = Number($n);
+      $$ = $n;
     }
   ;
 

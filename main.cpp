@@ -12,6 +12,7 @@
 #include <fstream>
 #include <exception>
 #include <regex>
+#include <stdexcept>
 
 #include "scanner.h"
 #include "parser.h"
@@ -49,7 +50,7 @@ int main(int argc, const char *argv[])
       std::string argument(argv[i]);
       if      ((argument == "-h") || (argument == "--help"))
       {
-        fprintf(stdout, "Usage: %s [-o <output file>] [-d <dot file>] [<input file>]\n", argv[0]);
+        fprintf(stdout, "Usage: %s [-o|--output <output file>] [-d|--dot-directory <dot file directory>] [<input file>]\n", argv[0]);
         return 0;
       }
       else if ((argument == "-o") || (argument == "--output"))
@@ -225,10 +226,14 @@ if ((DEBUG != nullptr) && (strcmp(DEBUG,"1") == 0)) parser.set_debug_level(1);
   catch (...)
   {
     std::exception_ptr exception = std::current_exception();
-
-//std::cout << exception;
-    fprintf(stderr, "INTERNAL ERROR: unhandled exception: %s!\n", exception.__cxa_exception_type()->name());
-fprintf(stderr,"%s:%d: %p\n",__FILE__,__LINE__,exception);
+    try
+    {
+      if (exception) std::rethrow_exception(exception);
+    }
+    catch(const std::exception &exception)
+    {
+      fprintf(stderr, "INTERNAL ERROR: unhandled exception '%s'!\n", exception.what());
+    }
     exitCode = 127;
   }
 
