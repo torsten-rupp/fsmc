@@ -27,8 +27,8 @@ using namespace FSM;
 
 /***************************** Functions *******************************/
 
-AST::AST() :
-  stateList()
+AST::AST()
+  : stateList()
 {
 }
 
@@ -39,7 +39,7 @@ void AST::clear()
 
 void AST::traverse(Visitor &visitor)
 {
-  stateList.travers(visitor);
+  stateList.traverse(visitor);
 }
 
 void AST::print() const
@@ -47,10 +47,10 @@ void AST::print() const
   std::cout << "AST:" << std::endl;
 
   std::cout << "stateList:" << std::endl;
-  for (const State &state : stateList)
+  for (const State *state : stateList)
   {
-      std::cout << "  " << state.name << ":" << std::endl;
-      for (const DeclarationStatement &declarationStatement : state.compoundStatement->declarationStatementList)
+      std::cout << "  " << state->name << ":" << std::endl;
+      for (const DeclarationStatement *declarationStatement : *state->compoundStatement->declarationStatementList)
       {
         std::cout << "  " << declarationStatement << std::endl;
       }
@@ -58,7 +58,7 @@ void AST::print() const
   }
 }
 
-void AST::addState(FSM::State state)
+void AST::addState(FSM::State *state)
 {
   stateList.add(state);
 }

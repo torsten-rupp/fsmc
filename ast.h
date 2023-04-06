@@ -31,7 +31,7 @@ namespace FSM
 class VisitorInterface
 {
   public:
-    virtual void travers(Visitor &visitor) const = 0;
+    virtual void traverse(Visitor &visitor) const = 0;
 };
 
 class Identifier : public std::string
@@ -58,32 +58,6 @@ class String : public std::string
 };
 
 //https://cs.wmich.edu/~gupta/teaching/cs4850/sumII06/The%20syntax%20of%20C%20in%20Backus-Naur%20form.htm
-#if 0
-
-enum class StructUnionSpecifier
-{
-  STRUCT,
-  UNION
-};
-
-class TypeAttributeList : public std::vector<TypeQualifier>
-{
-  public:
-    TypeAttributeList(TypeQualifier typeAttribute)
-      : std::vector<TypeQualifier>{typeAttribute}
-    {
-    }
-
-    TypeAttributeList()
-    {
-    }
-
-    void add(TypeQualifier typeAttribute)
-    {
-      push_back(typeAttribute);
-    }
-};
-#endif
 
 class Constant
 {
@@ -107,6 +81,7 @@ class Constant
     }
 };
 
+#if 0
 class Number
 {
   public:
@@ -152,212 +127,20 @@ class Number
       }
     }
 };
-
-#if 0
-class TypeDeclaration
-{
-  public:
-    TypeAttributeList typeAttributeList;
-    Identifier        name;
-
-    TypeDeclaration(const TypeAttributeList &typeAttributeList, const Identifier &name)
-      : typeAttributeList(typeAttributeList)
-      , name(name)
-    {
-    }
-
-    TypeDeclaration(const Identifier &name)
-      : name(name)
-    {
-    }
-
-    TypeDeclaration()
-    {
-    }
-
-    void travers(Visitor &visitor) const
-    {
-      if (!visitor.accept(*this))
-      {
-        visitor.accept(Visitor::Phases::PRE, *this);
-        visitor.accept(Visitor::Phases::POST, *this);
-      }
-    }
-
-    std::string toString() const
-    {
-// TODO:
-      return "XXX";
-    }
-};
 #endif
-
-class Expression;
-
-class ExpressionList : public std::vector<Expression*>
-{
-  public:
-    ExpressionList(Expression *expression)
-    {
-      push_back(expression);
-    }
-
-    ExpressionList()
-    {
-    }
-
-    virtual ~ExpressionList()
-    {
-      // TODO: free
-    }
-
-    void add(Expression *expression)
-    {
-      push_back(expression);
-    }
-};
 
 class Expression : public VisitorInterface
 {
   public:
-    enum class Operator
-    {
-      NONE,
-
-      IDENTIFIER,
-      STRING,
-      NUMBER,
-
-      NEGATIVE,
-      PLUS,
-      MINUS,
-      MULTIPLY,
-      DIVIDE,
-      INCREMENT,
-      DECREMENT,
-
-      EQUALS,
-      NOT_EQUALS,
-      LOWER,
-      GREATER,
-      LOWER_EQUALS,
-      GREATER_EQUALS,
-
-      AND,
-      OR,
-      XOR,
-      NOT,
-
-      ASSIGN,
-
-      FUNCTION_CALL,
-      CAST
-    } operator_;
     Expression     *nodes[2];
     Identifier     identifier;
     std::string    string;
-    Number         number;
-    Identifier     functionName;
-    ExpressionList argumentList;
-
-    Expression(const Expression &other)
-      : operator_(other.operator_)
-//      , nodes{new Expression(other.nodes[0]),new Expression(other.nodes[1])}
-      , nodes{other.nodes[0],other.nodes[1]}
-      , identifier(other.identifier)
-      , number(other.number)
-//      , string(other.string)
-//      , functionName(other.functionName)
-//      , argumentList(other.argumentList)
-    {
-//      fprintf(stderr,"%s:%d: %p\n",__FILE__,__LINE__,&other.identifier);
-//      fprintf(stderr,"%s:%d: s='%s'\n",__FILE__,__LINE__,other.identifier.c_str());
-      this->identifier = other.identifier;
-    }
-
-    Expression(const Identifier &identifier)
-      : operator_(Operator::IDENTIFIER)
-      , nodes{nullptr, nullptr}
-      , identifier(identifier)
-    {
-    }
-
-    Expression(const std::string &string)
-      : operator_(Operator::STRING)
-      , nodes{nullptr, nullptr}
-      , string(string)
-    {
-    }
-
-    Expression(const Number &number)
-      : operator_(Operator::NUMBER)
-      , nodes{nullptr, nullptr}
-      , number(number)
-    {
-    }
-
-    Expression(Operator operator_, const Expression &expression1, const Expression &expression2)
-      : operator_(operator_)
-      , nodes{new Expression(expression1), new Expression(expression2)}
-    {
-    }
-
-    Expression(Operator operator_, const Expression &expression)
-      : operator_(operator_)
-      , nodes{new Expression(expression), nullptr}
-    {
-    }
-
-#if 1
-    Expression()
-      : operator_(Operator::NONE)
-      , nodes{nullptr, nullptr}
-    {
-    }
-#endif
-
-    Expression(const Identifier &functionName, ExpressionList &argumentList)
-      : operator_(Operator::FUNCTION_CALL)
-      , nodes{nullptr, nullptr}
-      , functionName(functionName)
-      , argumentList(argumentList)
-    {
-    }
 
     virtual ~Expression()
     {
-//      if (nodes[1] != nullptr) delete(nodes[1]);
-//      if (nodes[0] != nullptr) delete(nodes[0]);
     }
 
-// TODO: remove
-#if 0
-    Expression& operator=(Expression other)
-    {
-      operator_  = other.operator_;
-      nodes[0]   = new Expression(other.nodes[0]);
-      nodes[1]   = new Expression(other.nodes[1]);
-      identifier = other.identifier;
-      number     = other.number;
-
-      return *this;
-    }
-#endif
-#if 0
-    Expression& operator=(const Expression &other)
-    {
-      operator_  = other.operator_;
-      nodes[0]   = (other.nodes[0] != nullptr) ? new Expression(other.nodes[0]) : nullptr;
-      nodes[1]   = (other.nodes[1] != nullptr) ? new Expression(other.nodes[1]) : nullptr;
-      identifier = other.identifier;
-      number     = other.number;
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
-
-      return *this;
-    }
-#endif
-
-    virtual void travers(Visitor &visitor) const
+    virtual void traverse(Visitor &visitor) const
     {
       if (!visitor.accept(*this))
       {
@@ -366,94 +149,8 @@ fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
       }
     }
 
-    virtual std::string toString() const
-    {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
-      switch (operator_)
-      {
-//        case Operator::NONE:           return "";
-
-        case Operator::IDENTIFIER:     return identifier;
-        case Operator::STRING:         return "\""+string+"\"";
-        case Operator::NUMBER:         return number.toString();
-
-        case Operator::ASSIGN:         return nodes[0]->toString()+" = "+nodes[1]->toString();
-
-        case Operator::NEGATIVE:       return "-"+nodes[0]->toString();
-        case Operator::PLUS:           return nodes[0]->toString()+" + "+nodes[1]->toString();
-        case Operator::MINUS:          return nodes[0]->toString()+" - "+nodes[1]->toString();
-        case Operator::MULTIPLY:       return nodes[0]->toString()+" * "+nodes[1]->toString();
-        case Operator::DIVIDE:         return nodes[0]->toString()+" / "+nodes[1]->toString();
-        case Operator::INCREMENT:      return nodes[0]->toString()+"++";
-        case Operator::DECREMENT:      return nodes[0]->toString()+"--";
-
-        case Operator::EQUALS:         return nodes[0]->toString()+" == "+nodes[1]->toString();
-        case Operator::NOT_EQUALS:     return nodes[0]->toString()+" != "+nodes[1]->toString();
-        case Operator::LOWER:          return nodes[0]->toString()+" < "+nodes[1]->toString();
-        case Operator::GREATER:        return nodes[0]->toString()+" > "+nodes[1]->toString();
-        case Operator::LOWER_EQUALS:   return nodes[0]->toString()+" <= "+nodes[1]->toString();
-        case Operator::GREATER_EQUALS: return nodes[0]->toString()+" >= "+nodes[1]->toString();
-
-        case Operator::NOT:            return "!"+nodes[0]->toString();
-        case Operator::AND:            return nodes[0]->toString()+" && "+nodes[1]->toString();
-        case Operator::OR:             return nodes[0]->toString()+" || "+nodes[1]->toString();
-        case Operator::XOR:            return nodes[0]->toString()+" ^ "+nodes[1]->toString();
-
-        case Operator::FUNCTION_CALL:
-          {
-            std::stringstream buffer;
-            bool              first = true;
-
-            buffer << functionName << "(";
-            for (const Expression *argument : argumentList)
-            {
-              if (!first) buffer << ", ";
-              buffer << argument;
-
-              first = false;
-            }
-            buffer << ")";
-
-            return buffer.str();
-          }
-
-        case Operator::CAST:           return "("+nodes[0]->toString()+")"+nodes[1]->toString();
-
-        default:
-          throw std::runtime_error("unknown operator");
-      }
-
-      return "";
-    }
-
-    friend std::ostream& operator<<(std::ostream& outputStream, const Expression *expression)
-    {
-      outputStream << expression->toString();
-
-      return outputStream;
-    }
+    virtual std::string toString() const = 0;
 };
-
-class AssignmentExpression;
-
-class ArgumentExpressionList : public std::vector<Expression*>
-{
-  public:
-    ArgumentExpressionList(Expression *expression)
-      : std::vector<Expression*>{expression}
-    {
-    }
-
-    ArgumentExpressionList()
-    {
-    }
-
-    void add(Expression *expression)
-    {
-      push_back(expression);
-    }
-};
-
 
 class PrimaryExpression : public Expression
 {
@@ -475,18 +172,21 @@ class PrimaryExpression : public Expression
     PrimaryExpression(const Identifier &identifier)
       : type(Type::IDENTIFIER)
       , identifier(identifier)
+      , expression(nullptr)
     {
     }
 
     PrimaryExpression(int64_t n)
       : type(Type::INTEGER)
       , n(n)
+      , expression(nullptr)
     {
     }
 
     PrimaryExpression(const std::string string)
       : type(Type::STRING)
       , string(string)
+      , expression(nullptr)
     {
     }
 
@@ -496,7 +196,12 @@ class PrimaryExpression : public Expression
     {
     }
 
-    virtual void travers(Visitor &visitor) const
+    ~PrimaryExpression() override
+    {
+      delete(expression);
+    }
+
+    virtual void traverse(Visitor &visitor) const
     {
       if (!visitor.accept(*this))
       {
@@ -530,6 +235,36 @@ fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
     }
 };
 
+class ArgumentExpressionList : public std::vector<Expression*>, private VisitorInterface
+{
+  public:
+    ArgumentExpressionList(Expression *expression)
+      : std::vector<Expression*>{expression}
+    {
+    }
+
+    virtual ~ArgumentExpressionList()
+    {
+      for (const Expression *expression : *this)
+      {
+        delete(expression);
+      }
+    }
+
+    void add(Expression *expression)
+    {
+      push_back(expression);
+    }
+
+    void traverse(Visitor &visitor) const override
+    {
+      for (const Expression *expression : *this)
+      {
+        expression->traverse(visitor);
+      }
+    }
+};
+
 class PostfixExpression : public Expression
 {
   public:
@@ -537,53 +272,120 @@ class PostfixExpression : public Expression
     {
       SUBSCRIPT,
       FUNCTION_CALL,
-      MEMBER
+      MEMBER,
+      POINTER,
+      INCREMENT,
+      DECREMENT
     };
 
-    Type                   type;
-    Expression             *a,*b;
-    ArgumentExpressionList argumentExpressionList;
-    Identifier             identifier;
-
-    PostfixExpression(Type type, Expression *a, Expression *b)
-      : type(type)
-      , a(a)
-      , b(b)
+    Type type;
+    union
     {
+      struct
+      {
+        Expression *array;
+        Expression *index;
+      };
+      struct
+      {
+        Expression             *call;
+        ArgumentExpressionList *argumentExpressionList;
+      };
+      struct
+      {
+        Expression *structure;
+        Identifier *identifier;
+      };
+      struct
+      {
+        Expression *expression;
+      };
+    };
+
+    PostfixExpression(Type type, Expression *array, Expression *index)
+      : type(Type::SUBSCRIPT)
+      , array(array)
+      , index(index)
+    {
+      assert(type == Type::SUBSCRIPT);
     }
 
-    PostfixExpression(Type type, Expression *a, const ArgumentExpressionList &argumentList)
+    PostfixExpression(Type type, Expression *call, ArgumentExpressionList *argumentExpressionList)
       : type(type)
-      , a(a)
-      , b(nullptr)
+      , call(call)
       , argumentExpressionList(argumentExpressionList)
     {
+      assert(type == Type::FUNCTION_CALL);
     }
 
-    PostfixExpression(Type type, Expression *a)
+    PostfixExpression(Type type, Expression *expression)
       : type(type)
-      , a(a)
-      , b(nullptr)
-      , argumentExpressionList(nullptr)
     {
+      assert(   (type == Type::FUNCTION_CALL)
+             || (type == Type::POINTER)
+             || (type == Type::INCREMENT)
+             || (type == Type::DECREMENT)
+            );
+
+      switch (type)
+      {
+        case Type::FUNCTION_CALL:
+          call = expression;
+          argumentExpressionList = nullptr;
+          break;
+        case Type::POINTER:
+        case Type::INCREMENT:
+        case Type::DECREMENT:
+          this->expression = expression;
+          break;
+      }
     }
 
-    PostfixExpression(Type type, Expression *a, const Identifier &identifier)
+    PostfixExpression(Type type, Expression *structure, const Identifier &identifier)
       : type(type)
-      , a(a)
-      , b(nullptr)
-      , identifier(identifier)
-      , argumentExpressionList(nullptr)
+      , structure(structure)
+      , identifier(new Identifier(identifier))
     {
+      assert(type == Type::MEMBER);
     }
 
-    void travers(Visitor &visitor) const override
+    ~PostfixExpression() override
+    {
+      switch (type)
+      {
+        case Type::SUBSCRIPT:
+          delete(index);
+          delete(array);
+          break;
+        case Type::FUNCTION_CALL:
+          delete(argumentExpressionList);
+          delete(call);
+          break;
+        case Type::MEMBER:
+          delete(identifier);
+          delete(structure);
+          break;
+      }
+    }
+
+    void traverse(Visitor &visitor) const override
     {
       if (!visitor.accept(*this))
       {
-// TODO: type
-        a->travers(visitor);
-        b->travers(visitor);
+        switch (type)
+        {
+          case Type::SUBSCRIPT:
+            array->traverse(visitor);
+            index->traverse(visitor);
+            break;
+          case Type::FUNCTION_CALL:
+            call->traverse(visitor);
+            argumentExpressionList->traverse(visitor);
+            break;
+          case Type::MEMBER:
+            structure->traverse(visitor);
+            break;
+        }
       }
     }
 
@@ -620,7 +422,12 @@ class UnaryExpression : public Expression
     {
     }
 
-    void travers(Visitor &visitor) const override
+    ~UnaryExpression() override
+    {
+      delete(expression);
+    }
+
+    void traverse(Visitor &visitor) const override
     {
       visitor.accept(*this);
     }
@@ -642,12 +449,17 @@ class CastExpression : public Expression
     {
     }
 
-    void travers(Visitor &visitor) const override
+    void traverse(Visitor &visitor) const override
     {
       if (!visitor.accept(*this))
       {
-        expression->travers(visitor);
+        expression->traverse(visitor);
       }
+    }
+
+    ~CastExpression() override
+    {
+      delete(expression);
     }
 
     std::string toString() const override
@@ -677,12 +489,18 @@ class MultiplicativeExpression : public Expression
     {
     }
 
-    void travers(Visitor &visitor) const override
+    ~MultiplicativeExpression() override
+    {
+      delete(b);
+      delete(a);
+    }
+
+    void traverse(Visitor &visitor) const override
     {
       if (!visitor.accept(*this))
       {
-        a->travers(visitor);
-        b->travers(visitor);
+        a->traverse(visitor);
+        b->traverse(visitor);
       }
     }
 
@@ -712,12 +530,18 @@ class AdditiveExpression : public Expression
     {
     }
 
-    void travers(Visitor &visitor) const override
+    ~AdditiveExpression() override
+    {
+      delete(b);
+      delete(a);
+    }
+
+    void traverse(Visitor &visitor) const override
     {
       if (!visitor.accept(*this))
       {
-        a->travers(visitor);
-        b->travers(visitor);
+        a->traverse(visitor);
+        b->traverse(visitor);
       }
     }
 
@@ -741,17 +565,24 @@ class ShiftExpression : public Expression
     Expression *a,*b;
 
     ShiftExpression(Type type, Expression *a, Expression *b)
-      : a(a)
+      : type(type)
+      , a(a)
       , b(b)
     {
     }
 
-    void travers(Visitor &visitor) const override
+    ~ShiftExpression() override
+    {
+      delete(b);
+      delete(a);
+    }
+
+    void traverse(Visitor &visitor) const override
     {
       if (!visitor.accept(*this))
       {
-        a->travers(visitor);
-        b->travers(visitor);
+        a->traverse(visitor);
+        b->traverse(visitor);
       }
     }
 
@@ -784,12 +615,18 @@ class RelationalExpression : public Expression
     {
     }
 
-    void travers(Visitor &visitor) const override
+    ~RelationalExpression() override
+    {
+      delete(b);
+      delete(a);
+    }
+
+    void traverse(Visitor &visitor) const override
     {
       if (!visitor.accept(*this))
       {
-        a->travers(visitor);
-        b->travers(visitor);
+        a->traverse(visitor);
+        b->traverse(visitor);
       }
     }
 
@@ -819,12 +656,18 @@ class EqualityExpression : public Expression
     {
     }
 
-    void travers(Visitor &visitor) const override
+    ~EqualityExpression() override
+    {
+      delete(b);
+      delete(a);
+    }
+
+    void traverse(Visitor &visitor) const override
     {
       if (!visitor.accept(*this))
       {
-        a->travers(visitor);
-        b->travers(visitor);
+        a->traverse(visitor);
+        b->traverse(visitor);
       }
     }
 
@@ -846,12 +689,18 @@ class AndExpression : public Expression
     {
     }
 
-    void travers(Visitor &visitor) const override
+    ~AndExpression() override
+    {
+      delete(b);
+      delete(a);
+    }
+
+    void traverse(Visitor &visitor) const override
     {
       if (!visitor.accept(*this))
       {
-        a->travers(visitor);
-        b->travers(visitor);
+        a->traverse(visitor);
+        b->traverse(visitor);
       }
     }
 
@@ -873,12 +722,18 @@ class ExclusiveOrExpression : public Expression
     {
     }
 
-    void travers(Visitor &visitor) const override
+    ~ExclusiveOrExpression() override
+    {
+      delete(b);
+      delete(a);
+    }
+
+    void traverse(Visitor &visitor) const override
     {
       if (!visitor.accept(*this))
       {
-        a->travers(visitor);
-        b->travers(visitor);
+        a->traverse(visitor);
+        b->traverse(visitor);
       }
     }
 
@@ -900,12 +755,18 @@ class InclusiveOrExpression : public Expression
     {
     }
 
-    void travers(Visitor &visitor) const override
+    ~InclusiveOrExpression() override
+    {
+      delete(b);
+      delete(a);
+    }
+
+    void traverse(Visitor &visitor) const override
     {
       if (!visitor.accept(*this))
       {
-        a->travers(visitor);
-        b->travers(visitor);
+        a->traverse(visitor);
+        b->traverse(visitor);
       }
     }
 
@@ -927,12 +788,18 @@ class LogicalAndExpression : public Expression
     {
     }
 
-    void travers(Visitor &visitor) const override
+    ~LogicalAndExpression() override
+    {
+      delete(b);
+      delete(a);
+    }
+
+    void traverse(Visitor &visitor) const override
     {
       if (!visitor.accept(*this))
       {
-        a->travers(visitor);
-        b->travers(visitor);
+        a->traverse(visitor);
+        b->traverse(visitor);
       }
     }
 
@@ -954,12 +821,18 @@ class LogicalOrExpression : public Expression
     {
     }
 
-    void travers(Visitor &visitor) const override
+    ~LogicalOrExpression() override
+    {
+      delete(b);
+      delete(a);
+    }
+
+    void traverse(Visitor &visitor) const override
     {
       if (!visitor.accept(*this))
       {
-        a->travers(visitor);
-        b->travers(visitor);
+        a->traverse(visitor);
+        b->traverse(visitor);
       }
     }
 
@@ -982,13 +855,20 @@ class ConditionalExpression : public Expression
     {
     }
 
-    void travers(Visitor &visitor) const override
+    ~ConditionalExpression() override
+    {
+      delete(b);
+      delete(a);
+      delete(condition);
+    }
+
+    void traverse(Visitor &visitor) const override
     {
       if (!visitor.accept(*this))
       {
-        condition->travers(visitor);
-        a->travers(visitor);
-        b->travers(visitor);
+        condition->traverse(visitor);
+        a->traverse(visitor);
+        b->traverse(visitor);
       }
     }
 
@@ -1033,10 +913,11 @@ class AssignmentExpression : public Expression
 
     ~AssignmentExpression() override
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+      delete(b);
+      delete(a);
     }
 
-    void travers(Visitor &visitor) const override
+    void traverse(Visitor &visitor) const override
     {
       if (!visitor.accept(*this))
       {
@@ -1057,7 +938,12 @@ fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
     }
 };
 
-class StorageClassSpecifier : public VisitorInterface
+class StorageClassDeclarationSpecifier : public VisitorInterface
+{
+  public:
+};
+
+class StorageClassSpecifier : public StorageClassDeclarationSpecifier
 {
   public:
     enum class Type
@@ -1076,37 +962,19 @@ class StorageClassSpecifier : public VisitorInterface
     {
     }
 
-    void travers(Visitor &visitor) const override
+    void traverse(Visitor &visitor) const override
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+      if (!visitor.accept(*this))
+      {
+        visitor.accept(Visitor::Phases::PRE, *this);
+        visitor.accept(Visitor::Phases::POST, *this);
+      }
     };
-
-#if 0
-    void accept(Visitor &visitor) const override
-    {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
-//      visitor.accept(*this);
-    }
-#endif
 };
 
-class DeclarationSpecifier : public VisitorInterface
+class DeclarationSpecifier : public StorageClassDeclarationSpecifier
 {
   public:
-#if 0
-    DeclarationSpecifier()
-    {
-    }
-#endif
-
-    virtual void travers(Visitor &visitor) const override = 0;
-/*
-    void accept(Visitor &visitor) const override
-    {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
-      visitor.accept(*this);
-    }
-*/
 };
 
 class TypeQualifier : public DeclarationSpecifier
@@ -1130,13 +998,13 @@ class TypeQualifier : public DeclarationSpecifier
     {
     }
 
-    void travers(Visitor &visitor) const override
+    void traverse(Visitor &visitor) const override
     {
       visitor.accept(*this);
     }
 };
 
-class TypeQualifierList : public std::vector<TypeQualifier*>
+class TypeQualifierList : public std::vector<TypeQualifier*>, private VisitorInterface
 {
   public:
     TypeQualifierList(TypeQualifier *typeQualifier)
@@ -1148,9 +1016,25 @@ class TypeQualifierList : public std::vector<TypeQualifier*>
     {
     }
 
+    virtual ~TypeQualifierList()
+    {
+      for (const TypeQualifier *typeQualifier : *this)
+      {
+        delete(typeQualifier);
+      }
+    }
+
     void add(TypeQualifier *typeQualifier)
     {
       push_back(typeQualifier);
+    }
+
+    void traverse(Visitor &visitor) const override
+    {
+      for (const TypeQualifier *typeQualifier : *this)
+      {
+        typeQualifier->traverse(visitor);
+      }
     }
 };
 
@@ -1189,77 +1073,33 @@ class TypeSpecifier : public DeclarationSpecifier
     {
     }
 
-    void travers(Visitor &visitor) const override
+    void traverse(Visitor &visitor) const override
     {
       visitor.accept(*this);
     }
 };
 
 // TODO: std::list?
-class DeclarationSpecifiers : public std::vector<DeclarationSpecifier*>, VisitorInterface
+class StorageClassDeclarationSpecifiers : public std::vector<StorageClassDeclarationSpecifier*>, VisitorInterface
 {
   public:
-    DeclarationSpecifiers(StorageClassSpecifier *storageClassSpecifier)
+    StorageClassDeclarationSpecifiers(StorageClassSpecifier *storageClassSpecifier)
 // TODO: storageClassSpecifier
-      : std::vector<DeclarationSpecifier*>{}
+      : std::vector<StorageClassDeclarationSpecifier*>{storageClassSpecifier}
     {
     }
 
-    DeclarationSpecifiers(DeclarationSpecifier *declarationSpecifier)
-      : std::vector<DeclarationSpecifier*>{declarationSpecifier}
+    StorageClassDeclarationSpecifiers(DeclarationSpecifier *declarationSpecifier)
+      : std::vector<StorageClassDeclarationSpecifier*>{declarationSpecifier}
     {
     }
 
-    DeclarationSpecifiers()
+    virtual ~StorageClassDeclarationSpecifiers()
     {
-    }
-
-    void add(StorageClassSpecifier *storageClassSpecifier)
-    {
-// TODO:
-//      push_back(declarationSpecifier);
-    }
-
-    void prepend(StorageClassSpecifier *storageClassSpecifier)
-    {
-// TODO:
-//      insert(begin(), declarationSpecifier);
-    }
-
-    void add(DeclarationSpecifier *declarationSpecifier)
-    {
-      push_back(declarationSpecifier);
-    }
-
-    void prepend(DeclarationSpecifier *declarationSpecifier)
-    {
-      insert(begin(), declarationSpecifier);
-    }
-
-    void travers(Visitor &visitor) const
-    {
-      if (!visitor.accept(*this))
+      for (const StorageClassDeclarationSpecifier *storageClassDeclarationSpecifier : *this)
       {
-        for (const DeclarationSpecifier *declarationSpecifier : *this)
-        {
-          declarationSpecifier->travers(visitor);
-        }
+        delete(storageClassDeclarationSpecifier);
       }
-    }
-};
-
-#if 0
-// TODO: std::list?
-class StorageClassSpecifiers : public std::vector<StorageClassSpecifier*>, VisitorInterface
-{
-  public:
-    StorageClassSpecifiers(StorageClassSpecifier *storageClassSpecifier)
-      : std::vector<StorageClassSpecifier*>{storageClassSpecifier}
-    {
-    }
-
-    StorageClassSpecifiers()
-    {
     }
 
     void add(StorageClassSpecifier *storageClassSpecifier)
@@ -1272,18 +1112,27 @@ class StorageClassSpecifiers : public std::vector<StorageClassSpecifier*>, Visit
       insert(begin(), storageClassSpecifier);
     }
 
-    void travers(Visitor &visitor) const
+    void add(DeclarationSpecifier *declarationSpecifier)
+    {
+      push_back(declarationSpecifier);
+    }
+
+    void prepend(DeclarationSpecifier *declarationSpecifier)
+    {
+      insert(begin(), declarationSpecifier);
+    }
+
+    void traverse(Visitor &visitor) const
     {
       if (!visitor.accept(*this))
       {
-        for (const StorageClassSpecifier *storageClassSpecifier : *this)
+        for (const StorageClassDeclarationSpecifier *storageClassDeclarationSpecifier : *this)
         {
-          storageClassSpecifier->travers(visitor);
+          storageClassDeclarationSpecifier->traverse(visitor);
         }
       }
     }
 };
-#endif
 
 class DirectDeclarator : public VisitorInterface
 {
@@ -1299,7 +1148,7 @@ class DirectDeclarator : public VisitorInterface
     {
     }
 
-    void travers(Visitor &visitor) const
+    void traverse(Visitor &visitor) const
     {
       visitor.accept(*this);
     }
@@ -1308,18 +1157,9 @@ class DirectDeclarator : public VisitorInterface
 class Declarator : public VisitorInterface
 {
   public:
-// TODO: pointer
-//    Identifier identifier;
-    DirectDeclarator directDeclarator;
+    const DirectDeclarator *directDeclarator;
 
-#if 0
-    Declarator(const Identifier &identifier)
-      : identifier(identifier)
-    {
-    }
-#endif
-
-    Declarator(const DirectDeclarator &directDeclarator)
+    Declarator(const DirectDeclarator *directDeclarator)
       : directDeclarator(directDeclarator)
     {
     }
@@ -1328,12 +1168,16 @@ class Declarator : public VisitorInterface
     {
     }
 
-    void travers(Visitor &visitor) const
+    virtual ~Declarator()
+    {
+      delete(directDeclarator);
+    }
+
+    void traverse(Visitor &visitor) const
     {
       if (!visitor.accept(*this))
       {
-// TODO: pointer
-        directDeclarator.travers(visitor);
+        directDeclarator->traverse(visitor);
       }
     }
 };
@@ -1358,11 +1202,16 @@ class Initializer : public VisitorInterface
     {
     }
 
-    void travers(Visitor &visitor) const
+    virtual ~Initializer()
+    {
+      delete(expression);
+    }
+
+    void traverse(Visitor &visitor) const
     {
       if (!visitor.accept(*this))
       {
-        expression->travers(visitor);
+        expression->traverse(visitor);
       }
     }
 };
@@ -1370,37 +1219,40 @@ class Initializer : public VisitorInterface
 class InitDeclarator : public VisitorInterface
 {
   public:
-    const DeclarationSpecifiers declarationSpecifiers;
-    const Declarator            declarator;
-    const Initializer           *initializer;
+    const StorageClassDeclarationSpecifiers *storageClassDeclarationSpecifiers;
+    const Declarator                        *declarator;
+    const Initializer                       *initializer;
 
-    InitDeclarator(const DeclarationSpecifiers &declarationSpecifiers, const Declarator &declarator, const Initializer &initializer)
-      : declarationSpecifiers(declarationSpecifiers)
+    InitDeclarator(const StorageClassDeclarationSpecifiers *storageClassDeclarationSpecifiers, const Declarator *declarator, const Initializer *initializer)
+      : storageClassDeclarationSpecifiers(storageClassDeclarationSpecifiers)
       , declarator(declarator)
-      , initializer(new Initializer(initializer))
+      , initializer(initializer)
     {
     }
 
-    InitDeclarator(const DeclarationSpecifiers &declarationSpecifiers, const Declarator &declarator)
-      : declarationSpecifiers(declarationSpecifiers)
+    InitDeclarator(const StorageClassDeclarationSpecifiers *storageClassDeclarationSpecifiers, const Declarator *declarator)
+      : storageClassDeclarationSpecifiers(storageClassDeclarationSpecifiers)
       , declarator(declarator)
       , initializer(nullptr)
     {
     }
 
-    InitDeclarator()
+    virtual ~InitDeclarator()
     {
+      delete(initializer);
+      delete(declarator);
+      delete(storageClassDeclarationSpecifiers);
     }
 
-    void travers(Visitor &visitor) const
+    void traverse(Visitor &visitor) const
     {
       if (!visitor.accept(*this))
       {
-        declarationSpecifiers.travers(visitor);
-        declarator.travers(visitor);
+        storageClassDeclarationSpecifiers->traverse(visitor);
+        declarator->traverse(visitor);
         if (initializer != nullptr)
         {
-          initializer->travers(visitor);
+          initializer->traverse(visitor);
         }
       }
     }
@@ -1420,7 +1272,10 @@ class InitDeclaratorList : public std::vector<InitDeclarator*>, private VisitorI
 
     virtual ~InitDeclaratorList()
     {
-      // TODO: free
+      for (const InitDeclarator *initDeclarator : *this)
+      {
+        delete(initDeclarator);
+      }
     }
 
     void add(InitDeclarator *initDeclarator)
@@ -1428,43 +1283,65 @@ class InitDeclaratorList : public std::vector<InitDeclarator*>, private VisitorI
       push_back(initDeclarator);
     }
 
-    void travers(Visitor &visitor) const override
+    void traverse(Visitor &visitor) const override
     {
       for (const InitDeclarator *initDeclarator : *this)
       {
-        initDeclarator->travers(visitor);
+        initDeclarator->traverse(visitor);
       }
     }
 };
 
-class Declaration : public VisitorInterface
+class DeclarationStatement : public VisitorInterface
 {
   public:
-    DeclarationSpecifiers declarationSpecifiers;
-    InitDeclaratorList    initDeclaratorList;
+    virtual ~DeclarationStatement()
+    {
+    }
+};
 
-    Declaration(const DeclarationSpecifiers &declarationSpecifiers, const InitDeclaratorList &initDeclaratorList)
-      : declarationSpecifiers(declarationSpecifiers)
+class Declaration : public DeclarationStatement
+{
+  public:
+    const StorageClassDeclarationSpecifiers *storageClassDeclarationSpecifiers;
+    const InitDeclaratorList                *initDeclaratorList;
+
+    Declaration(const StorageClassDeclarationSpecifiers *storageClassDeclarationSpecifiers, const InitDeclaratorList *initDeclaratorList)
+      : storageClassDeclarationSpecifiers(storageClassDeclarationSpecifiers)
       , initDeclaratorList(initDeclaratorList)
     {
     }
 
-    Declaration(const DeclarationSpecifiers &declarationSpecifiers)
-      : declarationSpecifiers(declarationSpecifiers)
+    Declaration(const StorageClassDeclarationSpecifiers *storageClassDeclarationSpecifiers)
+      : storageClassDeclarationSpecifiers(storageClassDeclarationSpecifiers)
+      , initDeclaratorList(nullptr)
     {
     }
 
-    Declaration(const InitDeclaratorList &initDeclaratorList)
-      : initDeclaratorList(initDeclaratorList)
+    Declaration(const InitDeclaratorList *initDeclaratorList)
+      : storageClassDeclarationSpecifiers(nullptr)
+      , initDeclaratorList(initDeclaratorList)
     {
     }
 
-    void travers(Visitor &visitor) const
+    ~Declaration() override
+    {
+      delete(initDeclaratorList);
+      delete(storageClassDeclarationSpecifiers);
+    }
+
+    void traverse(Visitor &visitor) const
     {
       if (!visitor.accept(*this))
       {
-        declarationSpecifiers.travers(visitor);
-        initDeclaratorList.travers(visitor);
+        if (storageClassDeclarationSpecifiers != nullptr)
+        {
+          storageClassDeclarationSpecifiers->traverse(visitor);
+        }
+        if (initDeclaratorList != nullptr)
+        {
+          initDeclaratorList->traverse(visitor);
+        }
       }
     }
 
@@ -1475,9 +1352,13 @@ class Declaration : public VisitorInterface
     }
 };
 
-class Statement : public VisitorInterface
+class Statement : public DeclarationStatement
 {
   public:
+    virtual ~Statement() override
+    {
+    }
+
     virtual std::string toString() const = 0;
 
     friend std::ostream& operator<<(std::ostream& outputStream, const Statement *statement)
@@ -1488,84 +1369,42 @@ class Statement : public VisitorInterface
     }
 };
 
-class DeclarationStatement : public VisitorInterface
+class DeclarationStatementList : public std::vector<DeclarationStatement*>
 {
   public:
-    enum class Type
+    DeclarationStatementList(Declaration *declaration)
     {
-      DECLARATION,
-      STATEMENT
-    };
-
-    Type              type;
-    const Declaration *declaration;
-    const Statement   *statement;
-
-    DeclarationStatement(const Declaration *declaration)
-      : type(Type::DECLARATION)
-      , declaration(declaration)
-    {
+      push_back(declaration);
     }
 
-    DeclarationStatement(const Statement *statement)
-      : type(Type::STATEMENT)
-      , statement(statement)
+    DeclarationStatementList(Statement *statement)
     {
+      push_back(statement);
     }
 
-    void travers(Visitor &visitor) const
+    virtual ~DeclarationStatementList()
     {
-      switch (type)
+      for (const DeclarationStatement *declarationStatement : *this)
       {
-        case DeclarationStatement::Type::DECLARATION: declaration->travers(visitor); break;
-        case DeclarationStatement::Type::STATEMENT:   statement->travers(visitor); break;
+        delete(declarationStatement);
       }
     }
 
-    friend std::ostream& operator<<(std::ostream& outputStream, const DeclarationStatement &declarationStatement)
+    void add(Declaration *declaration)
     {
-      switch (declarationStatement.type)
+      push_back(declaration);
+    }
+
+    void add(Statement *statement)
+    {
+      push_back(statement);
+    }
+
+    void traverse(Visitor &visitor) const
+    {
+      for (const DeclarationStatement *declarationStatement : *this)
       {
-        case DeclarationStatement::Type::DECLARATION: outputStream << declarationStatement.declaration->toString(); break;
-        case DeclarationStatement::Type::STATEMENT:   outputStream << declarationStatement.statement->toString(); break;
-      }
-
-      return outputStream;
-    }
-};
-
-class DeclarationStatementList : public std::vector<DeclarationStatement>
-{
-  public:
-    DeclarationStatementList(const Declaration *declaration)
-    {
-      push_back(DeclarationStatement(declaration));
-    }
-
-    DeclarationStatementList(const Statement *statement)
-    {
-      push_back(DeclarationStatement(statement));
-    }
-
-    DeclarationStatementList()
-    {
-    }
-
-    void add(const Declaration *declaration)
-    {
-      push_back(DeclarationStatement(declaration));
-    }
-
-    void add(const Statement *statement)
-    {
-      push_back(DeclarationStatement(statement));
-    }
-
-    void travers(Visitor &visitor) const
-    {
-      for (const DeclarationStatement &declarationStatement : *this)
-      {
-        declarationStatement.travers(visitor);
+        declarationStatement->traverse(visitor);
       }
     }
 };
@@ -1573,22 +1412,31 @@ class DeclarationStatementList : public std::vector<DeclarationStatement>
 class CompoundStatement : public Statement
 {
   public:
-    DeclarationStatementList declarationStatementList;
+    const DeclarationStatementList *declarationStatementList;
 
-    CompoundStatement(const DeclarationStatementList &declarationStatementList)
+    CompoundStatement(const DeclarationStatementList *declarationStatementList)
       : declarationStatementList(declarationStatementList)
     {
     }
 
     CompoundStatement()
+      : declarationStatementList(nullptr)
     {
     }
 
-    void travers(Visitor &visitor) const override
+    ~CompoundStatement() override
+    {
+      delete(declarationStatementList);
+    }
+
+    void traverse(Visitor &visitor) const override
     {
       if (!visitor.accept(*this))
       {
-        declarationStatementList.travers(visitor);
+        if (declarationStatementList != nullptr)
+        {
+          declarationStatementList->traverse(visitor);
+        }
       }
     }
 
@@ -1597,7 +1445,7 @@ class CompoundStatement : public Statement
       std::stringstream buffer;
 
       buffer << " {";
-      for (const DeclarationStatement declarationStatement : declarationStatementList)
+      for (const DeclarationStatement *declarationStatement : *declarationStatementList)
       {
         buffer << declarationStatement;
       }
@@ -1606,47 +1454,6 @@ class CompoundStatement : public Statement
       return buffer.str();
     }
 };
-
-#if 0
-class VariableDeclarationStatement : public Statement
-{
-  public:
-    TypeDeclaration typeDeclaration;
-    Identifier      name;
-    Expression      init;
-
-    VariableDeclarationStatement(const TypeDeclaration &typeDeclaration, const Identifier &name, const Expression &init)
-      : typeDeclaration(typeDeclaration)
-      , name(name)
-      , init(init)
-    {
-    }
-
-    VariableDeclarationStatement(const TypeDeclaration &typeDeclaration, const Identifier &name)
-      : typeDeclaration(typeDeclaration)
-      , name(name)
-    {
-    }
-
-    virtual void travers(Visitor &visitor) const
-    {
-      if (!visitor.accept(*this))
-      {
-        visitor.accept(Visitor::Phases::PRE, *this);
-        visitor.accept(Visitor::Phases::POST, *this);
-      }
-    }
-
-    std::string toString() const override
-    {
-      std::stringstream buffer;
-
-      buffer << typeDeclaration.toString() << name << ";";
-
-      return buffer.str();
-    }
-};
-#endif
 
 class IfStatement : public Statement
 {
@@ -1669,13 +1476,20 @@ class IfStatement : public Statement
     {
     }
 
-    virtual void travers(Visitor &visitor) const
+    ~IfStatement() override
+    {
+      delete(elseStatement);
+      delete(ifStatement);
+      delete(condition);
+    }
+
+    virtual void traverse(Visitor &visitor) const
     {
       if (!visitor.accept(*this))
       {
-        condition->travers(visitor);
-        ifStatement->travers(visitor);
-        if (elseStatement != nullptr) elseStatement->travers(visitor);
+        condition->traverse(visitor);
+        ifStatement->traverse(visitor);
+        if (elseStatement != nullptr) elseStatement->traverse(visitor);
       }
     }
 
@@ -1710,14 +1524,22 @@ class ForStatement : public Statement
     {
     }
 
-    virtual void travers(Visitor &visitor) const
+    ~ForStatement() override
+    {
+      delete(statement);
+      delete(increment);
+      delete(condition);
+      delete(init);
+    }
+
+    virtual void traverse(Visitor &visitor) const
     {
       if (!visitor.accept(*this))
       {
-        if (init != nullptr) init->travers(visitor);
-        if (condition != nullptr) condition->travers(visitor);
-        if (increment != nullptr) increment->travers(visitor);
-        statement->travers(visitor);
+        if (init != nullptr) init->traverse(visitor);
+        if (condition != nullptr) condition->traverse(visitor);
+        if (increment != nullptr) increment->traverse(visitor);
+        statement->traverse(visitor);
       }
     }
 
@@ -1747,12 +1569,18 @@ class WhileStatement : public Statement
     {
     }
 
-    virtual void travers(Visitor &visitor) const
+    ~WhileStatement() override
+    {
+      delete(statement);
+      delete(condition);
+    }
+
+    virtual void traverse(Visitor &visitor) const
     {
       if (!visitor.accept(*this))
       {
-        condition->travers(visitor);
-        statement->travers(visitor);
+        condition->traverse(visitor);
+        statement->traverse(visitor);
       }
     }
 
@@ -1779,12 +1607,18 @@ class DoStatement : public Statement
     {
     }
 
-    virtual void travers(Visitor &visitor) const
+    ~DoStatement() override
+    {
+      delete(statement);
+      delete(condition);
+    }
+
+    virtual void traverse(Visitor &visitor) const
     {
       if (!visitor.accept(*this))
       {
-        statement->travers(visitor);
-        condition->travers(visitor);
+        statement->traverse(visitor);
+        condition->traverse(visitor);
       }
     }
 
@@ -1812,12 +1646,18 @@ class AssignmentStatement : public Statement
     {
     }
 
-    virtual void travers(Visitor &visitor) const
+    ~AssignmentStatement() override
+    {
+      delete(right);
+      delete(left);
+    }
+
+    virtual void traverse(Visitor &visitor) const
     {
       if (!visitor.accept(*this))
       {
-        left->travers(visitor);
-        right->travers(visitor);
+        left->traverse(visitor);
+        right->traverse(visitor);
       }
     }
 
@@ -1847,12 +1687,17 @@ class ExpressionStatement : public Statement
     {
     }
 
-    void travers(Visitor &visitor) const override
+    ~ExpressionStatement() override
+    {
+      delete(expression);
+    }
+
+    void traverse(Visitor &visitor) const override
     {
       if (!visitor.accept(*this))
       {
         visitor.accept(Visitor::Phases::PRE, *this);
-        expression->travers(visitor);
+        expression->traverse(visitor);
         visitor.accept(Visitor::Phases::POST, *this);
       }
     }
@@ -1892,14 +1737,19 @@ class JumpStatement : public Statement
     {
     }
 
-    void travers(Visitor &visitor) const override
+    ~JumpStatement() override
+    {
+      delete(expression);
+    }
+
+    void traverse(Visitor &visitor) const override
     {
       if (!visitor.accept(*this))
       {
         visitor.accept(Visitor::Phases::PRE, *this);
         if (expression != nullptr)
         {
-          expression->travers(visitor);
+          expression->traverse(visitor);
         }
         visitor.accept(Visitor::Phases::POST, *this);
       }
@@ -1918,13 +1768,22 @@ class JumpStatement : public Statement
 class NewStateStatement : public Statement
 {
   public:
+    enum class Type
+    {
+      START,
+      DEFAULT,
+      CUSTOM
+    };
+
+    Type        type;
     Identifier  name;
     std::string label;
     std::string color;
-    Number      lineWidth;
+    double      lineWidth;
 
-    NewStateStatement(const Identifier &name, const std::string &label, const std::string &color, const Number &lineWidth)
-      : name(name)
+    NewStateStatement(const Identifier &name, const std::string &label, const std::string &color, double &lineWidth)
+      : type(getType(name))
+      , name(name)
       , label(label)
       , color(color)
       , lineWidth(lineWidth)
@@ -1932,30 +1791,33 @@ class NewStateStatement : public Statement
     }
 
     NewStateStatement(const Identifier &name, const std::string &label, const std::string &color)
-      : name(name)
+      : type(getType(name))
+      , name(name)
       , label(label)
       , color(color)
-      , lineWidth()
+      , lineWidth(0)
     {
     }
 
     NewStateStatement(const Identifier &name, const std::string &label)
-      : name(name)
+      : type(getType(name))
+      , name(name)
       , label(label)
       , color()
-      , lineWidth()
+      , lineWidth(0)
     {
     }
 
     NewStateStatement(const Identifier &name)
-      : name(name)
+      : type(getType(name))
+      , name(name)
       , label()
       , color()
       , lineWidth()
     {
     }
 
-    virtual void travers(Visitor &visitor) const
+    virtual void traverse(Visitor &visitor) const
     {
       if (!visitor.accept(*this))
       {
@@ -1969,7 +1831,7 @@ class NewStateStatement : public Statement
       std::stringstream buffer;
 
       buffer << "->" << name;
-      if (!label.empty() || !color.empty() || (lineWidth() > 0))
+      if (!label.empty() || !color.empty() || (lineWidth > 0))
       {
         buffer << "{";
         if (!label.empty())
@@ -1981,64 +1843,101 @@ class NewStateStatement : public Statement
           if (!label.empty()) buffer << ", ";
           buffer << color;
         }
-        if (lineWidth() > 0)
+        if (lineWidth > 0)
         {
           if (!label.empty() || !color.empty()) buffer << ", ";
-          buffer << lineWidth.toString();
+          buffer << lineWidth;
         }
         buffer << "}";
       }
 
       return buffer.str();
     }
+
+  private:
+    Type getType(const std::string name)
+    {
+      if      (name == "start"  ) return NewStateStatement::Type::START;
+      else if (name == "default") return NewStateStatement::Type::DEFAULT;
+      else                        return NewStateStatement::Type::CUSTOM;
+    }
 };
 
 class State
 {
   public:
+    enum class Type
+    {
+      START,
+      DEFAULT,
+      CUSTOM
+    };
+
+    const Type              type;
     const Identifier        name;
     const CompoundStatement *compoundStatement;
 
-    State(const Identifier &name, const CompoundStatement *compoundStatement)
-      : name(name)
+    State(Type type, const Identifier &name, const CompoundStatement *compoundStatement)
+      : type(type)
+      , name(name)
       , compoundStatement(compoundStatement)
     {
     }
 
-    State(CompoundStatement *compoundStatement)
-      : compoundStatement(compoundStatement)
+    State(Type type, const CompoundStatement *compoundStatement)
+      : type(type)
+      , name()
+      , compoundStatement(compoundStatement)
     {
     }
 
+#if 0
     State()
     {
     }
+#endif
 
-    void travers(Visitor &visitor) const
+    virtual ~State()
+    {
+      delete(compoundStatement);
+    }
+
+    void traverse(Visitor &visitor) const
     {
       if (!visitor.accept(*this))
       {
         visitor.accept(Visitor::Phases::PRE, *this);
-        compoundStatement->travers(visitor);
+        if (compoundStatement != nullptr)
+        {
+          compoundStatement->traverse(visitor);
+        }
         visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
 
-class StateList : public std::vector<State>
+class StateList : public std::vector<State*>
 {
   public:
-    void add(const State &state)
+    void add(State *state)
     {
       push_back(state);
     }
 
-    void travers(Visitor &visitor) const
+    virtual ~StateList()
+    {
+      for (const State *state : *this)
+      {
+        delete(state);
+      }
+    }
+
+    void traverse(Visitor &visitor) const
     {
       visitor.accept(Visitor::Phases::PRE, *this);
-      for (const FSM::State state : *this)
+      for (const FSM::State *state : *this)
       {
-        state.travers(visitor);
+        state->traverse(visitor);
       }
       visitor.accept(Visitor::Phases::POST, *this);
     }
@@ -2048,7 +1947,7 @@ class AST
 {
   public:
     typedef std::unordered_multimap<Identifier,
-                                    NewStateStatement&,
+                                    const NewStateStatement*,
                                     std::hash<std::string>
                                    > StateTransitionMap;
 
@@ -2066,19 +1965,30 @@ class AST
 
     Identifier getStartState() const
     {
-      if      (!startState.empty())
+      for (const State *state : stateList)
       {
-        return startState;
+        if (state->type == State::Type::START)
+        {
+          return state->name;
+        }
       }
-      else if (stateList.size() > 0)
-      {
-        return stateList[0].name;
-      }
-      else
-      {
-        return Identifier();
-      }
+
+      return Identifier();
     }
+
+    Identifier getDefaultState() const
+    {
+      for (const State *state : stateList)
+      {
+        if (state->type == State::Type::DEFAULT)
+        {
+          return state->name;
+        }
+      }
+
+      return Identifier();
+    }
+
 
     const StateList& getStateList() const
     {
@@ -2092,7 +2002,7 @@ class AST
       std::pair<StateTransitionMap::const_iterator, StateTransitionMap::const_iterator> iterators = stateTransitions.equal_range(name);
       while (iterators.first != iterators.second)
       {
-        handler(iterators.first->second);
+        handler(*iterators.first->second);
         iterators.first++;
       }
     }
@@ -2119,12 +2029,12 @@ class AST
       this->startState = startState;
     }
 
-    void addState(State state);
+    void addState(State *state);
 
-    void addStateTransition(const Identifier &name, NewStateStatement &newStateStatement)
+    void addStateTransition(const Identifier &name, const NewStateStatement *newStateStatement)
     {
       std::pair<StateTransitionMap::const_iterator, StateTransitionMap::const_iterator> iterators = stateTransitions.equal_range(name);
-      while ((iterators.first != iterators.second) && (iterators.first->second.name != newStateStatement.name))
+      while ((iterators.first != iterators.second) && (iterators.first->second->name != newStateStatement->name))
       {
         iterators.first++;
       }
@@ -2135,6 +2045,7 @@ class AST
     }
 
   private:
+    uint               stateStackSize;
     std::string        fsmName;
     Identifier         startState;
     StateList          stateList;
