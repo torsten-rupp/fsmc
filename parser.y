@@ -1320,9 +1320,13 @@ newStateStatement
 newStateStatementPrefixOperator
   : IDENTIFIER[name] ','
     {
-      if ($name == "push")
+      if      ($name == "push")
       {
         $$ = NewStateStatement::PrefixOperator::PUSH;
+      }
+      else if ($name == "reset")
+      {
+        $$ = NewStateStatement::PrefixOperator::RESET;
       }
       else
       {

@@ -4,6 +4,19 @@ Finite State Machine Compiler
 The Finit State Machine Compiler compile a C/C++ source code with embedded
 Finite State Machines (FSMs) into C/C++ code and optionally .dot files.
 
+Usage:
+
+fsmc [<options>] [<input file>]
+
+Options
+-o|--output <file path>               output file
+-d|--dot-directory <directory path>   .dot file directory
+-l|--log-function <log function>      log function to call on state change
+-n|--state-stack-size <n>             state stack size
+-a|--asserts                          generate asserts
+
+Log function macros: @fromStateName@, @toStateName@
+
 Source code format:
 
 ```
@@ -12,6 +25,7 @@ Source code format:
 <fsm definitions>
 #end
 <C/C++ source>
+...
 ```
 FSM definitions
 
@@ -33,11 +47,15 @@ execute in the given state.
 To change to a new state use the syntax
 
 ```
--> [push,]<new state name>[(<options>)];
--> [push,]start[(<options>)];
--> [push,]default[(<options>)];
+-> [push|reset,]<new state name>[(<options>)];
+-> [push|reset,]start[(<options>)];
+-> [push|reset,]default[(<options>)];
 -> pop[(<options>)];
 ```
+
+```push``` save the current state on a stack and change to the new state.
+```reset``` reset state stack.
+```pop``` pop the last pushed state and change to that state.
 
 Options
 ```

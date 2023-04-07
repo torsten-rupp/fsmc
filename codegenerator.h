@@ -30,7 +30,7 @@ class CodeGenerator
     }
 
 // TODO:const AST
-  void generate(AST &ast, uint indent);
+  void generate(AST &ast, uint indent, const std::string &logFunction);
 
   private:
     std::ostream &output;

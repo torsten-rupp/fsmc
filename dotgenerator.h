@@ -33,6 +33,8 @@ class DotGenerator
 
   private:
     std::ostream &output;
+
+    std::vector<const State*> getPushStates(const AST &ast, const State *state) const;
 };
 
 } // namespace FSM

@@ -1772,7 +1772,6 @@ class NewStateStatement : public Statement
     {
       START,
       DEFAULT,
-      PUSH,
       POP,
       CUSTOM
     };
@@ -1780,7 +1779,8 @@ class NewStateStatement : public Statement
     enum class PrefixOperator
     {
       NONE,
-      PUSH
+      PUSH,
+      RESET
     };
 
     class Options
@@ -1979,21 +1979,14 @@ class StateList : public std::vector<State*>
       push_back(state);
     }
 
-    virtual ~StateList()
-    {
-      for (const State *state : *this)
-      {
-        delete(state);
-      }
-    }
-
     void traverse(Visitor &visitor) const
     {
       visitor.accept(Visitor::Phases::PRE, *this);
-      for (const FSM::State *state : *this)
+      for (const State *state : *this)
       {
         state->traverse(visitor);
       }
+
       visitor.accept(Visitor::Phases::POST, *this);
     }
 };
@@ -2008,77 +2001,109 @@ class AST
 
     AST(uint stateStackSize, bool asserts);
 
+    /** check if FSM with state stack
+     * @return true iff FSM state stack
+     */
     bool hasStateStack() const
     {
       return stateStackSize > 0;
     }
 
+    /** get FSM state stack size
+     * @return state stack size of 0
+     */
     uint getStateStackSize() const
     {
       return stateStackSize;
     }
 
+    /** check if asserts should be generated
+     * @return true iff asserts should be generated
+     */
     uint isAsserts() const
     {
       return asserts;
     }
 
-    /**
-     * clear AST
+    /** clear AST
      */
     void clear();
 
+    /** travers AST
+     * @param visitor visitor
+     */
+    void traverse(Visitor &visitor);
+
+    /** get FSM name
+     * @return name
+     */
     std::string getFSMName() const
     {
       return fsmName;
     }
 
-    Identifier getStartState() const
+    /** validate states
+     */
+    void validateStates() const;
+
+    /** get FSM state
+     * @param name state name
+     * @return start state
+     */
+    const State* getState(const std::string &name) const;
+
+    /** get FSM start state
+     * @return start state or nullptr
+     */
+    const State* getStartState() const;
+
+    /** get FSM default state
+     * @return default state or nullptr
+     */
+    const State* getDefaultState() const;
+
+    /** get FSM state list
+     * @return state list
+     */
+    const StateList getStateList() const
     {
-      for (const State *state : stateList)
+      StateList stateList;
+
+      for (const std::pair<const std::string,State*> &pair : states)
       {
-        if (state->type == State::Type::START)
-        {
-          return state->name;
-        }
+        stateList.push_back(pair.second);
       }
 
-      return Identifier();
-    }
-
-    Identifier getDefaultState() const
-    {
-      for (const State *state : stateList)
-      {
-        if (state->type == State::Type::DEFAULT)
-        {
-          return state->name;
-        }
-      }
-
-      return Identifier();
-    }
-
-
-    const StateList& getStateList() const
-    {
       return stateList;
     }
 
-    void doStateTransitions(const Identifier &name,
+    /** iterate over all states which have a transition to state
+     * @param state to-state
+     * @param handler iteration handler
+     */
+    void doStates(const State                                                                  *toState,
+                  std::function<void(const State*,const NewStateStatement &newStateStatement)> handler
+                 ) const;
+
+    /** iterate over all states
+     * @param handler iteration handler
+     */
+    void doStates(std::function<void(const State *state)> handler) const;
+
+    /** iterate over all transitions from state
+     * @param state state
+     * @param handler iteration handler
+     */
+    void doStateTransitions(const State                                                     *fromState,
                             std::function<void(const NewStateStatement &newStateStatement)> handler
-                           ) const
-    {
-      std::pair<StateTransitionMap::const_iterator, StateTransitionMap::const_iterator> iterators = stateTransitions.equal_range(name);
-      while (iterators.first != iterators.second)
-      {
-        handler(*iterators.first->second);
-        iterators.first++;
-      }
-    }
+                           ) const;
 
-    void traverse(Visitor &visitor);
+    /** iterate over all state transitions
+     * @param handler iteration handler
+     */
+    void doStateTransitions(std::function<void(const NewStateStatement &newStateStatement)> handler) const;
 
+// TODO: use traverse
     /**
      * print AST
      */
@@ -2115,11 +2140,34 @@ class AST
     }
 
   private:
+    class StateMap : public std::unordered_map<const std::string,
+                                               State*,
+                                               std::hash<std::string>
+                                              >
+    {
+      public:
+        virtual ~StateMap()
+        {
+          for (const std::pair<const std::string,State*> &pair : *this)
+          {
+            delete(pair.second);
+          }
+        }
+
+        void traverse(Visitor &visitor) const
+        {
+          for (const std::pair<const std::string,State*> &state : *this)
+          {
+            state.second->traverse(visitor);
+          }
+        }
+    };
+
     uint               stateStackSize;
     bool               asserts;
     std::string        fsmName;
     Identifier         startState;
-    StateList          stateList;
+    StateMap           states;
     StateTransitionMap stateTransitions;
 };
 

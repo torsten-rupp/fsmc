@@ -45,6 +45,7 @@ int main(int argc, const char *argv[])
     std::string outputFilePath = "";
     std::string dotDirectoryPath = "";
     uint        stateStackSize = 0;
+    std::string logFunction = "";
     bool        asserts = false;
     int i = 1;
     while (i < argc)
@@ -58,6 +59,7 @@ int main(int argc, const char *argv[])
         fprintf(stdout, "-o|--output <file path>               output file\n");
         fprintf(stdout, "-d|--dot-directory <directory path>   .dot file directory\n");
         fprintf(stdout, "-n|--state-stack-size <n>             state stack size\n");
+        fprintf(stdout, "-l|--log-function <log function>      log function to call on state change\n");
         fprintf(stdout, "-a|--asserts                          generate asserts\n");
         return 0;
       }
@@ -75,8 +77,14 @@ int main(int argc, const char *argv[])
       }
       else if ((argument == "-n") || (argument == "--state-stack-size"))
       {
-        if (i >= argc) throw std::runtime_error("missing parameter for option --dot-directory");
+        if (i >= argc) throw std::runtime_error("missing parameter for option --state-stack-size");
         stateStackSize = static_cast<uint>(std::atoi(argv[i+1]));
+        i += 2;
+      }
+      else if ((argument == "-l") || (argument == "--log-function"))
+      {
+        if (i >= argc) throw std::runtime_error("missing parameter for option --log-function");
+        logFunction = argv[i+1];
         i += 2;
       }
       else if ((argument == "-a") || (argument == "--asserts"))
@@ -204,9 +212,12 @@ if ((DEBUG != nullptr) && (strcmp(DEBUG,"1") == 0)) parser.set_debug_level(1);
         }
 //ast.print();
 
+        // validate
+        ast.validateStates();
+
         // generate code
         CodeGenerator codeGenerator(*output);
-        codeGenerator.generate(ast, fsmIndent);
+        codeGenerator.generate(ast, fsmIndent, logFunction);
 
         // generate .dot file
         if (!dotDirectoryPath.empty())
