@@ -6,6 +6,7 @@ Finite State Machines (FSMs) into C/C++ code and optionally .dot files.
 
 Usage:
 
+```
 fsmc [<options>] [<input file>]
 
 Options
@@ -14,6 +15,7 @@ Options
 -l|--log-function <log function>      log function to call on state change
 -n|--state-stack-size <n>             state stack size
 -a|--asserts                          generate asserts
+```
 
 Log function macros: @fromStateName@, @toStateName@
 
@@ -67,7 +69,30 @@ Example:
 ```
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <unistd.h>
+#include <assert.h>
+
+#define TRUE  1
+#define FALSE 0
+
+#define ON  TRUE
+#define OFF FALSE
+
+bool isFailure()
+{
+  return FALSE;
+}
+
+bool isPower(bool enabled)
+{
+  return FALSE;
+}
+
+void logStateChange(const char *fromStateName, const char *toStateName)
+{
+  printf("DEBUG: state change '%s' -> '%s'\n", fromStateName, toStateName);
+}
 
 int main(int argc, const char *argv[])
 {
@@ -78,46 +103,52 @@ int main(int argc, const char *argv[])
     #fsm traffic_lights
       *GREEN
       {
-        if (failure) -> push,FAILURE;
+        if (isFailure() || isPower(OFF)) -> push,FAILURE;
         printf("green: go\n");
-        -> YELLOW;
+        -> YELLOW("",blue,2);
       }
 
       YELLOW
       {
-        if (failure) -> push,FAILURE;
+        if (isFailure() || isPower(OFF)) -> push,FAILURE;
         printf("yellow: prepare for stop\n");
-        -> RED;
+        -> RED("",blue,2);
       }
 
       RED
       {
-        if (failure) -> push,FAILURE;
+        if (isFailure() || isPower(OFF)) -> push,FAILURE;
         printf("red: stop!\n");
-        -> RED_YELLOW;
+        -> RED_YELLOW("",blue,2);
       }
 
       RED_YELLOW
       {
-        if (failure) -> push,FAILURE;
+        if (isFailure() || isPower(OFF)) -> push,FAILURE;
         printf("red-yellow: ready for start\n");
-        -> GREEN;
+        -> GREEN("",blue,2);
       }
 
       FAILURE
       {
-        -> BLINK_ON
+        if (isPower(OFF)) -> OFF;
+        -> BLINK_ON;
       }
 
       BLINK_ON
       {
-        -> BLINK_OFF
+        -> BLINK_OFF;
       }
 
       BLINK_OFF
       {
-        if (!failure) -> pop;
-        -> BLINK_ON
+        if (!isFailure()) -> pop;
+        -> BLINK_ON;
+      }
+
+      OFF
+      {
+        if (isPower(ON)) -> reset,RED;
       }
     #end
 
@@ -129,3 +160,7 @@ int main(int argc, const char *argv[])
   return 0;
 }
 ```
+
+.dot output with Graphviz:
+
+![Traffic lights example](examples/traffic_lights.png "Traffic Lights FSM")
