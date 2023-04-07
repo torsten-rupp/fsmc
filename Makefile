@@ -78,6 +78,10 @@ test4: fsmc
 test4d: fsmc
 	gdb --args ./fsmc demo.c -d .
 
+.PHONY: examples
+examples: \
+  examples/traffic_lights
+
 .PHONY: examples/traffic_lights
 examples/traffic_lights: examples/traffic_lights.c fsmc
 	./fsmc examples/traffic_lights.c -d examples | gcc -x c - -o examples/traffic_lights

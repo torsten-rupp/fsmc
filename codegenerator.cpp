@@ -95,7 +95,19 @@ class CVisitor : public Visitor
             {
               for (const State *state : stateList)
               {
-                output << indent() << state->name << suffix << "," << std::endl;
+                switch (state->type)
+                {
+                  case State::Type::START:
+                    output << indent() << state->name << suffix << "," << std::endl;
+                    output << indent() << "STATE_START" << suffix << "," << std::endl;
+                    break;
+                  case State::Type::DEFAULT:
+                    output << indent() << "STATE_DEFAULT" << suffix << "," << std::endl;
+                    break;
+                  case State::Type::CUSTOM:
+                    output << indent() << state->name << suffix << "," << std::endl;
+                    break;
+                }
               }
             });
             output << indent() <<"} States" << suffix << ";" << std::endl;
