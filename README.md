@@ -4,7 +4,7 @@ Finite State Machine Compiler
 The Finit State Machine Compiler compile a C/C++ source code with embedded
 Finite State Machines (FSMs) into C/C++ code and optionally .dot files.
 
-Usage:
+## Usage
 
 ```
 fsmc [<options>] [<input file>]
@@ -19,7 +19,7 @@ Options
 
 Log function macros: @fromStateName@, @toStateName@
 
-Source code format:
+## Source code format
 
 ```
 <C/C++ source>
@@ -64,7 +64,7 @@ Options
 "<label>",<color>,<line width>
 ```
 
-Example:
+# Example
 
 ```
 #include <stdlib.h>
@@ -164,3 +164,28 @@ int main(int argc, const char *argv[])
 .dot output with Graphviz:
 
 ![Traffic lights example](examples/traffic_lights.png "Traffic Lights FSM")
+
+# Term of use and license
+
+When you use fsmc you do this with your own responsibility and
+risks.  You use fsmc as it "is".  You agree that the author of fsmc
+will not be responsible for any damage on physical or virtual
+entities or persons which may be caused directly or indirectly by
+fsmc.  You agree not to claim for damages against the author of fsmc
+in case there is an unexpected behavior or there are unexpected
+results of fsmc (e.  g.  due to bugs in the software) or in case of
+miss usage of the fsmc.  You can send bug reports and feature
+requests - which is encouraged -, but you agree that there is no
+liability of the author that a bug is corrected and you agree there
+is no claim that anything is changed in fsmc by the author.
+
+fsmc and all files are under the GPL version 2. The full GPL
+version 2 license text can be found here:
+
+  http://www.gnu.org/licenses/gpl-2.0.html
+
+# Contact
+
+Send an email to Torsten Rupp (author of fsmc):
+
+torsten.rupp at gmx.net
