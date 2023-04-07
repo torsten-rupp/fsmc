@@ -27,8 +27,10 @@ using namespace FSM;
 
 /***************************** Functions *******************************/
 
-AST::AST()
-  : stateList()
+AST::AST(uint stateStackSize, bool asserts)
+  : stateStackSize(stateStackSize)
+  , asserts(asserts)
+  , stateList()
 {
 }
 

@@ -42,15 +42,23 @@ int main(int argc, const char *argv[])
   {
     // parse arguments
     std::string inputFilePath;
-    std::string outputFilePath;
-    std::string dotDirectoryPath;
+    std::string outputFilePath = "";
+    std::string dotDirectoryPath = "";
+    uint        stateStackSize = 0;
+    bool        asserts = false;
     int i = 1;
     while (i < argc)
     {
       std::string argument(argv[i]);
       if      ((argument == "-h") || (argument == "--help"))
       {
-        fprintf(stdout, "Usage: %s [-o|--output <output file>] [-d|--dot-directory <dot file directory>] [<input file>]\n", argv[0]);
+        fprintf(stdout, "Usage: %s [<options>] [<input file>]\n", argv[0]);
+        fprintf(stdout, "\n");
+        fprintf(stdout, "Options\n");
+        fprintf(stdout, "-o|--output <file path>               output file\n");
+        fprintf(stdout, "-d|--dot-directory <directory path>   .dot file directory\n");
+        fprintf(stdout, "-n|--state-stack-size <n>             state stack size\n");
+        fprintf(stdout, "-a|--asserts                          generate asserts\n");
         return 0;
       }
       else if ((argument == "-o") || (argument == "--output"))
@@ -64,6 +72,17 @@ int main(int argc, const char *argv[])
         if (i >= argc) throw std::runtime_error("missing parameter for option --dot-directory");
         dotDirectoryPath = argv[i+1];
         i += 2;
+      }
+      else if ((argument == "-n") || (argument == "--state-stack-size"))
+      {
+        if (i >= argc) throw std::runtime_error("missing parameter for option --dot-directory");
+        stateStackSize = static_cast<uint>(std::atoi(argv[i+1]));
+        i += 2;
+      }
+      else if ((argument == "-a") || (argument == "--asserts"))
+      {
+        asserts = true;
+        i += 1;
       }
       else
       {
@@ -175,7 +194,7 @@ int main(int argc, const char *argv[])
         scanner.setLineNumber(fsmStartLineNb);
 
         // parse FSM
-        AST ast;
+        AST ast(stateStackSize,asserts);
         Parser parser(!inputFilePath.empty() ? inputFilePath : "<stdin>", scanner, ast);
 const char *DEBUG = getenv("DEBUG");
 if ((DEBUG != nullptr) && (strcmp(DEBUG,"1") == 0)) parser.set_debug_level(1);

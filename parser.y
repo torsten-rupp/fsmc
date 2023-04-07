@@ -178,7 +178,7 @@
 %type <InitDeclaratorList*>                initDeclaratorList;
 %type <Declaration*>                       externalDeclaration;
 %type <DeclarationStatementList*>          declarationStatementList;
-                                           
+
 %type <Expression*>                        primaryExpression;
 %type <Expression*>                        postfixExpression;
 %type <Expression*>                        unaryExpression;
@@ -199,15 +199,17 @@
 %type <ArgumentExpressionList*>            argumentExpressionList;
 %type <AssignmentExpression::Operator>     assignmentOperator;
 %type <Expression*>                        expression;
-                                           
+
 %type <Statement*>                         statement;
 %type <Statement*>                         labeled_statement;
 %type <CompoundStatement*>                 compoundStatement;
 %type <ExpressionStatement*>               expressionStatement;
 %type <Statement*>                         selectionStatement;
 %type <Statement*>                         iterationStatement;
-%type <NewStateStatement*>                 newStateStatement;
 %type <JumpStatement*>                     jumpStatement;
+%type <NewStateStatement*>                 newStateStatement;
+%type <NewStateStatement::PrefixOperator>  newStateStatementPrefixOperator;
+%type <NewStateStatement::Options>         newStateStatementOptions;
 %type <double>                             number;
 
 %start start
@@ -1276,22 +1278,28 @@ jumpStatement
     }
   ;
 
-newStateStatement:
-    DEREFERENCE IDENTIFIER[stateName] '(' STRING[label] ',' IDENTIFIER[color] ',' number[lineWidth] ')' ';'
+newStateStatement
+  : DEREFERENCE newStateStatementPrefixOperator IDENTIFIER[stateName] '(' newStateStatementOptions ')' ';'
     {
-      NewStateStatement *newStateStatement = new NewStateStatement($stateName,$label,$color,$lineWidth);
+      NewStateStatement *newStateStatement = new NewStateStatement($stateName,$newStateStatementPrefixOperator,$newStateStatementOptions);
       ast.addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
-  | DEREFERENCE IDENTIFIER[stateName] '(' STRING[label] ',' IDENTIFIER[color] ')' ';'
+  | DEREFERENCE newStateStatementPrefixOperator IDENTIFIER[stateName] '(' ')' ';'
     {
-      NewStateStatement *newStateStatement = new NewStateStatement($stateName,$label,$color);
+      NewStateStatement *newStateStatement = new NewStateStatement($stateName,$newStateStatementPrefixOperator);
       ast.addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
-  | DEREFERENCE IDENTIFIER[stateName] '(' STRING[label] ')' ';'
+  | DEREFERENCE newStateStatementPrefixOperator IDENTIFIER[stateName] ';'
     {
-      NewStateStatement *newStateStatement = new NewStateStatement($stateName,$label);
+      NewStateStatement *newStateStatement = new NewStateStatement($stateName,$newStateStatementPrefixOperator);
+      ast.addStateTransition(currentStateName,newStateStatement);
+      $$ = newStateStatement;
+    }
+  | DEREFERENCE IDENTIFIER[stateName] '(' newStateStatementOptions ')' ';'
+    {
+      NewStateStatement *newStateStatement = new NewStateStatement($stateName,$newStateStatementOptions);
       ast.addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
@@ -1306,6 +1314,37 @@ newStateStatement:
       NewStateStatement *newStateStatement = new NewStateStatement($stateName);
       ast.addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
+    }
+  ;
+
+newStateStatementPrefixOperator
+  : IDENTIFIER[name] ','
+    {
+      if ($name == "push")
+      {
+        $$ = NewStateStatement::PrefixOperator::PUSH;
+      }
+      else
+      {
+        std::stringstream buffer;
+        buffer << "unknown new state prefix operator '" << $name << "'";
+        error(@$,buffer.str());
+      }
+    }
+  ;
+
+newStateStatementOptions
+  : STRING[label] ',' IDENTIFIER[color] ',' number[lineWidth]
+    {
+      $$ = NewStateStatement::Options($label, $color, $lineWidth);
+    }
+  | STRING[label] ',' IDENTIFIER[color]
+    {
+      $$ = NewStateStatement::Options($label, $color);
+    }
+  | STRING[label]
+    {
+      $$ = NewStateStatement::Options($label);
     }
   ;
 

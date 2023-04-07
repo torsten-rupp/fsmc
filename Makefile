@@ -76,10 +76,10 @@ test3: fsmc
 
 .PHONY: test4
 test4: fsmc
-	./fsmc demo.c -d .
+	./fsmc demo.c -d . -n 123 -a
 .PHONY: test4d
 test4d: fsmc
-	gdb --args ./fsmc demo.c -d .
+	gdb --args ./fsmc demo.c -d . --state-stack-size 123 --asserts
 
 .PHONY: examples
 examples: \
@@ -87,4 +87,4 @@ examples: \
 
 .PHONY: examples/traffic_lights
 examples/traffic_lights: examples/traffic_lights.c fsmc
-	./fsmc examples/traffic_lights.c -d examples | gcc -x c - -o examples/traffic_lights
+	./fsmc examples/traffic_lights.c -d examples -n 8 -a | gcc -x c - -o examples/traffic_lights

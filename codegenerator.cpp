@@ -119,6 +119,12 @@ class CVisitor : public Visitor
               output << " = " << startState << suffix;
             }
             output << ";" << std::endl;
+            uint stateStackSize = ast.getStateStackSize();
+            if (stateStackSize > 0)
+            {
+              output << indent() << "static States" << suffix << " stateStack" << suffix << "[" << stateStackSize << "];" << std::endl;
+              output << indent() << "static uint stateStackIndex" << suffix << " = 0;" << std::endl;
+            }
             output << std::endl;
 
             output << indent() << "switch (state" << suffix << ")" << std::endl;
@@ -582,11 +588,63 @@ break;
 
     bool accept(const NewStateStatement &newStateStatement) override
     {
+      switch (newStateStatement.prefixOperator)
+      {
+        case NewStateStatement::PrefixOperator::PUSH:
+          if (ast.hasStateStack())
+          {
+            if (ast.isAsserts())
+            {
+              output << indent() << "assert(stateStackIndex" << suffix << " < " << ast.getStateStackSize() << ");" << std::endl;
+            }
+            output << indent() << "stateStack" << suffix << "[stateStackIndex" << suffix <<"] = state" << suffix << ";" << std::endl;
+            output << indent() << "stateStackIndex" << suffix <<"++;" << std::endl;
+          }
+          else
+          {
+            throw std::runtime_error("no state stack defined");
+          }
+          break;
+        default:
+          break;
+      }
       switch (newStateStatement.type)
       {
-        case NewStateStatement::Type::START:   output << indent() << "state" << suffix << " = " << ast.getStartState()    << suffix << ";" << std::endl; break;
-        case NewStateStatement::Type::DEFAULT: output << indent() << "state" << suffix << " = STATE_DEFAULT"              << suffix << ";" << std::endl; break;
-        case NewStateStatement::Type::CUSTOM:  output << indent() << "state" << suffix << " = " << newStateStatement.name << suffix << ";" << std::endl; break;
+        case NewStateStatement::Type::START:
+          output << indent() << "state" << suffix << " = " << ast.getStartState()    << suffix << ";" << std::endl;
+          break;
+        case NewStateStatement::Type::DEFAULT:
+          output << indent() << "state" << suffix << " = STATE_DEFAULT"              << suffix << ";" << std::endl;
+          break;
+        case NewStateStatement::Type::POP:
+          if (ast.hasStateStack())
+          {
+            if (ast.isAsserts())
+            {
+              output << indent() << "assert(stateStackIndex" << suffix << " > 0);" << std::endl;
+              output << indent() << "stateStackIndex" << suffix << "--;" << std::endl;
+              output << indent() << "state" << suffix << " = stateStack " << suffix << "[stateStackIndex" << suffix << "];" << std::endl;
+            }
+            else
+            {
+              output << indent() << "if (stateStackIndex" << suffix << " > 0)" << std::endl;
+              output << indent() << "{" << std::endl;
+              indent(2,[&]()
+              {
+                output << indent() << "stateStackIndex" << suffix << "--;" << std::endl;
+                output << indent() << "state" << suffix << " = stateStack " << suffix << "[stateStackIndex" << suffix << "];" << std::endl;
+              });
+              output << indent() << "}" << std::endl;
+            }
+          }
+          else
+          {
+            throw std::runtime_error("no state stack defined");
+          }
+          break;
+        case NewStateStatement::Type::CUSTOM:
+          output << indent() << "state" << suffix << " = " << newStateStatement.name << suffix << ";" << std::endl;
+          break;
       }
 
       return true;

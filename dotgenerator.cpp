@@ -31,26 +31,26 @@ using namespace FSM;
 //  INITIAL                                  -> CHECK_MAX_NUM_OF_RRT [color=blue, penwidth=3.0];
 
 std::string optionsToString(const NewStateStatement &newStateStatement)
-{  
+{
   std::stringstream buffer;
   bool              first = true;
-  
-  if (!newStateStatement.label.empty())
+
+  if (!newStateStatement.options.label.empty())
   {
     if (!first) buffer << ", ";
-    buffer << "label=\"" << newStateStatement.label << "\"";
+    buffer << "label=\"" << newStateStatement.options.label << "\"";
     first = false;
   }
-  if (!newStateStatement.color.empty())
+  if (!newStateStatement.options.color.empty())
   {
     if (!first) buffer << ", ";
-    buffer << "color=" << newStateStatement.color;
+    buffer << "color=" << newStateStatement.options.color;
     first = false;
   }
-  if (newStateStatement.lineWidth > 0)
+  if (newStateStatement.options.lineWidth > 0)
   {
     if (!first) buffer << ", ";
-    buffer << "penwidth=" << newStateStatement.lineWidth;
+    buffer << "penwidth=" << newStateStatement.options.lineWidth;
     first = false;
   }
 
@@ -79,6 +79,23 @@ void DotGenerator::generate(const AST &ast)
             break;
           case NewStateStatement::Type::CUSTOM:
             output << "  " << state->name << " -> " << newStateStatement.name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
+            break;
+        }
+        switch (newStateStatement.prefixOperator)
+        {
+          case NewStateStatement::PrefixOperator::PUSH:
+            switch (newStateStatement.type)
+            {
+              case NewStateStatement::Type::START:
+                output << "  " << ast.getStartState() << " -> " << state->name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
+                break;
+              case NewStateStatement::Type::DEFAULT:
+                output << "  " << ast.getDefaultState() << " -> " << state->name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
+                break;
+              case NewStateStatement::Type::CUSTOM:
+                output << "  " << newStateStatement.name << " -> " << state->name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
+                break;
+            }
             break;
         }
       }

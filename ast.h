@@ -1772,48 +1772,87 @@ class NewStateStatement : public Statement
     {
       START,
       DEFAULT,
+      PUSH,
+      POP,
       CUSTOM
     };
 
-    Type        type;
-    Identifier  name;
-    std::string label;
-    std::string color;
-    double      lineWidth;
+    enum class PrefixOperator
+    {
+      NONE,
+      PUSH
+    };
 
-    NewStateStatement(const Identifier &name, const std::string &label, const std::string &color, double &lineWidth)
+    class Options
+    {
+      public:
+        std::string label;
+        std::string color;
+        double      lineWidth;
+
+      Options(const std::string label, const std::string color, double lineWidth)
+        : label(label)
+        , color(color)
+        , lineWidth(lineWidth)
+      {
+      }
+
+      Options(const std::string label, const std::string color)
+        : label(label)
+        , color(color)
+        , lineWidth(0)
+      {
+      }
+
+      Options(const std::string label)
+        : label(label)
+        , color()
+        , lineWidth(0)
+      {
+      }
+
+      Options()
+        : label()
+        , color()
+        , lineWidth(0)
+      {
+      }
+    };
+
+    Type           type;
+    Identifier     name;
+    PrefixOperator prefixOperator;
+    Options        options;
+
+    NewStateStatement(const Identifier &name, PrefixOperator prefixOperator, const Options &options)
       : type(getType(name))
       , name(name)
-      , label(label)
-      , color(color)
-      , lineWidth(lineWidth)
+      , prefixOperator(prefixOperator)
+      , options(options)
     {
     }
 
-    NewStateStatement(const Identifier &name, const std::string &label, const std::string &color)
+    NewStateStatement(const Identifier &name, PrefixOperator prefixOperator)
       : type(getType(name))
       , name(name)
-      , label(label)
-      , color(color)
-      , lineWidth(0)
+      , prefixOperator(prefixOperator)
+      , options()
     {
     }
 
-    NewStateStatement(const Identifier &name, const std::string &label)
+    NewStateStatement(const Identifier &name, const Options &options)
       : type(getType(name))
       , name(name)
-      , label(label)
-      , color()
-      , lineWidth(0)
+      , prefixOperator(PrefixOperator::NONE)
+      , options(options)
     {
     }
 
     NewStateStatement(const Identifier &name)
       : type(getType(name))
       , name(name)
-      , label()
-      , color()
-      , lineWidth()
+      , prefixOperator(PrefixOperator::NONE)
+      , options()
     {
     }
 
@@ -1830,23 +1869,38 @@ class NewStateStatement : public Statement
     {
       std::stringstream buffer;
 
-      buffer << "->" << name;
-      if (!label.empty() || !color.empty() || (lineWidth > 0))
+      buffer << "->";
+      switch (prefixOperator)
+      {
+        case PrefixOperator::PUSH:
+          buffer << "push,";
+          break;
+        default:
+          break;
+      }
+      switch (type)
+      {
+        case Type::START:   buffer << "start"; break;
+        case Type::DEFAULT: buffer << "default"; break;
+        case Type::POP:     buffer << "pop"; break;
+        case Type::CUSTOM:  buffer << name; break;
+      }
+      if (!options.label.empty() || !options.color.empty() || (options.lineWidth > 0))
       {
         buffer << "{";
-        if (!label.empty())
+        if (!options.label.empty())
         {
-          buffer << "\"" << label << "\"";
+          buffer << "\"" << options.label << "\"";
         }
-        if (!color.empty())
+        if (!options.color.empty())
         {
-          if (!label.empty()) buffer << ", ";
-          buffer << color;
+          if (!options.label.empty()) buffer << ", ";
+          buffer << options.color;
         }
-        if (lineWidth > 0)
+        if (options.lineWidth > 0)
         {
-          if (!label.empty() || !color.empty()) buffer << ", ";
-          buffer << lineWidth;
+          if (!options.label.empty() || !options.color.empty()) buffer << ", ";
+          buffer << options.lineWidth;
         }
         buffer << "}";
       }
@@ -1855,10 +1909,11 @@ class NewStateStatement : public Statement
     }
 
   private:
-    Type getType(const std::string name)
+    static Type getType(const std::string name)
     {
       if      (name == "start"  ) return NewStateStatement::Type::START;
       else if (name == "default") return NewStateStatement::Type::DEFAULT;
+      else if (name == "pop")     return NewStateStatement::Type::POP;
       else                        return NewStateStatement::Type::CUSTOM;
     }
 };
@@ -1951,7 +2006,22 @@ class AST
                                     std::hash<std::string>
                                    > StateTransitionMap;
 
-    AST();
+    AST(uint stateStackSize, bool asserts);
+
+    bool hasStateStack() const
+    {
+      return stateStackSize > 0;
+    }
+
+    uint getStateStackSize() const
+    {
+      return stateStackSize;
+    }
+
+    uint isAsserts() const
+    {
+      return asserts;
+    }
 
     /**
      * clear AST
@@ -2046,6 +2116,7 @@ class AST
 
   private:
     uint               stateStackSize;
+    bool               asserts;
     std::string        fsmName;
     Identifier         startState;
     StateList          stateList;
