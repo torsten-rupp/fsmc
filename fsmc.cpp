@@ -47,6 +47,7 @@ int main(int argc, const char *argv[])
     uint        stateStackSize = 0;
     std::string logFunction = "";
     bool        asserts = false;
+    bool        dumpAST = false;
     int i = 1;
     while (i < argc)
     {
@@ -61,6 +62,7 @@ int main(int argc, const char *argv[])
         fprintf(stdout, "-n|--state-stack-size <n>             state stack size\n");
         fprintf(stdout, "-l|--log-function <log function>      log function to call on state change\n");
         fprintf(stdout, "-a|--asserts                          generate asserts\n");
+        fprintf(stdout, "--dump-ast                            dump abstract syntax tree\n");
         return 0;
       }
       else if ((argument == "-o") || (argument == "--output"))
@@ -90,6 +92,11 @@ int main(int argc, const char *argv[])
       else if ((argument == "-a") || (argument == "--asserts"))
       {
         asserts = true;
+        i += 1;
+      }
+      else if (argument == "--dump-ast")
+      {
+        dumpAST = true;
         i += 1;
       }
       else
@@ -186,7 +193,10 @@ int main(int argc, const char *argv[])
         }
         else
         {
-          *output << line << std::endl;
+          if (!dumpAST)
+          {
+            *output << line << std::endl;
+          }
         }
       }
       if (fsm)
@@ -210,30 +220,36 @@ if ((DEBUG != nullptr) && (strcmp(DEBUG,"1") == 0)) parser.set_debug_level(1);
         {
           throw std::runtime_error("parsing failed");
         }
-//ast.print();
 
         // validate
         ast.validateStates();
 
-        // generate code
-        CodeGenerator codeGenerator(*output, fsmIndent, 2, logFunction);
-        codeGenerator.generate(ast);
-
-        // generate .dot file
-        if (!dotDirectoryPath.empty())
+        if (!dumpAST)
         {
-          std::string filePath = dotDirectoryPath+"/"+ast.getFSMName()+".dot";
-          std::ofstream output(filePath);
-          if (!output.is_open())
-          if (!outputFile.is_open())
+          // generate code
+          CodeGenerator codeGenerator(*output, fsmIndent, 2, logFunction);
+          codeGenerator.generate(ast);
+
+          // generate .dot file
+          if (!dotDirectoryPath.empty())
           {
-            throw std::runtime_error("cannot open file '" + filePath + "'");
+            std::string filePath = dotDirectoryPath+"/"+ast.getFSMName()+".dot";
+            std::ofstream output(filePath);
+            if (!output.is_open())
+            if (!outputFile.is_open())
+            {
+              throw std::runtime_error("cannot open file '" + filePath + "'");
+            }
+
+            DotGenerator dotGenerator(output);
+            dotGenerator.generate(ast);
+
+            output.close();
           }
-
-          DotGenerator dotGenerator(output);
-          dotGenerator.generate(ast);
-
-          output.close();
+        }
+        else
+        {
+          ast.print();
         }
       }
     }

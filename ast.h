@@ -152,8 +152,6 @@ class Expression : public VisitorInterface
         visitor.accept(Visitor::Phases::POST, *this);
       }
     }
-
-    virtual std::string toString() const = 0;
 };
 
 class PrimaryExpression : public Expression
@@ -216,30 +214,6 @@ class PrimaryExpression : public Expression
         visitor.accept(Visitor::Phases::PRE, *this);
         visitor.accept(Visitor::Phases::POST, *this);
       }
-    }
-
-    std::string toString() const override
-    {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
-      std::stringstream buffer;
-
-      switch (type)
-      {
-        case Type::IDENTIFIER:
-          buffer << identifier;
-          break;
-        case Type::INTEGER:
-          buffer << n;
-          break;
-        case Type::STRING:
-          buffer << string;
-          break;
-        case Type::EXPRESSION:
-          buffer << '(' << expression->toString() << ')';
-          break;
-      }
-
-      return buffer.str();
     }
 };
 
@@ -400,12 +374,6 @@ class PostfixExpression : public Expression
         }
       }
     }
-
-    std::string toString() const override
-    {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
-      return "postfix";
-    }
 };
 
 class UnaryExpression : public Expression
@@ -443,12 +411,6 @@ class UnaryExpression : public Expression
     {
       visitor.accept(*this);
     }
-
-    std::string toString() const override
-    {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
-      return "unary";
-    }
 };
 
 class CastExpression : public Expression
@@ -476,12 +438,6 @@ class CastExpression : public Expression
     ~CastExpression() override
     {
       delete(expression);
-    }
-
-    std::string toString() const override
-    {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
-      return "cast";
     }
 };
 
@@ -523,12 +479,6 @@ class MultiplicativeExpression : public Expression
         b->traverse(visitor);
       }
     }
-
-    std::string toString() const override
-    {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
-      return "mul";
-    }
 };
 
 class AdditiveExpression : public Expression
@@ -568,12 +518,6 @@ class AdditiveExpression : public Expression
         b->traverse(visitor);
       }
     }
-
-    std::string toString() const override
-    {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
-      return "add";
-    }
 };
 
 class ShiftExpression : public Expression
@@ -612,12 +556,6 @@ class ShiftExpression : public Expression
         a->traverse(visitor);
         b->traverse(visitor);
       }
-    }
-
-    std::string toString() const override
-    {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
-      return "shift";
     }
 };
 
@@ -661,12 +599,6 @@ class RelationalExpression : public Expression
         b->traverse(visitor);
       }
     }
-
-    std::string toString() const override
-    {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
-      return "eq";
-    }
 };
 
 class EqualityExpression : public Expression
@@ -706,12 +638,6 @@ class EqualityExpression : public Expression
         b->traverse(visitor);
       }
     }
-
-    std::string toString() const override
-    {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
-      return "eq";
-    }
 };
 
 class AndExpression : public Expression
@@ -742,12 +668,6 @@ class AndExpression : public Expression
         a->traverse(visitor);
         b->traverse(visitor);
       }
-    }
-
-    std::string toString() const override
-    {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
-      return "and";
     }
 };
 
@@ -780,12 +700,6 @@ class ExclusiveOrExpression : public Expression
         b->traverse(visitor);
       }
     }
-
-    std::string toString() const override
-    {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
-      return "xor";
-    }
 };
 
 class InclusiveOrExpression : public Expression
@@ -816,12 +730,6 @@ class InclusiveOrExpression : public Expression
         a->traverse(visitor);
         b->traverse(visitor);
       }
-    }
-
-    std::string toString() const override
-    {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
-      return "or";
     }
 };
 
@@ -854,12 +762,6 @@ class LogicalAndExpression : public Expression
         b->traverse(visitor);
       }
     }
-
-    std::string toString() const override
-    {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
-      return "log and";
-    }
 };
 
 class LogicalOrExpression : public Expression
@@ -890,12 +792,6 @@ class LogicalOrExpression : public Expression
         a->traverse(visitor);
         b->traverse(visitor);
       }
-    }
-
-    std::string toString() const override
-    {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
-      return "log or";
     }
 };
 
@@ -930,12 +826,6 @@ class ConditionalExpression : public Expression
         a->traverse(visitor);
         b->traverse(visitor);
       }
-    }
-
-    std::string toString() const override
-    {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
-      return "cnd";
     }
 };
 
@@ -988,17 +878,6 @@ class AssignmentExpression : public Expression
         visitor.accept(Visitor::Phases::PRE, *this);
         visitor.accept(Visitor::Phases::POST, *this);
       }
-    }
-
-    std::string toString() const override
-    {
-      std::stringstream buffer;
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
-
-//      buffer << unaryExpression->toString() << " = " << assignmentExpression->toString();
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
-
-      return buffer.str();
     }
 };
 
@@ -1431,29 +1310,11 @@ class Declaration : public DeclarationStatement
         }
       }
     }
-
-    std::string toString() const
-    {
-// TODO:
-      return "Declaration";
-    }
 };
 
 class Statement : public DeclarationStatement
 {
   public:
-    virtual ~Statement() override
-    {
-    }
-
-    virtual std::string toString() const = 0;
-
-    friend std::ostream& operator<<(std::ostream& outputStream, const Statement *statement)
-    {
-      outputStream << statement->toString();
-
-      return outputStream;
-    }
 };
 
 class DeclarationStatementList : public std::vector<DeclarationStatement*>
@@ -1530,20 +1391,6 @@ class CompoundStatement : public Statement
         }
       }
     }
-
-    std::string toString() const override
-    {
-      std::stringstream buffer;
-
-      buffer << " {";
-      for (const DeclarationStatement *declarationStatement : *declarationStatementList)
-      {
-        buffer << declarationStatement;
-      }
-      buffer << "}";
-
-      return buffer.str();
-    }
 };
 
 class IfStatement : public Statement
@@ -1587,20 +1434,6 @@ class IfStatement : public Statement
         if (elseStatement != nullptr) elseStatement->traverse(visitor);
       }
     }
-
-    std::string toString() const override
-    {
-      std::stringstream buffer;
-
-      buffer << "if" << " (" << condition->toString() << ")";
-      buffer << ifStatement;
-      if (elseStatement)
-      {
-        buffer << "else" << elseStatement;
-      }
-
-      return buffer.str();
-    }
 };
 
 class ForStatement : public Statement
@@ -1641,19 +1474,6 @@ class ForStatement : public Statement
         statement->traverse(visitor);
       }
     }
-
-    std::string toString() const override
-    {
-      std::stringstream buffer;
-
-
-      buffer << "for" << " (" << init->toString() << ";" << condition->toString() << ";" << increment->toString() << ")";
-      buffer << "{";
-      buffer << statement;
-      buffer << "}";
-
-      return buffer.str();
-    }
 };
 
 class WhileStatement : public Statement
@@ -1685,16 +1505,6 @@ class WhileStatement : public Statement
         condition->traverse(visitor);
         statement->traverse(visitor);
       }
-    }
-
-    std::string toString() const override
-    {
-      std::stringstream buffer;
-
-      buffer << "while" << " (" << condition->toString() << ")";
-      buffer << statement;
-
-      return buffer.str();
     }
 };
 
@@ -1728,17 +1538,6 @@ class DoStatement : public Statement
         condition->traverse(visitor);
       }
     }
-
-    std::string toString() const override
-    {
-      std::stringstream buffer;
-
-      buffer << "do";
-      buffer << statement;
-      buffer << "while" << " (" << condition->toString() << ")";
-
-      return buffer.str();
-    }
 };
 
 class AssignmentStatement : public Statement
@@ -1771,16 +1570,6 @@ class AssignmentStatement : public Statement
         right->traverse(visitor);
       }
     }
-
-    std::string toString() const override
-    {
-      std::stringstream buffer;
-
-      buffer << left->toString() << " = " << right->toString() << ";";
-
-      return buffer.str();
-    }
-
 };
 
 class ExpressionStatement : public Statement
@@ -1815,15 +1604,6 @@ class ExpressionStatement : public Statement
         expression->traverse(visitor);
         visitor.accept(Visitor::Phases::POST, *this);
       }
-    }
-
-    std::string toString() const
-    {
-      std::stringstream buffer;
-
-      buffer << expression->toString()  << ";";
-
-      return buffer.str();
     }
 };
 
@@ -1872,15 +1652,6 @@ class JumpStatement : public Statement
         }
         visitor.accept(Visitor::Phases::POST, *this);
       }
-    }
-
-    std::string toString() const
-    {
-      std::stringstream buffer;
-
-      buffer << expression->toString()  << ";";
-
-      return buffer.str();
     }
 };
 
@@ -1988,49 +1759,6 @@ class NewStateStatement : public Statement
       }
     }
 
-    std::string toString() const override
-    {
-      std::stringstream buffer;
-
-      buffer << "->";
-      switch (prefixOperator)
-      {
-        case PrefixOperator::PUSH:
-          buffer << "push,";
-          break;
-        default:
-          break;
-      }
-      switch (type)
-      {
-        case Type::START:   buffer << "start"; break;
-        case Type::DEFAULT: buffer << "default"; break;
-        case Type::POP:     buffer << "pop"; break;
-        case Type::CUSTOM:  buffer << name; break;
-      }
-      if (!options.label.empty() || !options.color.empty() || (options.lineWidth > 0))
-      {
-        buffer << "{";
-        if (!options.label.empty())
-        {
-          buffer << "\"" << options.label << "\"";
-        }
-        if (!options.color.empty())
-        {
-          if (!options.label.empty()) buffer << ", ";
-          buffer << options.color;
-        }
-        if (options.lineWidth > 0)
-        {
-          if (!options.label.empty() || !options.color.empty()) buffer << ", ";
-          buffer << options.lineWidth;
-        }
-        buffer << "}";
-      }
-
-      return buffer.str();
-    }
-
   private:
     static Type getType(const std::string name)
     {
@@ -2069,12 +1797,6 @@ class State
     {
     }
 
-#if 0
-    State()
-    {
-    }
-#endif
-
     virtual ~State()
     {
       delete(compoundStatement);
@@ -2108,13 +1830,19 @@ class StateList : public std::vector<State*>
 
     void traverse(Visitor &visitor) const
     {
-      visitor.accept(Visitor::Phases::PRE, *this);
-      for (const State *state : *this)
+      try
       {
-        state->traverse(visitor);
+        visitor.accept(*this);
       }
-
-      visitor.accept(Visitor::Phases::POST, *this);
+      catch (const Visitor::Exception &)
+      {
+        visitor.accept(Visitor::Phases::PRE, *this);
+        for (const State *state : *this)
+        {
+          state->traverse(visitor);
+        }
+        visitor.accept(Visitor::Phases::POST, *this);
+      }
     }
 };
 

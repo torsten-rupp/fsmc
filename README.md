@@ -15,6 +15,7 @@ Options
 -l|--log-function <log function>      log function to call on state change
 -n|--state-stack-size <n>             state stack size
 -a|--asserts                          generate asserts
+--dump-ast                            dump abstract syntax tree
 ```
 
 Log function macros: @fromStateName@, @toStateName@
