@@ -24,9 +24,16 @@ namespace FSM
 class CodeGenerator
 {
   public:
-    CodeGenerator(std::ostream &output, uint indent, const std::string &logFunction)
+   /** indent
+   * @param output output stream
+   * @param startIndentCount start indention
+   * @param indentCount indention
+   * @param logFunction log function with macros
+   */
+   CodeGenerator(std::ostream &output, uint startIndentCount, uint indentCount, const std::string &logFunction)
       : output(output)
-      , indent(indent)
+      , startIndentCount(startIndentCount)
+      , indentCount(indentCount)
       , logFunction(logFunction)
     {
     }
@@ -36,7 +43,8 @@ class CodeGenerator
 
   private:
     std::ostream      &output;
-    uint              indent;
+    uint              startIndentCount;
+    uint              indentCount;
     const std::string &logFunction;
 };
 

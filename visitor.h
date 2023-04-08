@@ -12,7 +12,6 @@
 #include <sstream>
 #include <vector>
 #include <string>
-#include <functional>
 
 /****************** Conditional compilation switches *******************/
 
@@ -21,34 +20,6 @@
 /***************************** Datatypes *******************************/
 namespace FSM
 {
-
-class TextBlock
-{
-  public:
-    TextBlock()
-      : lines()
-      , columns(0)
-    {
-    }
-
-    TextBlock(const std::string &line)
-      : lines{line}
-      , columns(line.length())
-    {
-    }
-
-    void operator+(const std::string &line)
-    {
-    }
-
-    void operator+(const TextBlock &textBlock)
-    {
-    }
-
-  private:
-    std::vector<std::string> lines;
-    uint                     columns;
-};
 
 class State;
 class StateList;
@@ -85,11 +56,8 @@ class InitDeclarator;
 class Statement;
 class DeclarationStatement;
 class DeclarationStatementList;
-class TypeAttributeList;
-class TypeDeclaration;
 class Expression;
 class CompoundStatement;
-class VariableDeclarationStatement;
 class AssignmentStatement;
 class IfStatement;
 class ForStatement;
@@ -98,10 +66,16 @@ class DoStatement;
 class ExpressionStatement;
 class JumpStatement;
 class NewStateStatement;
+
 class AST;
+
 class Visitor
 {
   public:
+    class Exception
+    {
+    };
+
     enum class Phases
     {
       PRE,
@@ -111,51 +85,21 @@ class Visitor
     Visitor()
     {
     }
-//    Visitor(const Visitor &) = delete;
-//    Visitor(const Visitor &&) = delete;
 
 // TODO: AST const &ast
     void run(AST &ast);
 
-    void indent(uint n)
-    {
-      indentions.push_back(indentions.back()+n);
-
-      indentString.clear();
-      indentString.append(indentions.back(), ' ');
-    }
-
-    void unindent()
-    {
-      indentions.pop_back();
-
-      indentString.clear();
-      indentString.append(indentions.back(), ' ');
-    }
-
-    void indent(uint n,std::function<void(void)> code)
-    {
-      indent(2);
-      code();
-      unindent();
-    }
-
-    std::string indent() const
-    {
-      return indentString;
-    }
-
     #define ACCEPT(type) \
-      virtual bool accept(const type &) \
+      virtual void accept(const type &) \
       { \
-        return false; \
+        throw Exception(); \
       }; \
-      virtual bool accept(Phases phase, const type &) \
+      virtual void accept(Phases phase, const type &) \
       { \
-        return false; \
       }
 
     ACCEPT(State);
+    ACCEPT(StateList);
 
     ACCEPT(Expression);
     ACCEPT(PrimaryExpression);
@@ -189,7 +133,6 @@ class Visitor
     ACCEPT(Statement);
     ACCEPT(DeclarationStatement);
     ACCEPT(DeclarationStatementList);
-    ACCEPT(TypeDeclaration);
     ACCEPT(CompoundStatement);
     ACCEPT(IfStatement);
     ACCEPT(ForStatement);
@@ -198,11 +141,7 @@ class Visitor
     ACCEPT(ExpressionStatement);
     ACCEPT(JumpStatement);
     ACCEPT(NewStateStatement);
-    virtual bool accept(Phases phase, const StateList &stateList) = 0;
-
   private:
-    std::vector<uint> indentions{0};
-    std::string       indentString;
 };
 
 } // namespace FSM

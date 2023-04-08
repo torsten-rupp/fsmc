@@ -216,7 +216,7 @@ if ((DEBUG != nullptr) && (strcmp(DEBUG,"1") == 0)) parser.set_debug_level(1);
         ast.validateStates();
 
         // generate code
-        CodeGenerator codeGenerator(*output, fsmIndent, logFunction);
+        CodeGenerator codeGenerator(*output, fsmIndent, 2, logFunction);
         codeGenerator.generate(ast);
 
         // generate .dot file

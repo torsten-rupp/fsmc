@@ -142,7 +142,11 @@ class Expression : public VisitorInterface
 
     virtual void traverse(Visitor &visitor) const
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         visitor.accept(Visitor::Phases::PRE, *this);
         visitor.accept(Visitor::Phases::POST, *this);
@@ -203,7 +207,11 @@ class PrimaryExpression : public Expression
 
     virtual void traverse(Visitor &visitor) const
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         visitor.accept(Visitor::Phases::PRE, *this);
         visitor.accept(Visitor::Phases::POST, *this);
@@ -370,7 +378,11 @@ class PostfixExpression : public Expression
 
     void traverse(Visitor &visitor) const override
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         switch (type)
         {
@@ -451,7 +463,11 @@ class CastExpression : public Expression
 
     void traverse(Visitor &visitor) const override
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         expression->traverse(visitor);
       }
@@ -497,7 +513,11 @@ class MultiplicativeExpression : public Expression
 
     void traverse(Visitor &visitor) const override
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         a->traverse(visitor);
         b->traverse(visitor);
@@ -538,7 +558,11 @@ class AdditiveExpression : public Expression
 
     void traverse(Visitor &visitor) const override
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         a->traverse(visitor);
         b->traverse(visitor);
@@ -579,7 +603,11 @@ class ShiftExpression : public Expression
 
     void traverse(Visitor &visitor) const override
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         a->traverse(visitor);
         b->traverse(visitor);
@@ -623,7 +651,11 @@ class RelationalExpression : public Expression
 
     void traverse(Visitor &visitor) const override
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         a->traverse(visitor);
         b->traverse(visitor);
@@ -664,7 +696,11 @@ class EqualityExpression : public Expression
 
     void traverse(Visitor &visitor) const override
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         a->traverse(visitor);
         b->traverse(visitor);
@@ -697,7 +733,11 @@ class AndExpression : public Expression
 
     void traverse(Visitor &visitor) const override
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         a->traverse(visitor);
         b->traverse(visitor);
@@ -730,7 +770,11 @@ class ExclusiveOrExpression : public Expression
 
     void traverse(Visitor &visitor) const override
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         a->traverse(visitor);
         b->traverse(visitor);
@@ -763,7 +807,11 @@ class InclusiveOrExpression : public Expression
 
     void traverse(Visitor &visitor) const override
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         a->traverse(visitor);
         b->traverse(visitor);
@@ -796,7 +844,11 @@ class LogicalAndExpression : public Expression
 
     void traverse(Visitor &visitor) const override
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         a->traverse(visitor);
         b->traverse(visitor);
@@ -829,7 +881,11 @@ class LogicalOrExpression : public Expression
 
     void traverse(Visitor &visitor) const override
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         a->traverse(visitor);
         b->traverse(visitor);
@@ -864,7 +920,11 @@ class ConditionalExpression : public Expression
 
     void traverse(Visitor &visitor) const override
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         condition->traverse(visitor);
         a->traverse(visitor);
@@ -919,7 +979,11 @@ class AssignmentExpression : public Expression
 
     void traverse(Visitor &visitor) const override
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         visitor.accept(Visitor::Phases::PRE, *this);
         visitor.accept(Visitor::Phases::POST, *this);
@@ -964,7 +1028,11 @@ class StorageClassSpecifier : public StorageClassDeclarationSpecifier
 
     void traverse(Visitor &visitor) const override
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         visitor.accept(Visitor::Phases::PRE, *this);
         visitor.accept(Visitor::Phases::POST, *this);
@@ -1124,7 +1192,11 @@ class StorageClassDeclarationSpecifiers : public std::vector<StorageClassDeclara
 
     void traverse(Visitor &visitor) const
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         for (const StorageClassDeclarationSpecifier *storageClassDeclarationSpecifier : *this)
         {
@@ -1175,7 +1247,11 @@ class Declarator : public VisitorInterface
 
     void traverse(Visitor &visitor) const
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         directDeclarator->traverse(visitor);
       }
@@ -1209,7 +1285,11 @@ class Initializer : public VisitorInterface
 
     void traverse(Visitor &visitor) const
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         expression->traverse(visitor);
       }
@@ -1246,7 +1326,11 @@ class InitDeclarator : public VisitorInterface
 
     void traverse(Visitor &visitor) const
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         storageClassDeclarationSpecifiers->traverse(visitor);
         declarator->traverse(visitor);
@@ -1332,7 +1416,11 @@ class Declaration : public DeclarationStatement
 
     void traverse(Visitor &visitor) const
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         if (storageClassDeclarationSpecifiers != nullptr)
         {
@@ -1431,7 +1519,11 @@ class CompoundStatement : public Statement
 
     void traverse(Visitor &visitor) const override
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         if (declarationStatementList != nullptr)
         {
@@ -1485,7 +1577,11 @@ class IfStatement : public Statement
 
     virtual void traverse(Visitor &visitor) const
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         condition->traverse(visitor);
         ifStatement->traverse(visitor);
@@ -1534,7 +1630,11 @@ class ForStatement : public Statement
 
     virtual void traverse(Visitor &visitor) const
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         if (init != nullptr) init->traverse(visitor);
         if (condition != nullptr) condition->traverse(visitor);
@@ -1577,7 +1677,11 @@ class WhileStatement : public Statement
 
     virtual void traverse(Visitor &visitor) const
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         condition->traverse(visitor);
         statement->traverse(visitor);
@@ -1615,7 +1719,11 @@ class DoStatement : public Statement
 
     virtual void traverse(Visitor &visitor) const
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         statement->traverse(visitor);
         condition->traverse(visitor);
@@ -1654,7 +1762,11 @@ class AssignmentStatement : public Statement
 
     virtual void traverse(Visitor &visitor) const
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         left->traverse(visitor);
         right->traverse(visitor);
@@ -1694,7 +1806,11 @@ class ExpressionStatement : public Statement
 
     void traverse(Visitor &visitor) const override
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         visitor.accept(Visitor::Phases::PRE, *this);
         expression->traverse(visitor);
@@ -1744,7 +1860,11 @@ class JumpStatement : public Statement
 
     void traverse(Visitor &visitor) const override
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         visitor.accept(Visitor::Phases::PRE, *this);
         if (expression != nullptr)
@@ -1858,7 +1978,11 @@ class NewStateStatement : public Statement
 
     virtual void traverse(Visitor &visitor) const
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         visitor.accept(Visitor::Phases::PRE, *this);
         visitor.accept(Visitor::Phases::POST, *this);
@@ -1959,7 +2083,11 @@ class State
 
     void traverse(Visitor &visitor) const
     {
-      if (!visitor.accept(*this))
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
       {
         visitor.accept(Visitor::Phases::PRE, *this);
         if (compoundStatement != nullptr)
@@ -2104,13 +2232,12 @@ class AST
     void doStateTransitions(std::function<void(const NewStateStatement &newStateStatement)> handler) const;
 
 // TODO: use traverse
-    /**
-     * print AST
+    /** print AST
      */
     void print() const;
 
   private:
-    // allow access to private methods
+    // allow access to private methods/members
     friend class Parser;
     friend class Visitor;
 

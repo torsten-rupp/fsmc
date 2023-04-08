@@ -37,17 +37,17 @@ class CVisitor : public Visitor
   #define name(string) "__" << string << suffix << "__"
 
   public:
-    CVisitor(std::ostream &output, const AST &ast, const std::string &logFunction)
+    CVisitor(std::ostream &output, const AST &ast, uint indentCount, const std::string &logFunction)
       : Visitor()
       , ast(ast)
+      , indentCount(indentCount)
       , logFunction(logFunction)
       , output(output)
     {
     }
-//    CVisitor(const CVisitor &) = delete;
-//    CVisitor(const CVisitor &&) = delete;
 
     /** indent
+     * @param n spaces to indent
      */
     void indent(uint n)
     {
@@ -57,6 +57,15 @@ class CVisitor : public Visitor
       indentString.append(indentions.back(), ' ');
     }
 
+    /** indent
+     */
+    void indent()
+    {
+      indent(indentCount);
+    }
+
+    /** unindent
+     */
     void unindent()
     {
       indentions.pop_back();
@@ -65,51 +74,54 @@ class CVisitor : public Visitor
       indentString.append(indentions.back(), ' ');
     }
 
-    void indent(uint n,std::function<void(void)> code)
+    /** indent lamda code
+     * @param code code to execute
+     */
+    void indent(std::function<void(void)> code)
     {
-      indent(2);
+      indent();
       code();
       unindent();
     }
 
-    std::string indent() const
+    /** get indent string
+     */
+    std::string indentSpaces() const
     {
       return indentString;
     }
 
-    bool accept(Phases phase, const State &state) override
+    void accept(Phases phase, const State &state) override
     {
       currentState = &state;
       switch (phase)
       {
         case Phases::PRE:
-          indent(2);
+          indent();
           switch (state.type)
           {
             case State::Type::START:
-              output << indent() << "case " << name(state.name) << ":" << std::endl;
-              output << indent() << "case " << name("STATE_START") << ":" << std::endl;
+              output << indentSpaces() << "case " << name(state.name) << ":" << std::endl;
+              output << indentSpaces() << "case " << name("STATE_START") << ":" << std::endl;
               break;
             case State::Type::DEFAULT:
-              output << indent() << "case " << name("STATE_DEFAULT") << ":" << std::endl;
+              output << indentSpaces() << "case " << name("STATE_DEFAULT") << ":" << std::endl;
               break;
             case State::Type::CUSTOM:
-              output << indent() << "case " << name(state.name) << ":" << std::endl;
+              output << indentSpaces() << "case " << name(state.name) << ":" << std::endl;
               break;
           }
-          indent(2);
+          indent();
           break;
         case Phases::POST:
-          output << indent() << "break;" << std::endl;
+          output << indentSpaces() << "break;" << std::endl;
           unindent();
           unindent();
           break;
       }
-
-      return true;
     }
 
-    bool accept(Phases phase, const StateList &stateList) override
+    void accept(Phases phase, const StateList &stateList) override
     {
       switch (phase)
       {
@@ -124,30 +136,30 @@ class CVisitor : public Visitor
             suffix = buffer.str();
 
             // states
-            output << indent() << "typedef enum" << std::endl;
-            output << indent() <<"{" << std::endl;
-            indent(2,[&]()
+            output << indentSpaces() << "typedef enum" << std::endl;
+            output << indentSpaces() <<"{" << std::endl;
+            indent([&]()
             {
               ast.doStates([&](const State *state)
               {
                 switch (state->type)
                 {
                   case State::Type::START:
-                    output << indent() << name(state->name) << "," << std::endl;
-                    output << indent() << name("STATE_START") << "," << std::endl;
+                    output << indentSpaces() << name(state->name) << "," << std::endl;
+                    output << indentSpaces() << name("STATE_START") << "," << std::endl;
                     break;
                   case State::Type::DEFAULT:
-                    output << indent() << name("STATE_DEFAULT") << "," << std::endl;
+                    output << indentSpaces() << name("STATE_DEFAULT") << "," << std::endl;
                     break;
                   case State::Type::CUSTOM:
-                    output << indent() << name(state->name) << "," << std::endl;
+                    output << indentSpaces() << name(state->name) << "," << std::endl;
                     break;
                 }
               });
             });
-            output << indent() <<"} " << name("States") << ";" << std::endl;
+            output << indentSpaces() <<"} " << name("States") << ";" << std::endl;
 
-            output << indent() << "static " << name("States") << " " << name("state");
+            output << indentSpaces() << "static " << name("States") << " " << name("state");
             const State *startState = ast.getStartState();
             if (startState != nullptr)
             {
@@ -157,24 +169,22 @@ class CVisitor : public Visitor
             uint stateStackSize = ast.getStateStackSize();
             if (stateStackSize > 0)
             {
-              output << indent() << "static " << name("States") << " " << name("stateStack") << "[" << stateStackSize << "];" << std::endl;
-              output << indent() << "static uint " << name("stateStackIndex") << " = 0;" << std::endl;
+              output << indentSpaces() << "static " << name("States") << " " << name("stateStack") << "[" << stateStackSize << "];" << std::endl;
+              output << indentSpaces() << "static uint " << name("stateStackIndex") << " = 0;" << std::endl;
             }
             output << std::endl;
 
-            output << indent() << "switch (" << name("state") << ")" << std::endl;
-            output << indent() << "{" << std::endl;
+            output << indentSpaces() << "switch (" << name("state") << ")" << std::endl;
+            output << indentSpaces() << "{" << std::endl;
           }
           break;
         case Phases::POST:
-          output << indent() <<"}" << std::endl;
+          output << indentSpaces() <<"}" << std::endl;
           break;
       }
-
-      return true;
     }
 
-    bool accept(const StorageClassSpecifier &storageClassSpecifier) override
+    void accept(const StorageClassSpecifier &storageClassSpecifier) override
     {
       switch (storageClassSpecifier.type)
       {
@@ -184,11 +194,9 @@ class CVisitor : public Visitor
         case StorageClassSpecifier::Type::AUTO:     output << "auto";     break;
         case StorageClassSpecifier::Type::REGISTER: output << "register"; break;
       }
-
-      return true;
     }
 
-    bool accept(const TypeQualifier &typeQualifier) override
+    void accept(const TypeQualifier &typeQualifier) override
     {
       switch (typeQualifier.type)
       {
@@ -197,7 +205,7 @@ class CVisitor : public Visitor
       }
     }
 
-    bool accept(const TypeSpecifier &typeSpecifier) override
+    void accept(const TypeSpecifier &typeSpecifier) override
     {
       switch (typeSpecifier.type)
       {
@@ -206,7 +214,7 @@ class CVisitor : public Visitor
       }
     }
 
-    bool accept(const StorageClassDeclarationSpecifiers &storageClassDeclarationSpecifiers) override
+    void accept(const StorageClassDeclarationSpecifiers &storageClassDeclarationSpecifiers) override
     {
       bool first = true;
       for (const StorageClassDeclarationSpecifier *storageClassDeclarationSpecifier : storageClassDeclarationSpecifiers)
@@ -215,32 +223,24 @@ class CVisitor : public Visitor
         storageClassDeclarationSpecifier->traverse(*this);
         first = false;
       }
-
-      return true;
     }
 
-    bool accept(const DirectDeclarator &directDeclarator) override
+    void accept(const DirectDeclarator &directDeclarator) override
     {
       output << directDeclarator.identifier;
-
-      return true;
     }
 
-    bool accept(const Declarator &declarator) override
+    void accept(const Declarator &declarator) override
     {
       declarator.directDeclarator->traverse(*this);
-
-      return true;
     }
 
-    bool accept(const Initializer &initializer) override
+    void accept(const Initializer &initializer) override
     {
       initializer.expression->traverse(*this);
-
-      return true;
     }
 
-    bool accept(const InitDeclarator &initDeclarator) override
+    void accept(const InitDeclarator &initDeclarator) override
     {
       if (initDeclarator.storageClassDeclarationSpecifiers != nullptr)
       {
@@ -253,13 +253,11 @@ class CVisitor : public Visitor
         output << " = ";
         initDeclarator.initializer->traverse(*this);
       }
-
-      return true;
     }
 
-    bool accept(const Declaration &declaration) override
+    void accept(const Declaration &declaration) override
     {
-      output << indent();
+      output << indentSpaces();
       if (declaration.storageClassDeclarationSpecifiers != nullptr)
       {
         declaration.storageClassDeclarationSpecifiers->traverse(*this);
@@ -267,11 +265,9 @@ class CVisitor : public Visitor
       }
       declaration.initDeclaratorList->traverse(*this);
       output << ";" << std::endl;
-
-      return true;
     }
 
-    bool accept(const PrimaryExpression &primaryExpression) override
+    void accept(const PrimaryExpression &primaryExpression) override
     {
       switch (primaryExpression.type)
       {
@@ -284,11 +280,9 @@ class CVisitor : public Visitor
           output << ')';
           break;
       }
-
-      return true;
     }
 
-    bool accept(const PostfixExpression &postfixExpression) override
+    void accept(const PostfixExpression &postfixExpression) override
     {
       switch (postfixExpression.type)
       {
@@ -312,11 +306,9 @@ class CVisitor : public Visitor
           output << "." << postfixExpression.identifier;
           break;
       }
-
-      return true;
     }
 
-    bool accept(const UnaryExpression &unaryExpression) override
+    void accept(const UnaryExpression &unaryExpression) override
     {
       switch (unaryExpression.operator_)
       {
@@ -328,20 +320,16 @@ class CVisitor : public Visitor
         case UnaryExpression::Operator::LOGICAL_NOT: output << "!"; break;
       }
       unaryExpression.expression->traverse(*this);
-
-      return true;
     }
 
-    bool accept(const CastExpression &castExpression) override
+    void accept(const CastExpression &castExpression) override
     {
 //output << "castExpression";
 //fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
       castExpression.expression->traverse(*this);
-
-      return true;
     }
 
-    bool accept(const MultiplicativeExpression &multiplicativeExpression) override
+    void accept(const MultiplicativeExpression &multiplicativeExpression) override
     {
 //output << "multiplicativeExpression";
       multiplicativeExpression.a->traverse(*this);
@@ -351,11 +339,9 @@ class CVisitor : public Visitor
         case MultiplicativeExpression::Type::DIVIDE:   output << " / "; break;
       }
       multiplicativeExpression.b->traverse(*this);
-
-      return true;
     }
 
-    bool accept(const AdditiveExpression &additiveExpression) override
+    void accept(const AdditiveExpression &additiveExpression) override
     {
 //output << "additiveExpression";
       additiveExpression.a->traverse(*this);
@@ -365,11 +351,9 @@ class CVisitor : public Visitor
         case AdditiveExpression::Type::SUBTRACT: output << " - "; break;
       }
       additiveExpression.b->traverse(*this);
-
-      return true;
     }
 
-    bool accept(const ShiftExpression &shiftExpression) override
+    void accept(const ShiftExpression &shiftExpression) override
     {
 //output << "shiftExpression";
       shiftExpression.a->traverse(*this);
@@ -382,11 +366,9 @@ class CVisitor : public Visitor
         }
         shiftExpression.b->traverse(*this);
       }
-
-      return true;
     }
 
-    bool accept(const RelationalExpression &relationalExpression) override
+    void accept(const RelationalExpression &relationalExpression) override
     {
 //output << "relationalExpression";
       switch (relationalExpression.type)
@@ -412,11 +394,9 @@ class CVisitor : public Visitor
           relationalExpression.b->traverse(*this);
           break;
       }
-
-      return true;
     }
 
-    bool accept(const EqualityExpression &equalityExpression) override
+    void accept(const EqualityExpression &equalityExpression) override
     {
 //output << "equalityExpression";
       switch (equalityExpression.type)
@@ -432,61 +412,49 @@ class CVisitor : public Visitor
           equalityExpression.b->traverse(*this);
           break;
       }
-
-      return true;
     }
 
-    bool accept(const AndExpression &andExpression) override
+    void accept(const AndExpression &andExpression) override
     {
 //output << "andExpression";
       andExpression.a->traverse(*this);
       output << " & ";
       andExpression.b->traverse(*this);
-
-      return true;
     }
 
-    bool accept(const ExclusiveOrExpression &exclusiveOrExpression) override
+    void accept(const ExclusiveOrExpression &exclusiveOrExpression) override
     {
 //output << "exclusiveOrExpression";
       exclusiveOrExpression.a->traverse(*this);
       output << " ^ ";
       exclusiveOrExpression.b->traverse(*this);
-
-      return true;
     }
 
-    bool accept(const InclusiveOrExpression &inclusiveOrExpression) override
+    void accept(const InclusiveOrExpression &inclusiveOrExpression) override
     {
 //output << "inclusiveOrExpression";
       inclusiveOrExpression.a->traverse(*this);
       output << " | ";
       inclusiveOrExpression.b->traverse(*this);
-
-      return true;
     }
 
-    bool accept(const LogicalAndExpression &logicalAndExpression) override
+    void accept(const LogicalAndExpression &logicalAndExpression) override
     {
 //output << "logicalAndExpression";
       logicalAndExpression.a->traverse(*this);
       output << " && ";
       logicalAndExpression.b->traverse(*this);
-
-      return true;
     }
 
-    bool accept(const LogicalOrExpression &logicalOrExpression) override
+    void accept(const LogicalOrExpression &logicalOrExpression) override
     {
 //output << "logicalOrExpression";
       logicalOrExpression.a->traverse(*this);
       output << " || ";
       logicalOrExpression.b->traverse(*this);
-
-      return true;
     }
 
-    bool accept(const ConditionalExpression &conditionalExpression) override
+    void accept(const ConditionalExpression &conditionalExpression) override
     {
 //output << "conditionalExpression";
       conditionalExpression.condition->traverse(*this);
@@ -494,11 +462,9 @@ class CVisitor : public Visitor
       conditionalExpression.a->traverse(*this);
       output << " : ";
       conditionalExpression.b->traverse(*this);
-
-      return true;
     }
 
-    bool accept(const AssignmentExpression &assignmentExpression) override
+    void accept(const AssignmentExpression &assignmentExpression) override
     {
       assignmentExpression.a->traverse(*this);
       switch (assignmentExpression.operator_)
@@ -516,41 +482,35 @@ class CVisitor : public Visitor
         case AssignmentExpression::Operator::OR_ASSIGN:          output << " |= ";  break;
       }
       assignmentExpression.b->traverse(*this);
-
-      return true;
     }
 
-    bool accept(const CompoundStatement &compoundStatement) override
+    void accept(const CompoundStatement &compoundStatement) override
     {
-      output << indent() << "{" << std::endl;
-      indent(2,[&]()
+      output << indentSpaces() << "{" << std::endl;
+      indent([&]()
       {
         if (compoundStatement.declarationStatementList != nullptr)
         {
           compoundStatement.declarationStatementList->traverse(*this);
         }
       });
-      output << indent() << "}" << std::endl;
-
-      return true;
+      output << indentSpaces() << "}" << std::endl;
     }
 
-    bool accept(const IfStatement &ifStatement) override
+    void accept(const IfStatement &ifStatement) override
     {
-      output << indent() << "if ("; ifStatement.condition->traverse(*this); output << ")" << std::endl;
+      output << indentSpaces() << "if ("; ifStatement.condition->traverse(*this); output << ")" << std::endl;
       ifStatement.ifStatement->traverse(*this);
       if (ifStatement.elseStatement != nullptr)
       {
-        output << indent() << "else" << std::endl;
+        output << indentSpaces() << "else" << std::endl;
         ifStatement.elseStatement->traverse(*this);
       }
-
-      return true;
     }
 
-    bool accept(const ForStatement &forStatement) override
+    void accept(const ForStatement &forStatement) override
     {
-      output << indent() << "for (";
+      output << indentSpaces() << "for (";
       forStatement.init->traverse(*this);
       output << "; ";
       forStatement.condition->traverse(*this);
@@ -560,52 +520,48 @@ class CVisitor : public Visitor
       forStatement.statement->traverse(*this);
     }
 
-    bool accept(const WhileStatement &whileStatement) override
+    void accept(const WhileStatement &whileStatement) override
     {
-      output << indent() << "while (";
+      output << indentSpaces() << "while (";
       whileStatement.condition->traverse(*this);
       output << ")" << std::endl;
       whileStatement.statement->traverse(*this);
     }
 
-    bool accept(const DoStatement &doStatement) override
+    void accept(const DoStatement &doStatement) override
     {
-      output << indent() << "do" << std::endl;
+      output << indentSpaces() << "do" << std::endl;
       doStatement.statement->traverse(*this);
-      output << indent() << "while (";
+      output << indentSpaces() << "while (";
       doStatement.condition->traverse(*this);
       output << ");" << std::endl;
-
-      return true;
     }
 
-    bool accept(Phases phase, const ExpressionStatement &expressionStatement) override
+    void accept(Phases phase, const ExpressionStatement &expressionStatement) override
     {
       switch (phase)
       {
         case Phases::PRE:
-          output << indent();
+          output << indentSpaces();
           break;
         case Phases::POST:
           output << ";" << std::endl;
           break;
       }
-
-      return true;
     }
 
-    bool accept(const JumpStatement &jumpStatement) override
+    void accept(const JumpStatement &jumpStatement) override
     {
       switch (jumpStatement.type)
       {
         case JumpStatement::Type::CONTINUE:
-          output << indent() << "continue" << ';' <<  std::endl;
+          output << indentSpaces() << "continue" << ';' <<  std::endl;
           break;
         case JumpStatement::Type::BREAK:
-          output << indent() << "break" << ';' <<  std::endl;
+          output << indentSpaces() << "break" << ';' <<  std::endl;
           break;
         case JumpStatement::Type::RETURN:
-          output << indent() << "return";
+          output << indentSpaces() << "return";
           if (jumpStatement.expression != nullptr)
           {
             output << " ";
@@ -614,14 +570,12 @@ class CVisitor : public Visitor
           output << ";" << std::endl;
         break;
       }
-
-      return true;
     }
 
-    bool accept(const NewStateStatement &newStateStatement) override
+    void accept(const NewStateStatement &newStateStatement) override
     {
-      output << indent() << "{" << std::endl;
-      indent(2);
+      output << indentSpaces() << "{" << std::endl;
+      indent();
       switch (newStateStatement.prefixOperator)
       {
         case NewStateStatement::PrefixOperator::PUSH:
@@ -629,10 +583,10 @@ class CVisitor : public Visitor
           {
             if (ast.isAsserts())
             {
-              output << indent() << "assert(" << name("stateStackIndex") << " < " << ast.getStateStackSize() << ");" << std::endl;
+              output << indentSpaces() << "assert(" << name("stateStackIndex") << " < " << ast.getStateStackSize() << ");" << std::endl;
             }
-            output << indent() << name("stateStack") << "[" << name("stateStackIndex") << "] = " << name("state") << ";" << std::endl;
-            output << indent() << name("stateStackIndex") <<"++;" << std::endl;
+            output << indentSpaces() << name("stateStack") << "[" << name("stateStackIndex") << "] = " << name("state") << ";" << std::endl;
+            output << indentSpaces() << name("stateStackIndex") <<"++;" << std::endl;
           }
           else
           {
@@ -642,7 +596,7 @@ class CVisitor : public Visitor
         case NewStateStatement::PrefixOperator::RESET:
           if (ast.hasStateStack())
           {
-            output << indent() << name("stateStackIndex") <<" = 0;" << std::endl;
+            output << indentSpaces() << name("stateStackIndex") <<" = 0;" << std::endl;
           }
           else
           {
@@ -655,30 +609,30 @@ class CVisitor : public Visitor
       switch (newStateStatement.type)
       {
         case NewStateStatement::Type::START:
-          output << indent() << name("state") << " = " << name(ast.getStartState()) << ";" << std::endl;
+          output << indentSpaces() << name("state") << " = " << name(ast.getStartState()) << ";" << std::endl;
           break;
         case NewStateStatement::Type::DEFAULT:
-          output << indent() << name("state") << " = " << name("STATE_DEFAULT") << ";" << std::endl;
+          output << indentSpaces() << name("state") << " = " << name("STATE_DEFAULT") << ";" << std::endl;
           break;
         case NewStateStatement::Type::POP:
           if (ast.hasStateStack())
           {
             if (ast.isAsserts())
             {
-              output << indent() << "assert(" << name("stateStackIndex") << " > 0);" << std::endl;
-              output << indent() << name("stateStackIndex") << "--;" << std::endl;
-              output << indent() << name("state") << " = " << name("stateStack") << "[" << name("stateStackIndex") << "];" << std::endl;
+              output << indentSpaces() << "assert(" << name("stateStackIndex") << " > 0);" << std::endl;
+              output << indentSpaces() << name("stateStackIndex") << "--;" << std::endl;
+              output << indentSpaces() << name("state") << " = " << name("stateStack") << "[" << name("stateStackIndex") << "];" << std::endl;
             }
             else
             {
-              output << indent() << "if (" << name("stateStackIndex") << " > 0)" << std::endl;
-              output << indent() << "{" << std::endl;
-              indent(2,[&]()
+              output << indentSpaces() << "if (" << name("stateStackIndex") << " > 0)" << std::endl;
+              output << indentSpaces() << "{" << std::endl;
+              indent([&]()
               {
-                output << indent() << name("stateStackIndex") << "--;" << std::endl;
-                output << indent() << name("state") << " = " << name("stateStack") << "[" << name("stateStackIndex") << "];" << std::endl;
+                output << indentSpaces() << name("stateStackIndex") << "--;" << std::endl;
+                output << indentSpaces() << name("state") << " = " << name("stateStack") << "[" << name("stateStackIndex") << "];" << std::endl;
               });
-              output << indent() << "}" << std::endl;
+              output << indentSpaces() << "}" << std::endl;
             }
           }
           else
@@ -687,22 +641,22 @@ class CVisitor : public Visitor
           }
           break;
         case NewStateStatement::Type::CUSTOM:
-          output << indent() << name("state") << " = " << name(newStateStatement.name) << ";" << std::endl;
+          output << indentSpaces() << name("state") << " = " << name(newStateStatement.name) << ";" << std::endl;
           if (!logFunction.empty())
           {
-            output << indent() << expandMacros(logFunction,newStateStatement.name) << ";" << std::endl;
+            output << indentSpaces() << expandMacros(logFunction,newStateStatement.name) << ";" << std::endl;
           }
           break;
       }
       unindent();
-      output << indent() << "}" << std::endl;
-
-      return true;
+      output << indentSpaces() << "}" << std::endl;
     }
 
   private:
     std::ostream      &output;
     const AST         &ast;
+    uint              startIndentCount;
+    uint              indentCount;
     const std::string &logFunction;
     std::string       suffix;
     const State       *currentState;
@@ -724,17 +678,20 @@ class CVisitor : public Visitor
 
 void CodeGenerator::generate(AST &ast)
 {
-  CVisitor visitor(output, ast, logFunction);
+  CVisitor visitor(output, ast, indentCount, logFunction);
 
-  visitor.indent(indent);
-  output << visitor.indent() << "" << std::endl;
-  output << visitor.indent() << "// FSM start " << ast.getFSMName() << std::endl;
-  output << visitor.indent() << "{" << std::endl;
-  visitor.indent(2);
-  visitor.run(ast);
-  visitor.unindent();
-  output << visitor.indent() << "}" << std::endl;
-  output << visitor.indent() << "// FSM end" << std::endl;
+  visitor.indent(startIndentCount);
+  visitor.indent([&]()
+  {
+    output << visitor.indentSpaces() << "" << std::endl;
+    output << visitor.indentSpaces() << "// FSM start " << ast.getFSMName() << std::endl;
+    output << visitor.indentSpaces() << "{" << std::endl;
+    visitor.indent();
+    visitor.run(ast);
+    visitor.unindent();
+    output << visitor.indentSpaces() << "}" << std::endl;
+    output << visitor.indentSpaces() << "// FSM end" << std::endl;
+  });
   visitor.unindent();
 }
 
