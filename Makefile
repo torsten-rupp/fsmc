@@ -39,7 +39,7 @@ all: fsmc
 clean:
 	rm -f scanner.cpp
 	rm -f parser.cpp parser.hpp parser.output location.hh position.hh stack.hh
-	rm -f main.o scanner.o parser.o ast.o
+	rm -f fsmc.o scanner.o parser.o ast.o
 	rm -f codegenerator.o dotgenerator.o
 	rm -f fsmc
 
@@ -48,7 +48,7 @@ scanner.cpp: scanner.l
 parser.cpp parser.hpp: parser.y
 	bison -o parser.cpp parser.y
 
-main.o: main.cpp scanner.h parser.hpp ast.h
+fsmc.o: fsmc.cpp scanner.h parser.hpp ast.h
 scanner.o: scanner.cpp scanner.h parser.hpp
 parser.o: parser.cpp parser.hpp scanner.h ast.h
 ast.o: ast.cpp ast.h visitor.h
@@ -56,7 +56,7 @@ visitor.o: visitor.cpp visitor.h
 codegenerator.o: codegenerator.cpp codegenerator.h ast.h visitor.h
 dotgenerator.o: dotgenerator.cpp dotgenerator.h ast.h visitor.h
 
-fsmc: main.o scanner.o parser.o ast.o visitor.o codegenerator.o dotgenerator.o
+fsmc: fsmc.o scanner.o parser.o ast.o visitor.o codegenerator.o dotgenerator.o
 	g++ -g $^ -o fsmc
 
 .PHONY: test

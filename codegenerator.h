@@ -24,16 +24,20 @@ namespace FSM
 class CodeGenerator
 {
   public:
-    CodeGenerator(std::ostream &output)
+    CodeGenerator(std::ostream &output, uint indent, const std::string &logFunction)
       : output(output)
+      , indent(indent)
+      , logFunction(logFunction)
     {
     }
 
 // TODO:const AST
-  void generate(AST &ast, uint indent, const std::string &logFunction);
+  void generate(AST &ast);
 
   private:
-    std::ostream &output;
+    std::ostream      &output;
+    uint              indent;
+    const std::string &logFunction;
 };
 
 } // namespace FSM

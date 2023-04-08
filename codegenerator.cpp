@@ -34,6 +34,8 @@ using namespace FSM;
 
 class CVisitor : public Visitor
 {
+  #define name(string) "__" << string << suffix << "__"
+
   public:
     CVisitor(std::ostream &output, const AST &ast, const std::string &logFunction)
       : Visitor()
@@ -45,6 +47,36 @@ class CVisitor : public Visitor
 //    CVisitor(const CVisitor &) = delete;
 //    CVisitor(const CVisitor &&) = delete;
 
+    /** indent
+     */
+    void indent(uint n)
+    {
+      indentions.push_back(indentions.back()+n);
+
+      indentString.clear();
+      indentString.append(indentions.back(), ' ');
+    }
+
+    void unindent()
+    {
+      indentions.pop_back();
+
+      indentString.clear();
+      indentString.append(indentions.back(), ' ');
+    }
+
+    void indent(uint n,std::function<void(void)> code)
+    {
+      indent(2);
+      code();
+      unindent();
+    }
+
+    std::string indent() const
+    {
+      return indentString;
+    }
+
     bool accept(Phases phase, const State &state) override
     {
       currentState = &state;
@@ -55,14 +87,14 @@ class CVisitor : public Visitor
           switch (state.type)
           {
             case State::Type::START:
-              output << indent() << "case " << state.name << suffix << ":" << std::endl;
-              output << indent() << "case " << "STATE_START" << suffix << ":" << std::endl;
+              output << indent() << "case " << name(state.name) << ":" << std::endl;
+              output << indent() << "case " << name("STATE_START") << ":" << std::endl;
               break;
             case State::Type::DEFAULT:
-              output << indent() << "case " << "STATE_DEFAULT" << suffix << ":" << std::endl;
+              output << indent() << "case " << name("STATE_DEFAULT") << ":" << std::endl;
               break;
             case State::Type::CUSTOM:
-              output << indent() << "case " << state.name << suffix << ":" << std::endl;
+              output << indent() << "case " << name(state.name) << ":" << std::endl;
               break;
           }
           indent(2);
@@ -101,36 +133,36 @@ class CVisitor : public Visitor
                 switch (state->type)
                 {
                   case State::Type::START:
-                    output << indent() << state->name << suffix << "," << std::endl;
-                    output << indent() << "STATE_START" << suffix << "," << std::endl;
+                    output << indent() << name(state->name) << "," << std::endl;
+                    output << indent() << name("STATE_START") << "," << std::endl;
                     break;
                   case State::Type::DEFAULT:
-                    output << indent() << "STATE_DEFAULT" << suffix << "," << std::endl;
+                    output << indent() << name("STATE_DEFAULT") << "," << std::endl;
                     break;
                   case State::Type::CUSTOM:
-                    output << indent() << state->name << suffix << "," << std::endl;
+                    output << indent() << name(state->name) << "," << std::endl;
                     break;
                 }
               });
             });
-            output << indent() <<"} States" << suffix << ";" << std::endl;
+            output << indent() <<"} " << name("States") << ";" << std::endl;
 
-            output << indent() << "static States" << suffix << " state" << suffix;
+            output << indent() << "static " << name("States") << " " << name("state");
             const State *startState = ast.getStartState();
             if (startState != nullptr)
             {
-              output << " = " << startState->name << suffix;
+              output << " = " << name(startState->name);
             }
             output << ";" << std::endl;
             uint stateStackSize = ast.getStateStackSize();
             if (stateStackSize > 0)
             {
-              output << indent() << "static States" << suffix << " stateStack" << suffix << "[" << stateStackSize << "];" << std::endl;
-              output << indent() << "static uint stateStackIndex" << suffix << " = 0;" << std::endl;
+              output << indent() << "static " << name("States") << " " << name("stateStack") << "[" << stateStackSize << "];" << std::endl;
+              output << indent() << "static uint " << name("stateStackIndex") << " = 0;" << std::endl;
             }
             output << std::endl;
 
-            output << indent() << "switch (state" << suffix << ")" << std::endl;
+            output << indent() << "switch (" << name("state") << ")" << std::endl;
             output << indent() << "{" << std::endl;
           }
           break;
@@ -482,9 +514,6 @@ class CVisitor : public Visitor
         case AssignmentExpression::Operator::AND_ASSIGN:         output << " &= ";  break;
         case AssignmentExpression::Operator::XOR_ASSIGN:         output << " ^= ";  break;
         case AssignmentExpression::Operator::OR_ASSIGN:          output << " |= ";  break;
-default:
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
-break;
       }
       assignmentExpression.b->traverse(*this);
 
@@ -600,10 +629,10 @@ break;
           {
             if (ast.isAsserts())
             {
-              output << indent() << "assert(stateStackIndex" << suffix << " < " << ast.getStateStackSize() << ");" << std::endl;
+              output << indent() << "assert(" << name("stateStackIndex") << " < " << ast.getStateStackSize() << ");" << std::endl;
             }
-            output << indent() << "stateStack" << suffix << "[stateStackIndex" << suffix <<"] = state" << suffix << ";" << std::endl;
-            output << indent() << "stateStackIndex" << suffix <<"++;" << std::endl;
+            output << indent() << name("stateStack") << "[" << name("stateStackIndex") << "] = " << name("state") << ";" << std::endl;
+            output << indent() << name("stateStackIndex") <<"++;" << std::endl;
           }
           else
           {
@@ -613,7 +642,7 @@ break;
         case NewStateStatement::PrefixOperator::RESET:
           if (ast.hasStateStack())
           {
-            output << indent() << "stateStackIndex" << suffix <<" = 0;" << std::endl;
+            output << indent() << name("stateStackIndex") <<" = 0;" << std::endl;
           }
           else
           {
@@ -626,28 +655,28 @@ break;
       switch (newStateStatement.type)
       {
         case NewStateStatement::Type::START:
-          output << indent() << "state" << suffix << " = " << ast.getStartState()    << suffix << ";" << std::endl;
+          output << indent() << name("state") << " = " << name(ast.getStartState()) << ";" << std::endl;
           break;
         case NewStateStatement::Type::DEFAULT:
-          output << indent() << "state" << suffix << " = STATE_DEFAULT"              << suffix << ";" << std::endl;
+          output << indent() << name("state") << " = " << name("STATE_DEFAULT") << ";" << std::endl;
           break;
         case NewStateStatement::Type::POP:
           if (ast.hasStateStack())
           {
             if (ast.isAsserts())
             {
-              output << indent() << "assert(stateStackIndex" << suffix << " > 0);" << std::endl;
-              output << indent() << "stateStackIndex" << suffix << "--;" << std::endl;
-              output << indent() << "state" << suffix << " = stateStack" << suffix << "[stateStackIndex" << suffix << "];" << std::endl;
+              output << indent() << "assert(" << name("stateStackIndex") << " > 0);" << std::endl;
+              output << indent() << name("stateStackIndex") << "--;" << std::endl;
+              output << indent() << name("state") << " = " << name("stateStack") << "[" << name("stateStackIndex") << "];" << std::endl;
             }
             else
             {
-              output << indent() << "if (stateStackIndex" << suffix << " > 0)" << std::endl;
+              output << indent() << "if (" << name("stateStackIndex") << " > 0)" << std::endl;
               output << indent() << "{" << std::endl;
               indent(2,[&]()
               {
-                output << indent() << "stateStackIndex" << suffix << "--;" << std::endl;
-                output << indent() << "state" << suffix << " = stateStack" << suffix << "[stateStackIndex" << suffix << "];" << std::endl;
+                output << indent() << name("stateStackIndex") << "--;" << std::endl;
+                output << indent() << name("state") << " = " << name("stateStack") << "[" << name("stateStackIndex") << "];" << std::endl;
               });
               output << indent() << "}" << std::endl;
             }
@@ -658,7 +687,7 @@ break;
           }
           break;
         case NewStateStatement::Type::CUSTOM:
-          output << indent() << "state" << suffix << " = " << newStateStatement.name << suffix << ";" << std::endl;
+          output << indent() << name("state") << " = " << name(newStateStatement.name) << ";" << std::endl;
           if (!logFunction.empty())
           {
             output << indent() << expandMacros(logFunction,newStateStatement.name) << ";" << std::endl;
@@ -678,6 +707,9 @@ break;
     std::string       suffix;
     const State       *currentState;
 
+    std::vector<uint> indentions{0};
+    std::string       indentString;
+
     std::string expandMacros(const std::string &logFunction, const std::string &toStateName)
     {
       std::regex fromStateNameRegEx("@fromStateName@");
@@ -690,7 +722,7 @@ break;
     }
 };
 
-void CodeGenerator::generate(AST &ast, uint indent, const std::string &logFunction)
+void CodeGenerator::generate(AST &ast)
 {
   CVisitor visitor(output, ast, logFunction);
 
