@@ -68,3 +68,6 @@ tests:
 .PHONY: examples
 examples:
 	$(MAKE) -C examples
+
+# user makefile
+-include Makefile.user
