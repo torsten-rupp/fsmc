@@ -39,7 +39,7 @@ class CodeGenerator
     }
 
 // TODO:const AST
-  void generate(AST &ast);
+  void generate(const AST &ast);
 
   private:
     std::ostream      &output;

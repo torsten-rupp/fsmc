@@ -1152,7 +1152,6 @@ class StorageClassDeclarationSpecifiers : public std::vector<StorageClassDeclara
 {
   public:
     StorageClassDeclarationSpecifiers(StorageClassSpecifier *storageClassSpecifier)
-// TODO: storageClassSpecifier
       : std::vector<StorageClassDeclarationSpecifier*>{storageClassSpecifier}
     {
     }
@@ -2160,7 +2159,7 @@ class AST
     /** travers AST
      * @param visitor visitor
      */
-    void traverse(Visitor &visitor);
+    void traverse(Visitor &visitor) const;
 
     /** get FSM name
      * @return name

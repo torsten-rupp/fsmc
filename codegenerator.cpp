@@ -676,7 +676,7 @@ class CVisitor : public Visitor
     }
 };
 
-void CodeGenerator::generate(AST &ast)
+void CodeGenerator::generate(const AST &ast)
 {
   CVisitor visitor(output, ast, indentCount, logFunction);
 

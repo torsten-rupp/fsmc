@@ -40,7 +40,7 @@ void AST::clear()
   states.clear();
 }
 
-void AST::traverse(Visitor &visitor)
+void AST::traverse(Visitor &visitor) const
 {
   getStateList().traverse(visitor);
 }

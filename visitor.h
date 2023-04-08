@@ -87,7 +87,7 @@ class Visitor
     }
 
 // TODO: AST const &ast
-    void run(AST &ast);
+    void run(const AST &ast);
 
     #define ACCEPT(type) \
       virtual void accept(const type &) \

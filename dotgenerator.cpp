@@ -29,9 +29,8 @@ using namespace FSM;
 /***************************** Forwards ********************************/
 
 /***************************** Functions *******************************/
-//  INITIAL                                  -> CHECK_MAX_NUM_OF_RRT [color=blue, penwidth=3.0];
 
-std::string optionsToString(const NewStateStatement &newStateStatement)
+static std::string optionsToString(const NewStateStatement &newStateStatement)
 {
   std::stringstream buffer;
   bool              first = true;
@@ -139,6 +138,5 @@ std::vector<const State*> DotGenerator::getPushStates(const AST &ast, const Stat
 
   return pushStates;
 }
-
 
 /* end of file */

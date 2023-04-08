@@ -19,7 +19,7 @@ using namespace FSM;
 
 /***************************** Datatypes *******************************/
 
-void Visitor::run(AST &ast)
+void Visitor::run(const AST &ast)
 {
   ast.traverse(*this);
 }
