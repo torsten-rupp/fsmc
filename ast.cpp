@@ -49,7 +49,7 @@ void AST::validateStates() const
 {
   doStateTransitions([&](const NewStateStatement &newStateStatement)
   {
-    if (newStateStatement.type != NewStateStatement::Type::POP)
+    if (newStateStatement.type == NewStateStatement::Type::CUSTOM)
     {
       if (getState(newStateStatement.name) == nullptr)
       {

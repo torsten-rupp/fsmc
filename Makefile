@@ -11,6 +11,8 @@
 CFLAGS   = -D_GNU_SOURCE -I.
 CXXFLAGS = -D_GNU_SOURCE -I.
 
+%.o:%.c
+	gcc $(CFLAGS) -std=c99 -c -g $*.c -o $@
 %.o:%.cpp
 	g++ $(CXXFLAGS) -std=c++11 -c -g $*.cpp -o $@
 
@@ -23,14 +25,12 @@ default: all
 help:
 	@echo "Help:"
 	@echo ""
-	@echo "fsmc"
+	@echo "make fsmc"
+	@echo "make clean"
 	@echo ""
-	@echo "examples"
+	@echo "make tests"
 	@echo ""
-	@echo "test1 [DEBUG=1]"
-	@echo "test2 [DEBUG=1]"
-	@echo "test3 [DEBUG=1]"
-	@echo "test4 [DEBUG=1]"
+	@echo "make examples"
 
 .PHONY: all
 all: fsmc
@@ -42,6 +42,8 @@ clean:
 	rm -f fsmc.o scanner.o parser.o ast.o
 	rm -f codegenerator.o dotgenerator.o
 	rm -f fsmc
+	$(MAKE) -C tests clean
+	$(MAKE) -C examples clean
 
 scanner.cpp: scanner.l
 	flex -o scanner.cpp scanner.l
@@ -59,32 +61,10 @@ dotgenerator.o: dotgenerator.cpp dotgenerator.h ast.h visitor.h
 fsmc: fsmc.o scanner.o parser.o ast.o visitor.o codegenerator.o dotgenerator.o
 	g++ -g $^ -o fsmc
 
-.PHONY: test
-test: test1
-
-.PHONY: test1
-test1: fsmc
-	(echo 'f(1,2,3);'|./fsmc)
-
-.PHONY: test2
-test2: fsmc
-	(cat demo.c|./fsmc)
-
-.PHONY: test3
-test3: fsmc
-	(cat demo.fsm|./fsmc)
-
-.PHONY: test4
-test4: fsmc
-	./fsmc demo.c -d . -n 123 -a -l "logStateChange(@fromStateName@,@toStateName@)"
-.PHONY: test4d
-test4d: fsmc
-	gdb --args ./fsmc demo.c -d . --state-stack-size 123 --asserts --log-function "logStateChange(@fromStateName@,@toStateName@)"
+.PHONY: tests
+tests:
+	$(MAKE) -C tests
 
 .PHONY: examples
-examples: \
-  examples/traffic_lights
-
-.PHONY: examples/traffic_lights
-examples/traffic_lights: examples/traffic_lights.c fsmc
-	./fsmc examples/traffic_lights.c -d examples -n 8 -a -l 'logStateChange(@fromStateName@,@toStateName@)'| gcc -x c - -o examples/traffic_lights
+examples:
+	$(MAKE) -C examples
