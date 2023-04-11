@@ -264,7 +264,11 @@ stateDefinition:
     {
       ast.addState(new State(State::Type::CUSTOM,$stateName,$compoundStatement));
     }
-  | KEYWORD_DEFAULT compoundStatement
+  | KEYWORD_DEFAULT
+    {
+      currentStateName = Identifier("default");
+    }
+    compoundStatement
     {
       ast.addState(new State(State::Type::DEFAULT,$compoundStatement));
     }
