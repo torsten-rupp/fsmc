@@ -240,9 +240,16 @@ class ArgumentExpressionList : public std::vector<Expression*>, private VisitorI
 
     void traverse(Visitor &visitor) const override
     {
-      for (const Expression *expression : *this)
+      try
       {
-        expression->traverse(visitor);
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
+      {
+        for (const Expression *expression : *this)
+        {
+          expression->traverse(visitor);
+        }
       }
     }
 };

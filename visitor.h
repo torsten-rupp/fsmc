@@ -26,6 +26,7 @@ class StateList;
 
 class Expression;
 class PrimaryExpression;
+class ArgumentExpressionList;
 class PostfixExpression;
 class UnaryExpression;
 class CastExpression;
@@ -103,6 +104,7 @@ class Visitor
 
     ACCEPT(Expression);
     ACCEPT(PrimaryExpression);
+    ACCEPT(ArgumentExpressionList);
     ACCEPT(PostfixExpression);
     ACCEPT(UnaryExpression);
     ACCEPT(CastExpression);

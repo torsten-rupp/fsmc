@@ -282,6 +282,17 @@ class CVisitor : public Visitor
       }
     }
 
+    void accept(const ArgumentExpressionList &argumentExpressionList) override
+    {
+      bool first = true;
+      for (const Expression *expression : argumentExpressionList)
+      {
+        if (!first) output << ", ";        
+        expression->traverse(*this);
+        first = false;
+      }
+    }
+
     void accept(const PostfixExpression &postfixExpression) override
     {
       switch (postfixExpression.type)

@@ -33,6 +33,7 @@ int main(int argc, const char *argv[])
       }
       
       a = b.c.d;
+      foo(a, b, c);
 
       -> STATE1("abc",blue,4);
     }
