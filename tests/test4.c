@@ -51,7 +51,7 @@ int main(int argc, const char *argv[])
     DONE
     {
       printf("foo");
-     -> INIT;
+     -> start;
     }
 
     default

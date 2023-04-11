@@ -620,7 +620,7 @@ class CVisitor : public Visitor
       switch (newStateStatement.type)
       {
         case NewStateStatement::Type::START:
-          output << indentSpaces() << name("state") << " = " << name(ast.getStartState()) << ";" << std::endl;
+          output << indentSpaces() << name("state") << " = " << name(ast.getStartState()->name) << ";" << std::endl;
           break;
         case NewStateStatement::Type::DEFAULT:
           output << indentSpaces() << name("state") << " = " << name("STATE_DEFAULT") << ";" << std::endl;
