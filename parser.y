@@ -59,9 +59,9 @@
   static FSM::Parser::symbol_type yylex(FSM::Scanner &scanner)
   {
     return scanner.get_next_token();
-  }
+  } 
 
-  FSM::Identifier  currentStateName;
+  FSM::Identifier currentStateName;
 }
 
 // implementation
@@ -70,7 +70,7 @@
 }
 
 %lex-param { Scanner &scanner }
-%parse-param { const std::string &filePath }
+%parse-param { const std::string inputFilePath }
 %parse-param { Scanner &scanner }
 %parse-param { AST &ast }
 %locations
@@ -1377,6 +1377,6 @@ number:
 void FSM::Parser::error(const location_type &location, const std::string &message)
 {
   std::stringstream buffer;
-  buffer << filePath << ":" << location.begin.line << ":" << location.begin.column << ": " << message;
+  buffer << inputFilePath << ":" << location.begin.line << ":" << location.begin.column << ": " << message;
   throw std::runtime_error(buffer.str());
 }
