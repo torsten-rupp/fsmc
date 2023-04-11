@@ -72,10 +72,10 @@ void DotGenerator::generate(const AST &ast)
         switch (newStateStatement.type)
         {
           case NewStateStatement::Type::START:
-            output << "  " << state->name << " -> " << ast.getStartState() << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
+            output << "  " << state->name << " -> " << ast.getStartState()->name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
             break;
           case NewStateStatement::Type::DEFAULT:
-            output << "  " << state->name << " -> " << ast.getDefaultState() << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
+            output << "  " << state->name << " -> " << ast.getDefaultState()->name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
             break;
           case NewStateStatement::Type::POP:
             {
