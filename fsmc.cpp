@@ -15,7 +15,7 @@
 #include <stdexcept>
 
 #include "scanner.h"
-#include "parser.h"
+#include "parser.hpp"
 #include "ast.h"
 #include "codegenerator.h"
 #include "dotgenerator.h"
