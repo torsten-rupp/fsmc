@@ -303,7 +303,7 @@ class CVisitor : public Visitor
           break;
         case PostfixExpression::Type::MEMBER:
           postfixExpression.structure->traverse(*this);
-          output << "." << postfixExpression.identifier;
+          output << "." << *postfixExpression.identifier;
           break;
       }
     }

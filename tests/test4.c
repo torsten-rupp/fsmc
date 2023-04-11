@@ -31,6 +31,8 @@ int main(int argc, const char *argv[])
       {
         abc = 123;
       }
+      
+      a = b.c.d;
 
       -> STATE1("abc",blue,4);
     }
