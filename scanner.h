@@ -30,9 +30,9 @@
  * with a preprocessor macro. See GNU Flex manual, "Generating C++ Scanners" section
  */
 #if ! defined(yyFlexLexerOnce)
-#undef yyFlexLexer
-#define yyFlexLexer FSM_FlexLexer // the trick with prefix; no namespace here :(
-#include <FlexLexer.h>
+  #undef yyFlexLexer
+  #define yyFlexLexer FSM_FlexLexer // the trick with prefix; no namespace here :(
+  #include <FlexLexer.h>
 #endif
 
 // Scanner method signature is defined by this macro. Original yylex() returns int.
@@ -41,17 +41,14 @@
 #undef YY_DECL
 #define YY_DECL FSM::Parser::symbol_type FSM::Scanner::get_next_token()
 
-#include "parser.hpp" // this is needed for symbol_type
+#include "parser.hpp"
 
 namespace FSM
 {
 
 class Scanner : public yyFlexLexer
 {
-public:
-//    Scanner() {}
-//    virtual ~Scanner() {}
-
+  public:
     virtual FSM::Parser::symbol_type get_next_token();
 
     void setLineNumber(uint lineNb);
@@ -60,7 +57,7 @@ public:
     uint getLine();
     uint getColumn();
 
-private:
+  private:
 };
 
 }  // namespace FSM
