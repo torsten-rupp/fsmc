@@ -319,7 +319,8 @@ storageClassDeclarationSpecifiers
 //      $2.prepend($1);
       $1->add($2);
       $$ = $1;
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | storageClassSpecifier
     {
@@ -424,7 +425,8 @@ unaryExpression
     }
   | KEYWORD_SIZEOF '(' type_name ')'
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | postfixExpression[a]
     {
@@ -462,7 +464,8 @@ unaryOperator
 castExpression
   : '(' type_name ')' castExpression
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | unaryExpression
     {
@@ -696,7 +699,8 @@ assignmentOperator
 expression
   : expression ',' assignmentExpression
     {
-      fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | assignmentExpression
     {
@@ -707,7 +711,8 @@ expression
 constant_expression
   : conditionalExpression
     {
-      fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
@@ -796,11 +801,13 @@ typeSpecifier
     }
   | struct_or_union_specifier
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | enum_specifier
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   //| TYPE_NAME
   | IDENTIFIER[name]
@@ -812,126 +819,150 @@ fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
 struct_or_union_specifier
   : struct_or_union IDENTIFIER '{' struct_declarationList '}'
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | struct_or_union '{' struct_declarationList '}'
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | struct_or_union IDENTIFIER
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
 struct_or_union
   : KEYWORD_STRUCT
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | KEYWORD_UNION
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
 struct_declarationList
   : struct_declaration
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | struct_declarationList struct_declaration
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
 struct_declaration
   : specifier_qualifier_list struct_declarator_list ';'
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
 specifier_qualifier_list
   : typeSpecifier specifier_qualifier_list
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | typeSpecifier
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | typeQualifier specifier_qualifier_list
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | typeQualifier
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
 struct_declarator_list
   : struct_declarator
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | struct_declarator_list ',' struct_declarator
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
 struct_declarator
   : declarator
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | ':' constant_expression
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | declarator ':' constant_expression
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
 enum_specifier
   : ENUM '{' enumerator_list '}'
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | ENUM IDENTIFIER '{' enumerator_list '}'
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | ENUM IDENTIFIER
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
 enumerator_list
   : enumerator
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | enumerator_list ',' enumerator
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
 enumerator
   : IDENTIFIER
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | IDENTIFIER '=' constant_expression
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
@@ -963,7 +994,8 @@ declarator
     {
 // TODO:
       $$ = new Declarator($directDeclarator);
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | directDeclarator
     {
@@ -978,159 +1010,192 @@ directDeclarator
     }
   | '(' declarator ')'
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | directDeclarator '[' constant_expression ']'
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | directDeclarator '[' ']'
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | directDeclarator '(' parameter_type_list ')'
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | directDeclarator '(' identifier_list ')'
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | directDeclarator '(' ')'
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
 pointer
   : '*'
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | '*' typeQualifierList
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | '*' pointer
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | '*' typeQualifierList pointer
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
 parameter_type_list
   : parameter_list
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | parameter_list ',' ELLIPSIS
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
 parameter_list
   : parameter_declaration
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | parameter_list ',' parameter_declaration
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
 parameter_declaration
   : storageClassDeclarationSpecifiers declarator
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | storageClassDeclarationSpecifiers abstract_declarator
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | storageClassDeclarationSpecifiers
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
 identifier_list
   : identifier_list ',' IDENTIFIER
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | IDENTIFIER
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
 type_name
   : specifier_qualifier_list
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | specifier_qualifier_list abstract_declarator
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
 abstract_declarator
   : pointer
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | direct_abstract_declarator
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | pointer direct_abstract_declarator
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
 direct_abstract_declarator
   : '(' abstract_declarator ')'
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | '[' ']'
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | '[' constant_expression ']'
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | direct_abstract_declarator '[' ']'
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | direct_abstract_declarator '[' constant_expression ']'
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | '(' ')'
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | '(' parameter_type_list ')'
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | direct_abstract_declarator '(' ')'
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | direct_abstract_declarator '(' parameter_type_list ')'
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
@@ -1141,22 +1206,26 @@ initializer
     }
   | '{' initializer_list '}'
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | '{' initializer_list ',' '}'
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
 initializer_list
   : initializer_list ',' initializer
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | initializer
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
@@ -1194,15 +1263,18 @@ statement
 labeled_statement
   : IDENTIFIER ':' statement
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | KEYWORD_CASE constant_expression ':' statement
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | KEYWORD_DEFAULT ':' statement
     {
-fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
@@ -1239,14 +1311,16 @@ selectionStatement
     }
   | KEYWORD_SWITCH '(' expression ')' statement
     {
-      fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
 iterationStatement
   : KEYWORD_WHILE '(' expression ')' statement
     {
-      fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | KEYWORD_DO statement KEYWORD_WHILE '(' expression ')' ';'
     {
@@ -1254,11 +1328,13 @@ iterationStatement
     }
   | KEYWORD_FOR '(' expressionStatement expressionStatement ')' statement
     {
-      fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   | KEYWORD_FOR '(' expressionStatement expressionStatement expression ')' statement
     {
-      fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
     }
   ;
 
