@@ -65,6 +65,9 @@ fsmc: fsmc.o scanner.o parser.o ast.o visitor.o codegenerator.o dotgenerator.o
 tests:
 	$(MAKE) -C tests
 
+test%:
+	$(MAKE) -C tests test$*
+
 .PHONY: examples
 examples:
 	$(MAKE) -C examples

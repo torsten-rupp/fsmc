@@ -129,6 +129,377 @@ class Number
 };
 #endif
 
+class StorageClassDeclarationSpecifier : public VisitorInterface
+{
+  public:
+};
+
+class StorageClassSpecifier : public StorageClassDeclarationSpecifier
+{
+  public:
+    enum class Type
+    {
+      TYPEDEF,
+      EXTERN,
+      STATIC,
+      AUTO,
+      REGISTER
+    };
+
+    Type type;
+
+    StorageClassSpecifier(Type type)
+      : type(type)
+    {
+    }
+
+    void traverse(Visitor &visitor) const override
+    {
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
+      {
+        visitor.accept(Visitor::Phases::PRE, *this);
+        visitor.accept(Visitor::Phases::POST, *this);
+      }
+    };
+};
+
+class DeclarationSpecifier : public StorageClassDeclarationSpecifier
+{
+  public:
+};
+
+class TypeQualifier : public DeclarationSpecifier
+{
+  public:
+    enum class Type
+    {
+      CONST,
+      VOLATILE,
+      STRUCT
+    };
+
+    Type type;
+
+    TypeQualifier(Type type)
+      : type(type)
+    {
+    }
+
+    TypeQualifier()
+    {
+    }
+
+    void traverse(Visitor &visitor) const override
+    {
+      visitor.accept(*this);
+    }
+};
+
+class TypeQualifierList : public std::vector<TypeQualifier*>, private VisitorInterface
+{
+  public:
+    TypeQualifierList(TypeQualifier *typeQualifier)
+      : std::vector<TypeQualifier*>{typeQualifier}
+    {
+    }
+
+    TypeQualifierList()
+    {
+    }
+
+    virtual ~TypeQualifierList()
+    {
+      for (const TypeQualifier *typeQualifier : *this)
+      {
+        delete(typeQualifier);
+      }
+    }
+
+    void add(TypeQualifier *typeQualifier)
+    {
+      push_back(typeQualifier);
+    }
+
+    void traverse(Visitor &visitor) const override
+    {
+      for (const TypeQualifier *typeQualifier : *this)
+      {
+        typeQualifier->traverse(visitor);
+      }
+    }
+};
+
+class TypeSpecifier : public DeclarationSpecifier
+{
+  public:
+    enum class Type
+    {
+      VOID,
+      CHAR,
+      SHORT,
+      INT,
+      LONG,
+      FLOAT,
+      DOUBLE,
+      SIGNED,
+      UNSIGNED,
+      IDENTIFIER
+    };
+
+    Type             type;
+    const Identifier identifier;
+
+    TypeSpecifier(Type type)
+      : type(type)
+    {
+    }
+
+    TypeSpecifier(const Identifier &identifier)
+      : type(Type::IDENTIFIER)
+      , identifier(identifier)
+    {
+    }
+
+    TypeSpecifier()
+    {
+    }
+
+    void traverse(Visitor &visitor) const override
+    {
+      visitor.accept(*this);
+    }
+};
+
+// TODO: std::list?
+class SpecifierQualifierList : public std::vector<DeclarationSpecifier*>, VisitorInterface
+{
+  public:
+    SpecifierQualifierList(TypeQualifier *typeQualifier)
+      : std::vector<DeclarationSpecifier*>{typeQualifier}
+    {
+    }
+
+    SpecifierQualifierList(TypeSpecifier *typeSpecifier)
+      : std::vector<DeclarationSpecifier*>{typeSpecifier}
+    {
+    }
+
+    virtual ~SpecifierQualifierList()
+    {
+      for (const DeclarationSpecifier *declarationSpecifier : *this)
+      {
+        delete(declarationSpecifier);
+      }
+    }
+
+    void add(TypeQualifier *typeQualifier)
+    {
+      push_back(typeQualifier);
+    }
+
+    void prepend(TypeQualifier *typeQualifier)
+    {
+      insert(begin(), typeQualifier);
+    }
+
+    void add(TypeSpecifier *typeSpecifier)
+    {
+      push_back(typeSpecifier);
+    }
+
+    void prepend(TypeSpecifier *typeSpecifier)
+    {
+      insert(begin(), typeSpecifier);
+    }
+
+    void traverse(Visitor &visitor) const
+    {
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
+      {
+        for (const DeclarationSpecifier *declarationSpecifier : *this)
+        {
+          declarationSpecifier->traverse(visitor);
+        }
+      }
+    }
+};
+
+// TODO: std::list?
+class StorageClassDeclarationSpecifiers : public std::vector<StorageClassDeclarationSpecifier*>, VisitorInterface
+{
+  public:
+    StorageClassDeclarationSpecifiers(StorageClassSpecifier *storageClassSpecifier)
+      : std::vector<StorageClassDeclarationSpecifier*>{storageClassSpecifier}
+    {
+    }
+
+    StorageClassDeclarationSpecifiers(DeclarationSpecifier *declarationSpecifier)
+      : std::vector<StorageClassDeclarationSpecifier*>{declarationSpecifier}
+    {
+    }
+
+    virtual ~StorageClassDeclarationSpecifiers()
+    {
+      for (const StorageClassDeclarationSpecifier *storageClassDeclarationSpecifier : *this)
+      {
+        delete(storageClassDeclarationSpecifier);
+      }
+    }
+
+    void add(StorageClassSpecifier *storageClassSpecifier)
+    {
+      push_back(storageClassSpecifier);
+    }
+
+    void prepend(StorageClassSpecifier *storageClassSpecifier)
+    {
+      insert(begin(), storageClassSpecifier);
+    }
+
+    void add(DeclarationSpecifier *declarationSpecifier)
+    {
+      push_back(declarationSpecifier);
+    }
+
+    void prepend(DeclarationSpecifier *declarationSpecifier)
+    {
+      insert(begin(), declarationSpecifier);
+    }
+
+    void traverse(Visitor &visitor) const
+    {
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
+      {
+        for (const StorageClassDeclarationSpecifier *storageClassDeclarationSpecifier : *this)
+        {
+          storageClassDeclarationSpecifier->traverse(visitor);
+        }
+      }
+    }
+};
+
+class AbstractDeclarator : public VisitorInterface
+{
+  public:
+    Identifier identifier;
+
+    AbstractDeclarator(const Identifier &identifier)
+      : identifier(identifier)
+    {
+    }
+
+    AbstractDeclarator()
+    {
+    }
+
+    void traverse(Visitor &visitor) const
+    {
+      visitor.accept(*this);
+    }
+};
+
+class TypeName : public VisitorInterface
+{
+  public:
+    SpecifierQualifierList *specifierQualifierList;
+    AbstractDeclarator     *abstractDeclarator;
+
+    TypeName(SpecifierQualifierList *specifierQualifierList, AbstractDeclarator *abstractDeclarator)
+      : specifierQualifierList(specifierQualifierList)
+      , abstractDeclarator(abstractDeclarator)
+    {
+    }
+
+    TypeName(SpecifierQualifierList *specifierQualifierList)
+      : specifierQualifierList(specifierQualifierList)
+      , abstractDeclarator(nullptr)
+    {
+    }
+
+    virtual ~TypeName()
+    {
+      delete(abstractDeclarator);
+      delete(specifierQualifierList);
+    }
+
+    void traverse(Visitor &visitor) const override
+    {
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
+      {
+        specifierQualifierList->traverse(visitor);
+        if (abstractDeclarator != nullptr) abstractDeclarator->traverse(visitor);
+      }
+    }
+};
+
+class DirectDeclarator : public VisitorInterface
+{
+  public:
+    Identifier identifier;
+
+    DirectDeclarator(const Identifier &identifier)
+      : identifier(identifier)
+    {
+    }
+
+    DirectDeclarator()
+    {
+    }
+
+    void traverse(Visitor &visitor) const
+    {
+      visitor.accept(*this);
+    }
+};
+
+class Declarator : public VisitorInterface
+{
+  public:
+    const DirectDeclarator *directDeclarator;
+
+    Declarator(const DirectDeclarator *directDeclarator)
+      : directDeclarator(directDeclarator)
+    {
+    }
+
+    Declarator()
+    {
+    }
+
+    virtual ~Declarator()
+    {
+      delete(directDeclarator);
+    }
+
+    void traverse(Visitor &visitor) const
+    {
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
+      {
+        directDeclarator->traverse(visitor);
+      }
+    }
+};
+
 class Expression : public VisitorInterface
 {
   public:
@@ -423,11 +794,18 @@ class UnaryExpression : public Expression
 class CastExpression : public Expression
 {
   public:
+    const TypeName   *typeName;
     const Expression *expression;
 
-    CastExpression(const Expression *expression)
-      : expression(expression)
+    CastExpression(const TypeName *typeName, const Expression *expression)
+      : typeName(typeName)
+      , expression(expression)
     {
+    }
+
+    ~CastExpression() override
+    {
+      delete(expression);
     }
 
     void traverse(Visitor &visitor) const override
@@ -438,13 +816,9 @@ class CastExpression : public Expression
       }
       catch (const Visitor::Exception &)
       {
+        typeName->traverse(visitor);
         expression->traverse(visitor);
       }
-    }
-
-    ~CastExpression() override
-    {
-      delete(expression);
     }
 };
 
@@ -884,261 +1258,6 @@ class AssignmentExpression : public Expression
       {
         visitor.accept(Visitor::Phases::PRE, *this);
         visitor.accept(Visitor::Phases::POST, *this);
-      }
-    }
-};
-
-class StorageClassDeclarationSpecifier : public VisitorInterface
-{
-  public:
-};
-
-class StorageClassSpecifier : public StorageClassDeclarationSpecifier
-{
-  public:
-    enum class Type
-    {
-      TYPEDEF,
-      EXTERN,
-      STATIC,
-      AUTO,
-      REGISTER
-    };
-
-    Type type;
-
-    StorageClassSpecifier(Type type)
-      : type(type)
-    {
-    }
-
-    void traverse(Visitor &visitor) const override
-    {
-      try
-      {
-        visitor.accept(*this);
-      }
-      catch (const Visitor::Exception &)
-      {
-        visitor.accept(Visitor::Phases::PRE, *this);
-        visitor.accept(Visitor::Phases::POST, *this);
-      }
-    };
-};
-
-class DeclarationSpecifier : public StorageClassDeclarationSpecifier
-{
-  public:
-};
-
-class TypeQualifier : public DeclarationSpecifier
-{
-  public:
-    enum class Type
-    {
-      CONST,
-      VOLATILE,
-      STRUCT
-    };
-
-    Type type;
-
-    TypeQualifier(Type type)
-      : type(type)
-    {
-    }
-
-    TypeQualifier()
-    {
-    }
-
-    void traverse(Visitor &visitor) const override
-    {
-      visitor.accept(*this);
-    }
-};
-
-class TypeQualifierList : public std::vector<TypeQualifier*>, private VisitorInterface
-{
-  public:
-    TypeQualifierList(TypeQualifier *typeQualifier)
-      : std::vector<TypeQualifier*>{typeQualifier}
-    {
-    }
-
-    TypeQualifierList()
-    {
-    }
-
-    virtual ~TypeQualifierList()
-    {
-      for (const TypeQualifier *typeQualifier : *this)
-      {
-        delete(typeQualifier);
-      }
-    }
-
-    void add(TypeQualifier *typeQualifier)
-    {
-      push_back(typeQualifier);
-    }
-
-    void traverse(Visitor &visitor) const override
-    {
-      for (const TypeQualifier *typeQualifier : *this)
-      {
-        typeQualifier->traverse(visitor);
-      }
-    }
-};
-
-class TypeSpecifier : public DeclarationSpecifier
-{
-  public:
-    enum class Type
-    {
-      VOID,
-      CHAR,
-      SHORT,
-      INT,
-      LONG,
-      FLOAT,
-      DOUBLE,
-      SIGNED,
-      UNSIGNED,
-      IDENTIFIER
-    };
-
-    Type             type;
-    const Identifier identifier;
-
-    TypeSpecifier(Type type)
-      : type(type)
-    {
-    }
-
-    TypeSpecifier(const Identifier &identifier)
-      : type(Type::IDENTIFIER)
-      , identifier(identifier)
-    {
-    }
-
-    TypeSpecifier()
-    {
-    }
-
-    void traverse(Visitor &visitor) const override
-    {
-      visitor.accept(*this);
-    }
-};
-
-// TODO: std::list?
-class StorageClassDeclarationSpecifiers : public std::vector<StorageClassDeclarationSpecifier*>, VisitorInterface
-{
-  public:
-    StorageClassDeclarationSpecifiers(StorageClassSpecifier *storageClassSpecifier)
-      : std::vector<StorageClassDeclarationSpecifier*>{storageClassSpecifier}
-    {
-    }
-
-    StorageClassDeclarationSpecifiers(DeclarationSpecifier *declarationSpecifier)
-      : std::vector<StorageClassDeclarationSpecifier*>{declarationSpecifier}
-    {
-    }
-
-    virtual ~StorageClassDeclarationSpecifiers()
-    {
-      for (const StorageClassDeclarationSpecifier *storageClassDeclarationSpecifier : *this)
-      {
-        delete(storageClassDeclarationSpecifier);
-      }
-    }
-
-    void add(StorageClassSpecifier *storageClassSpecifier)
-    {
-      push_back(storageClassSpecifier);
-    }
-
-    void prepend(StorageClassSpecifier *storageClassSpecifier)
-    {
-      insert(begin(), storageClassSpecifier);
-    }
-
-    void add(DeclarationSpecifier *declarationSpecifier)
-    {
-      push_back(declarationSpecifier);
-    }
-
-    void prepend(DeclarationSpecifier *declarationSpecifier)
-    {
-      insert(begin(), declarationSpecifier);
-    }
-
-    void traverse(Visitor &visitor) const
-    {
-      try
-      {
-        visitor.accept(*this);
-      }
-      catch (const Visitor::Exception &)
-      {
-        for (const StorageClassDeclarationSpecifier *storageClassDeclarationSpecifier : *this)
-        {
-          storageClassDeclarationSpecifier->traverse(visitor);
-        }
-      }
-    }
-};
-
-class DirectDeclarator : public VisitorInterface
-{
-  public:
-    Identifier identifier;
-
-    DirectDeclarator(const Identifier &identifier)
-      : identifier(identifier)
-    {
-    }
-
-    DirectDeclarator()
-    {
-    }
-
-    void traverse(Visitor &visitor) const
-    {
-      visitor.accept(*this);
-    }
-};
-
-class Declarator : public VisitorInterface
-{
-  public:
-    const DirectDeclarator *directDeclarator;
-
-    Declarator(const DirectDeclarator *directDeclarator)
-      : directDeclarator(directDeclarator)
-    {
-    }
-
-    Declarator()
-    {
-    }
-
-    virtual ~Declarator()
-    {
-      delete(directDeclarator);
-    }
-
-    void traverse(Visitor &visitor) const
-    {
-      try
-      {
-        visitor.accept(*this);
-      }
-      catch (const Visitor::Exception &)
-      {
-        directDeclarator->traverse(visitor);
       }
     }
 };

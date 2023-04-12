@@ -24,6 +24,18 @@ namespace FSM
 class State;
 class StateList;
 
+class StorageClassSpecifier;
+class TypeQualifier;
+class TypeSpecifier;
+class DeclarationSpecifier;
+class SpecifierQualifierList;
+class TypeName;
+class AbstractDeclarator;
+class StorageClassDeclarationSpecifiers;
+class Declaration;
+class DirectDeclarator;
+class Declarator;
+
 class Expression;
 class PrimaryExpression;
 class ArgumentExpressionList;
@@ -43,14 +55,6 @@ class LogicalOrExpression;
 class ConditionalExpression;
 class AssignmentExpression;
 
-class StorageClassSpecifier;
-class TypeQualifier;
-class TypeSpecifier;
-class DeclarationSpecifier;
-class StorageClassDeclarationSpecifiers;
-class Declaration;
-class DirectDeclarator;
-class Declarator;
 class Initializer;
 class InitDeclarator;
 
@@ -102,6 +106,18 @@ class Visitor
     ACCEPT(State);
     ACCEPT(StateList);
 
+    ACCEPT(StorageClassSpecifier);
+    ACCEPT(TypeQualifier);
+    ACCEPT(TypeSpecifier);
+    ACCEPT(DeclarationSpecifier);
+    ACCEPT(SpecifierQualifierList);
+    ACCEPT(TypeName);
+    ACCEPT(AbstractDeclarator);
+    ACCEPT(StorageClassDeclarationSpecifiers);
+    ACCEPT(Declaration);
+    ACCEPT(DirectDeclarator);
+    ACCEPT(Declarator);
+
     ACCEPT(Expression);
     ACCEPT(PrimaryExpression);
     ACCEPT(ArgumentExpressionList);
@@ -121,14 +137,6 @@ class Visitor
     ACCEPT(ConditionalExpression);
     ACCEPT(AssignmentExpression);
 
-    ACCEPT(StorageClassSpecifier);
-    ACCEPT(TypeQualifier);
-    ACCEPT(TypeSpecifier);
-    ACCEPT(DeclarationSpecifier);
-    ACCEPT(StorageClassDeclarationSpecifiers);
-    ACCEPT(Declaration);
-    ACCEPT(DirectDeclarator);
-    ACCEPT(Declarator);
     ACCEPT(Initializer);
     ACCEPT(InitDeclarator);
 

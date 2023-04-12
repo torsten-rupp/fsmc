@@ -34,6 +34,8 @@ int main(int argc, const char *argv[])
       
       a = b.c.d;
       foo(a, b, c);
+      a = sizeof(b);
+      (void)a;
 
       -> STATE1("abc",blue,4);
     }

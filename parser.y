@@ -169,6 +169,9 @@
 %type <TypeQualifier*>                     typeQualifier;
 %type <TypeQualifierList*>                 typeQualifierList;
 %type <TypeSpecifier*>                     typeSpecifier;
+%type <SpecifierQualifierList*>            specifierQualifierList;
+%type <TypeName*>                          typeName;
+%type <AbstractDeclarator*>                abstractDeclarator;
 %type <StorageClassDeclarationSpecifiers*> storageClassDeclarationSpecifiers;
 %type <Declaration*>                       declaration;
 %type <Declarator*>                        declarator;
@@ -423,7 +426,7 @@ unaryExpression
     {
       $$ = new UnaryExpression(UnaryExpression::Operator::SIZEOF, $a);
     }
-  | KEYWORD_SIZEOF '(' type_name ')'
+  | KEYWORD_SIZEOF '(' typeName ')'
     {
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
@@ -462,10 +465,9 @@ unaryOperator
   ;
 
 castExpression
-  : '(' type_name ')' castExpression
+  : '(' typeName[a] ')' castExpression[b]
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
-      YYABORT;
+      $$ = new CastExpression($a, $b);
     }
   | unaryExpression
     {
@@ -809,7 +811,7 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
-  //| TYPE_NAME
+  //| typeName
   | IDENTIFIER[name]
     {
       $$ = new TypeSpecifier($name);
@@ -861,33 +863,31 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
   ;
 
 struct_declaration
-  : specifier_qualifier_list struct_declarator_list ';'
+  : specifierQualifierList struct_declarator_list ';'
     {
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   ;
 
-specifier_qualifier_list
-  : typeSpecifier specifier_qualifier_list
+specifierQualifierList
+  : specifierQualifierList typeSpecifier
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
-      YYABORT;
+      $1->prepend($2);
+      $$ = $1;
     }
   | typeSpecifier
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
-      YYABORT;
+      $$ = new SpecifierQualifierList($1);
     }
-  | typeQualifier specifier_qualifier_list
+  | specifierQualifierList typeQualifier
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
-      YYABORT;
+      $1->prepend($2);
+      $$ = $1;
     }
   | typeQualifier
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
-      YYABORT;
+      $$ = new SpecifierQualifierList($1);
     }
   ;
 
@@ -1095,7 +1095,7 @@ parameter_declaration
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
-  | storageClassDeclarationSpecifiers abstract_declarator
+  | storageClassDeclarationSpecifiers abstractDeclarator
     {
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
@@ -1120,39 +1120,37 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
     }
   ;
 
-type_name
-  : specifier_qualifier_list
+typeName
+  : specifierQualifierList abstractDeclarator
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
-      YYABORT;
+      $$ = new TypeName($specifierQualifierList,$abstractDeclarator);
     }
-  | specifier_qualifier_list abstract_declarator
+  | specifierQualifierList
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
-      YYABORT;
+      $$ = new TypeName($specifierQualifierList);
     }
   ;
 
-abstract_declarator
+abstractDeclarator
   : pointer
     {
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
-  | direct_abstract_declarator
+  | direct_abstractDeclarator
     {
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
-  | pointer direct_abstract_declarator
+  | pointer direct_abstractDeclarator
     {
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   ;
 
-direct_abstract_declarator
-  : '(' abstract_declarator ')'
+direct_abstractDeclarator
+  : '(' abstractDeclarator ')'
     {
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
@@ -1167,12 +1165,12 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
-  | direct_abstract_declarator '[' ']'
+  | direct_abstractDeclarator '[' ']'
     {
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
-  | direct_abstract_declarator '[' constant_expression ']'
+  | direct_abstractDeclarator '[' constant_expression ']'
     {
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
@@ -1187,12 +1185,12 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
-  | direct_abstract_declarator '(' ')'
+  | direct_abstractDeclarator '(' ')'
     {
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
-  | direct_abstract_declarator '(' parameter_type_list ')'
+  | direct_abstractDeclarator '(' parameter_type_list ')'
     {
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;

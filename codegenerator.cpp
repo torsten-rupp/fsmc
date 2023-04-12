@@ -202,6 +202,9 @@ class CVisitor : public Visitor
       {
         case TypeQualifier::Type::CONST:    output << "const"; break;
         case TypeQualifier::Type::VOLATILE: output << "volatile"; break;
+        case TypeQualifier::Type::STRUCT:
+throw std::runtime_error("NYI");
+break;
       }
     }
 
@@ -209,8 +212,45 @@ class CVisitor : public Visitor
     {
       switch (typeSpecifier.type)
       {
+        case TypeSpecifier::Type::VOID:       output << "void"; break;
+        case TypeSpecifier::Type::CHAR:       output << "int"; break;
+        case TypeSpecifier::Type::SHORT:      output << "int"; break;
         case TypeSpecifier::Type::INT:        output << "int"; break;
+        case TypeSpecifier::Type::LONG:       output << "int"; break;
+        case TypeSpecifier::Type::FLOAT:      output << "int"; break;
+        case TypeSpecifier::Type::DOUBLE:     output << "int"; break;
+        case TypeSpecifier::Type::SIGNED:     output << "int"; break;
+        case TypeSpecifier::Type::UNSIGNED:   output << "int"; break;
         case TypeSpecifier::Type::IDENTIFIER: output << typeSpecifier.identifier; break;
+default:
+throw std::runtime_error("NYI");
+break;
+      }
+    }
+    
+    void accept(const SpecifierQualifierList &specifierQualifierList) override
+    {
+      bool first = true;
+      for (const DeclarationSpecifier *declarationSpecifier : specifierQualifierList)
+      {
+        if (!first) output << " ";
+        declarationSpecifier->traverse(*this);
+        first = false;
+      }
+    }
+
+    void accept(const TypeName &typeName) override
+    {
+      bool first = true;
+      for (const DeclarationSpecifier *declarationSpecifier : *typeName.specifierQualifierList)
+      {
+        if (!first) output << " ";
+        declarationSpecifier->traverse(*this);
+        first = false;
+      }
+      if (typeName.abstractDeclarator != nullptr)
+      {
+        typeName.abstractDeclarator->traverse(*this);
       }
     }
 
@@ -225,6 +265,11 @@ class CVisitor : public Visitor
       }
     }
 
+    void accept(const AbstractDeclarator &abstractDeclarator) override
+    {
+// TODO:      output << abstractDeclarator.identifier;
+    }
+
     void accept(const DirectDeclarator &directDeclarator) override
     {
       output << directDeclarator.identifier;
@@ -233,38 +278,6 @@ class CVisitor : public Visitor
     void accept(const Declarator &declarator) override
     {
       declarator.directDeclarator->traverse(*this);
-    }
-
-    void accept(const Initializer &initializer) override
-    {
-      initializer.expression->traverse(*this);
-    }
-
-    void accept(const InitDeclarator &initDeclarator) override
-    {
-      if (initDeclarator.storageClassDeclarationSpecifiers != nullptr)
-      {
-        initDeclarator.storageClassDeclarationSpecifiers->traverse(*this);
-        output << " ";
-      }
-      initDeclarator.declarator->traverse(*this);
-      if (initDeclarator.initializer != nullptr)
-      {
-        output << " = ";
-        initDeclarator.initializer->traverse(*this);
-      }
-    }
-
-    void accept(const Declaration &declaration) override
-    {
-      output << indentSpaces();
-      if (declaration.storageClassDeclarationSpecifiers != nullptr)
-      {
-        declaration.storageClassDeclarationSpecifiers->traverse(*this);
-        output << " ";
-      }
-      declaration.initDeclaratorList->traverse(*this);
-      output << ";" << std::endl;
     }
 
     void accept(const PrimaryExpression &primaryExpression) override
@@ -329,14 +342,19 @@ class CVisitor : public Visitor
         case UnaryExpression::Operator::MINUS:       output << "-"; break;
         case UnaryExpression::Operator::NOT:         output << "~"; break;
         case UnaryExpression::Operator::LOGICAL_NOT: output << "!"; break;
+
+        case UnaryExpression::Operator::INCREMENT:   output << "++"; break;
+        case UnaryExpression::Operator::DECREMENT:   output << "--"; break;
+        case UnaryExpression::Operator::SIZEOF:      output << "sizeof"; break;
       }
       unaryExpression.expression->traverse(*this);
     }
 
     void accept(const CastExpression &castExpression) override
     {
-//output << "castExpression";
-//fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+      output << "(";
+      castExpression.typeName->traverse(*this);
+      output << ")";
       castExpression.expression->traverse(*this);
     }
 
@@ -493,6 +511,38 @@ class CVisitor : public Visitor
         case AssignmentExpression::Operator::OR_ASSIGN:          output << " |= ";  break;
       }
       assignmentExpression.b->traverse(*this);
+    }
+
+    void accept(const Initializer &initializer) override
+    {
+      initializer.expression->traverse(*this);
+    }
+
+    void accept(const InitDeclarator &initDeclarator) override
+    {
+      if (initDeclarator.storageClassDeclarationSpecifiers != nullptr)
+      {
+        initDeclarator.storageClassDeclarationSpecifiers->traverse(*this);
+        output << " ";
+      }
+      initDeclarator.declarator->traverse(*this);
+      if (initDeclarator.initializer != nullptr)
+      {
+        output << " = ";
+        initDeclarator.initializer->traverse(*this);
+      }
+    }
+
+    void accept(const Declaration &declaration) override
+    {
+      output << indentSpaces();
+      if (declaration.storageClassDeclarationSpecifiers != nullptr)
+      {
+        declaration.storageClassDeclarationSpecifiers->traverse(*this);
+        output << " ";
+      }
+      declaration.initDeclaratorList->traverse(*this);
+      output << ";" << std::endl;
     }
 
     void accept(const CompoundStatement &compoundStatement) override
