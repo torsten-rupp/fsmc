@@ -180,6 +180,7 @@
 %type <InitDeclarator*>                    initDeclarator;
 %type <InitDeclaratorList*>                initDeclaratorList;
 %type <Declaration*>                       externalDeclaration;
+%type <DeclarationStatement*>              declarationStatement;
 %type <DeclarationStatementList*>          declarationStatementList;
 
 %type <Expression*>                        primaryExpression;
@@ -281,30 +282,31 @@ stateDefinition:
 // ---------------------------------------------------------------------
 
 declarationStatementList
-  : declarationStatementList externalDeclaration
+  : declarationStatementList declarationStatement
     {
-      $1->add($externalDeclaration);
+      $1->add($declarationStatement);
       $$ = $1;
     }
-  | externalDeclaration
+  | declarationStatement
     {
-      $$ = new DeclarationStatementList($externalDeclaration);
+      $$ = new DeclarationStatementList($declarationStatement);
     }
-  | declarationStatementList statement
+  ;
+
+declarationStatement
+  : externalDeclaration
     {
-      $1->add($statement);
-      $$ = $1;
+      $$ = $externalDeclaration;
     }
   | statement
     {
-      $$ = new DeclarationStatementList($statement);
+      $$ = $statement;
     }
   ;
 
 externalDeclaration
   : declaration
     {
-      Declaration *p=$declaration;
       $$ = $declaration;
     }
 //  | function_definition
@@ -1321,15 +1323,17 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
     {
       $$ = new DoStatement($statement, $expression);
     }
-  | KEYWORD_FOR '(' expressionStatement expressionStatement ')' statement
+  | KEYWORD_FOR '(' declarationStatement[init] expressionStatement[condition] expression[increment] ')' statement
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
-      YYABORT;
+      $$ = new ForStatement($init,$condition,$statement);
     }
-  | KEYWORD_FOR '(' expressionStatement expressionStatement expression ')' statement
+  | KEYWORD_FOR '(' expressionStatement[init] expressionStatement[condition] ')' statement
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
-      YYABORT;
+      $$ = new ForStatement($init,$condition,$statement);
+    }
+  | KEYWORD_FOR '(' expressionStatement[init] expressionStatement[condition] expression[increment] ')' statement
+    {
+      $$ = new ForStatement($init,$condition,$increment,$statement);
     }
   ;
 

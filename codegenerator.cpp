@@ -329,6 +329,18 @@ break;
           postfixExpression.structure->traverse(*this);
           output << "." << *postfixExpression.identifier;
           break;
+        case PostfixExpression::Type::POINTER:
+          output << "&";
+          postfixExpression.expression->traverse(*this);
+          break;
+        case PostfixExpression::Type::INCREMENT:
+          postfixExpression.expression->traverse(*this);
+          output << "++";
+          break;
+        case PostfixExpression::Type::DECREMENT:
+          postfixExpression.expression->traverse(*this);
+          output << "--";
+          break;
       }
     }
 
@@ -535,14 +547,20 @@ break;
 
     void accept(const Declaration &declaration) override
     {
-      output << indentSpaces();
       if (declaration.storageClassDeclarationSpecifiers != nullptr)
       {
         declaration.storageClassDeclarationSpecifiers->traverse(*this);
         output << " ";
       }
       declaration.initDeclaratorList->traverse(*this);
-      output << ";" << std::endl;
+    }
+
+    void accept(const DeclarationStatementList &declarationStatementList) override
+    {
+      for (const DeclarationStatement *declarationStatement : declarationStatementList)
+      {
+        output << indentSpaces(); declarationStatement->traverse(*this); output << ";" << std::endl;
+      }
     }
 
     void accept(const LabeledStatement &labeledStatement) override
@@ -566,7 +584,7 @@ break;
 
     void accept(const CompoundStatement &compoundStatement) override
     {
-      output << indentSpaces() << "{" << std::endl;
+      output << "{" << std::endl;
       indent([&]()
       {
         if (compoundStatement.declarationStatementList != nullptr)
@@ -596,14 +614,17 @@ break;
 
     void accept(const ForStatement &forStatement) override
     {
-      output << indentSpaces() << "for (";
+      output << "for (";
       forStatement.init->traverse(*this);
       output << "; ";
       forStatement.condition->traverse(*this);
       output << "; ";
-      forStatement.increment->traverse(*this);
+      if (forStatement.increment != nullptr)
+      {
+        forStatement.increment->traverse(*this);
+      }
       output << ")" << std::endl;
-      forStatement.statement->traverse(*this);
+      output << indentSpaces(); forStatement.statement->traverse(*this);
     }
 
     void accept(const WhileStatement &whileStatement) override
@@ -622,19 +643,11 @@ break;
       doStatement.condition->traverse(*this);
       output << ");" << std::endl;
     }
-
-    void accept(Phases phase, const ExpressionStatement &expressionStatement) override
+    
+    void accept(const ExpressionStatement &expressionStatement) override
     {
-      switch (phase)
-      {
-        case Phases::PRE:
-          output << indentSpaces();
-          break;
-        case Phases::POST:
-          output << ";" << std::endl;
-          break;
-      }
-    }
+      expressionStatement.expression->traverse(*this);
+    }   
 
     void accept(const JumpStatement &jumpStatement) override
     {
@@ -660,6 +673,7 @@ break;
 
     void accept(const NewStateStatement &newStateStatement) override
     {
+      output << "do" << std::endl;
       output << indentSpaces() << "{" << std::endl;
       indent();
       switch (newStateStatement.prefixOperator)
@@ -736,6 +750,7 @@ break;
       }
       unindent();
       output << indentSpaces() << "}" << std::endl;
+      output << indentSpaces() << "while (0);" << std::endl;
     }
 
   private:

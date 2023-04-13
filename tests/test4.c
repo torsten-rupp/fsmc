@@ -41,8 +41,17 @@ int main(int argc, const char *argv[])
       {
         case b:
           break;
+        defeault:
+          break;
       }
      
+      for (i = 0; i < n; i++)
+      {
+      }
+      for (int i = 0; i < n; i++)
+      {
+      }
+
       -> STATE1("abc",blue,4);
     }
 

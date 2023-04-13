@@ -1488,14 +1488,9 @@ class Statement : public DeclarationStatement
 class DeclarationStatementList : public std::vector<DeclarationStatement*>
 {
   public:
-    DeclarationStatementList(Declaration *declaration)
+    DeclarationStatementList(DeclarationStatement *declarationStatement)
     {
-      push_back(declaration);
-    }
-
-    DeclarationStatementList(Statement *statement)
-    {
-      push_back(statement);
+      push_back(declarationStatement);
     }
 
     virtual ~DeclarationStatementList()
@@ -1506,21 +1501,25 @@ class DeclarationStatementList : public std::vector<DeclarationStatement*>
       }
     }
 
-    void add(Declaration *declaration)
+    void add(DeclarationStatement *declarationStatement)
     {
-      push_back(declaration);
-    }
-
-    void add(Statement *statement)
-    {
-      push_back(statement);
+      push_back(declarationStatement);
     }
 
     void traverse(Visitor &visitor) const
     {
-      for (const DeclarationStatement *declarationStatement : *this)
+      try
       {
-        declarationStatement->traverse(visitor);
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
+      {
+        visitor.accept(Visitor::Phases::PRE, *this);
+        for (const DeclarationStatement *declarationStatement : *this)
+        {
+          declarationStatement->traverse(visitor);
+        }
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -1692,15 +1691,23 @@ class SwitchStatement : public Statement
 class ForStatement : public Statement
 {
   public:
-    const Expression *init;
-    const Expression *condition;
-    const Expression *increment;
-    const Statement  *statement;
+    const DeclarationStatement *init;
+    const Statement            *condition;
+    const Expression           *increment;
+    const Statement            *statement;
 
-    ForStatement(const Expression *init, const Expression *condition, const Expression *increment, const Statement *statement)
+    ForStatement(const DeclarationStatement *init, const Statement *condition, const Expression *increment, const Statement *statement)
       : init(init)
       , condition(condition)
       , increment(increment)
+      , statement(statement)
+    {
+    }
+
+    ForStatement(const DeclarationStatement *init, const Statement *condition, const Statement *statement)
+      : init(init)
+      , condition(condition)
+      , increment(nullptr)
       , statement(statement)
     {
     }
