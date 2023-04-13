@@ -324,10 +324,12 @@ class SpecifierQualifierList : public std::vector<DeclarationSpecifier*>, Visito
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         for (const DeclarationSpecifier *declarationSpecifier : *this)
         {
           declarationSpecifier->traverse(visitor);
         }
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -382,10 +384,12 @@ class StorageClassDeclarationSpecifiers : public std::vector<StorageClassDeclara
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         for (const StorageClassDeclarationSpecifier *storageClassDeclarationSpecifier : *this)
         {
           storageClassDeclarationSpecifier->traverse(visitor);
         }
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -442,8 +446,10 @@ class TypeName : public VisitorInterface
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         specifierQualifierList->traverse(visitor);
         if (abstractDeclarator != nullptr) abstractDeclarator->traverse(visitor);
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -495,7 +501,9 @@ class Declarator : public VisitorInterface
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         directDeclarator->traverse(visitor);
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -617,10 +625,12 @@ class ArgumentExpressionList : public std::vector<Expression*>, private VisitorI
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         for (const Expression *expression : *this)
         {
           expression->traverse(visitor);
         }
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -736,6 +746,7 @@ class PostfixExpression : public Expression
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         switch (type)
         {
           case Type::SUBSCRIPT:
@@ -750,6 +761,7 @@ class PostfixExpression : public Expression
             structure->traverse(visitor);
             break;
         }
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -816,8 +828,10 @@ class CastExpression : public Expression
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         typeName->traverse(visitor);
         expression->traverse(visitor);
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -856,8 +870,10 @@ class MultiplicativeExpression : public Expression
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         a->traverse(visitor);
         b->traverse(visitor);
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -895,8 +911,10 @@ class AdditiveExpression : public Expression
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         a->traverse(visitor);
         b->traverse(visitor);
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -934,8 +952,10 @@ class ShiftExpression : public Expression
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         a->traverse(visitor);
         b->traverse(visitor);
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -976,8 +996,10 @@ class RelationalExpression : public Expression
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         a->traverse(visitor);
         b->traverse(visitor);
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -1015,8 +1037,10 @@ class EqualityExpression : public Expression
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         a->traverse(visitor);
         b->traverse(visitor);
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -1046,8 +1070,10 @@ class AndExpression : public Expression
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         a->traverse(visitor);
         b->traverse(visitor);
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -1077,8 +1103,10 @@ class ExclusiveOrExpression : public Expression
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         a->traverse(visitor);
         b->traverse(visitor);
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -1108,8 +1136,10 @@ class InclusiveOrExpression : public Expression
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         a->traverse(visitor);
         b->traverse(visitor);
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -1139,8 +1169,10 @@ class LogicalAndExpression : public Expression
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         a->traverse(visitor);
         b->traverse(visitor);
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -1170,8 +1202,10 @@ class LogicalOrExpression : public Expression
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         a->traverse(visitor);
         b->traverse(visitor);
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -1203,9 +1237,11 @@ class ConditionalExpression : public Expression
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         condition->traverse(visitor);
         a->traverse(visitor);
         b->traverse(visitor);
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -1295,7 +1331,9 @@ class Initializer : public VisitorInterface
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         expression->traverse(visitor);
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -1336,12 +1374,14 @@ class InitDeclarator : public VisitorInterface
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         storageClassDeclarationSpecifiers->traverse(visitor);
         declarator->traverse(visitor);
         if (initializer != nullptr)
         {
           initializer->traverse(visitor);
         }
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -1426,6 +1466,7 @@ class Declaration : public DeclarationStatement
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         if (storageClassDeclarationSpecifiers != nullptr)
         {
           storageClassDeclarationSpecifiers->traverse(visitor);
@@ -1434,6 +1475,7 @@ class Declaration : public DeclarationStatement
         {
           initDeclaratorList->traverse(visitor);
         }
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -1483,6 +1525,53 @@ class DeclarationStatementList : public std::vector<DeclarationStatement*>
     }
 };
 
+class LabeledStatement : public Statement
+{
+  public:
+    enum class Type
+    {
+      CASE,
+      DEFAULT
+    };
+
+    Type             type;
+    const Expression *constantExpression;
+    const Statement  *statement;
+
+    LabeledStatement(const Expression *constantExpression, const Statement *statement)
+      : constantExpression(constantExpression)
+      , statement(statement)
+    {
+    }
+
+    LabeledStatement(const Statement *statement)
+      : constantExpression(nullptr)
+      , statement(statement)
+    {
+    }
+
+    ~LabeledStatement() override
+    {
+      delete(statement);
+      delete(constantExpression);
+    }
+
+    void traverse(Visitor &visitor) const override
+    {
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
+      {
+        visitor.accept(Visitor::Phases::PRE, *this);
+        if (constantExpression != nullptr) constantExpression->traverse(visitor);
+        statement->traverse(visitor);
+        visitor.accept(Visitor::Phases::POST, *this);
+      }
+    }
+};
+
 class CompoundStatement : public Statement
 {
   public:
@@ -1511,10 +1600,12 @@ class CompoundStatement : public Statement
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         if (declarationStatementList != nullptr)
         {
           declarationStatementList->traverse(visitor);
         }
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -1555,9 +1646,45 @@ class IfStatement : public Statement
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         condition->traverse(visitor);
         ifStatement->traverse(visitor);
         if (elseStatement != nullptr) elseStatement->traverse(visitor);
+        visitor.accept(Visitor::Phases::POST, *this);
+      }
+    }
+};
+
+class SwitchStatement : public Statement
+{
+  public:
+    const Expression *expression;
+    const Statement  *statement;
+
+    SwitchStatement(const Expression *expression, const Statement *statement)
+      : expression(expression)
+      , statement(statement)
+    {
+    }
+
+    ~SwitchStatement() override
+    {
+      delete(statement);
+      delete(expression);
+    }
+
+    virtual void traverse(Visitor &visitor) const
+    {
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
+      {
+        visitor.accept(Visitor::Phases::PRE, *this);
+        expression->traverse(visitor);
+        statement->traverse(visitor);
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -1594,10 +1721,12 @@ class ForStatement : public Statement
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         if (init != nullptr) init->traverse(visitor);
         if (condition != nullptr) condition->traverse(visitor);
         if (increment != nullptr) increment->traverse(visitor);
         statement->traverse(visitor);
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -1628,8 +1757,10 @@ class WhileStatement : public Statement
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         condition->traverse(visitor);
         statement->traverse(visitor);
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -1660,8 +1791,10 @@ class DoStatement : public Statement
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         statement->traverse(visitor);
         condition->traverse(visitor);
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -1692,8 +1825,10 @@ class AssignmentStatement : public Statement
       }
       catch (const Visitor::Exception &)
       {
+        visitor.accept(Visitor::Phases::PRE, *this);
         left->traverse(visitor);
         right->traverse(visitor);
+        visitor.accept(Visitor::Phases::POST, *this);
       }
     }
 };
@@ -1958,6 +2093,7 @@ class StateList : public std::vector<State*>
     {
       try
       {
+fprintf(stderr,"%s:%d: xxxxxx\n",__FILE__,__LINE__);
         visitor.accept(*this);
       }
       catch (const Visitor::Exception &)

@@ -202,9 +202,10 @@
 %type <ArgumentExpressionList*>            argumentExpressionList;
 %type <AssignmentExpression::Operator>     assignmentOperator;
 %type <Expression*>                        expression;
+%type <Expression*>                        constantExpression;
 
 %type <Statement*>                         statement;
-%type <Statement*>                         labeled_statement;
+%type <Statement*>                         labeledStatement;
 %type <CompoundStatement*>                 compoundStatement;
 %type <ExpressionStatement*>               expressionStatement;
 %type <Statement*>                         selectionStatement;
@@ -710,11 +711,10 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
     }
   ;
 
-constant_expression
+constantExpression
   : conditionalExpression
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
-      YYABORT;
+      $$ = $conditionalExpression;
     }
   ;
 
@@ -910,12 +910,12 @@ struct_declarator
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
-  | ':' constant_expression
+  | ':' constantExpression
     {
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
-  | declarator ':' constant_expression
+  | declarator ':' constantExpression
     {
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
@@ -959,7 +959,7 @@ enumerator
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
-  | IDENTIFIER '=' constant_expression
+  | IDENTIFIER '=' constantExpression
     {
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
@@ -1013,7 +1013,7 @@ directDeclarator
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
-  | directDeclarator '[' constant_expression ']'
+  | directDeclarator '[' constantExpression ']'
     {
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
@@ -1160,7 +1160,7 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
-  | '[' constant_expression ']'
+  | '[' constantExpression ']'
     {
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
@@ -1170,7 +1170,7 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
-  | direct_abstractDeclarator '[' constant_expression ']'
+  | direct_abstractDeclarator '[' constantExpression ']'
     {
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
@@ -1228,9 +1228,9 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
   ;
 
 statement
-  : labeled_statement
+  : labeledStatement
     {
-      $$ = $labeled_statement;
+      $$ = $labeledStatement;
     }
   | compoundStatement
     {
@@ -1258,21 +1258,19 @@ statement
     }
   ;
 
-labeled_statement
+labeledStatement
   : IDENTIFIER ':' statement
     {
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
-  | KEYWORD_CASE constant_expression ':' statement
+  | KEYWORD_CASE constantExpression ':' statement
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
-      YYABORT;
+      $$ = new LabeledStatement($constantExpression, $statement);
     }
   | KEYWORD_DEFAULT ':' statement
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
-      YYABORT;
+      $$ = new LabeledStatement($statement);
     }
   ;
 
@@ -1309,8 +1307,7 @@ selectionStatement
     }
   | KEYWORD_SWITCH '(' expression ')' statement
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
-      YYABORT;
+      $$ = new SwitchStatement($expression,$statement);
     }
   ;
 

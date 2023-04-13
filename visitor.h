@@ -62,9 +62,11 @@ class Statement;
 class DeclarationStatement;
 class DeclarationStatementList;
 class Expression;
+class LabeledStatement;
 class CompoundStatement;
 class AssignmentStatement;
 class IfStatement;
+class SwitchStatement;
 class ForStatement;
 class WhileStatement;
 class DoStatement;
@@ -94,12 +96,12 @@ class Visitor
 // TODO: AST const &ast
     void run(const AST &ast);
 
-    #define ACCEPT(type) \
-      virtual void accept(const type &) \
+    #define ACCEPT(Type) \
+      virtual void accept(const Type &type) \
       { \
         throw Exception(); \
       }; \
-      virtual void accept(Phases phase, const type &) \
+      virtual void accept(Phases phase, const Type &type) \
       { \
       }
 
@@ -143,8 +145,10 @@ class Visitor
     ACCEPT(Statement);
     ACCEPT(DeclarationStatement);
     ACCEPT(DeclarationStatementList);
+    ACCEPT(LabeledStatement);
     ACCEPT(CompoundStatement);
     ACCEPT(IfStatement);
+    ACCEPT(SwitchStatement);
     ACCEPT(ForStatement);
     ACCEPT(WhileStatement);
     ACCEPT(DoStatement);

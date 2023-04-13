@@ -22,21 +22,27 @@ int main(int argc, const char *argv[])
       xyz = 1+2*3;
       xyz = (1+2)*3;
 
-      if (abc)
-      {
-        -> INIT;
-        return;
-      }
-
-      {
-        abc = 123;
-      }
-      
       a = b.c.d;
       foo(a, b, c);
       a = sizeof(b);
       (void)a;
 
+      {
+        abc = 123;
+      }
+
+      if (abc)
+      {
+        -> INIT;
+        return;
+      }
+      
+      switch (a)
+      {
+        case b:
+          break;
+      }
+     
       -> STATE1("abc",blue,4);
     }
 

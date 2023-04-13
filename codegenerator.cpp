@@ -545,6 +545,25 @@ break;
       output << ";" << std::endl;
     }
 
+    void accept(const LabeledStatement &labeledStatement) override
+    {
+      switch (labeledStatement.type)
+      {
+        case LabeledStatement::Type::CASE:
+          output << indentSpaces() << "case "; labeledStatement.constantExpression->traverse(*this); output << ":" << std::endl;
+          indent();
+          labeledStatement.statement->traverse(*this);
+          unindent();
+          break;
+        case LabeledStatement::Type::DEFAULT:
+          output << indentSpaces() << "case default:" << std::endl;
+          indent();
+          labeledStatement.statement->traverse(*this);
+          unindent();
+          break;
+      }
+    }
+
     void accept(const CompoundStatement &compoundStatement) override
     {
       output << indentSpaces() << "{" << std::endl;
@@ -567,6 +586,12 @@ break;
         output << indentSpaces() << "else" << std::endl;
         ifStatement.elseStatement->traverse(*this);
       }
+    }
+
+    void accept(const SwitchStatement &switchStatement) override
+    {
+      output << indentSpaces() << "switch ("; switchStatement.expression->traverse(*this); output << ")" << std::endl;
+      switchStatement.statement->traverse(*this);
     }
 
     void accept(const ForStatement &forStatement) override
