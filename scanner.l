@@ -215,7 +215,7 @@
   }
 
   "->" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_DEREFERENCE, currentLocation());
+    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_POINTER, currentLocation());
   }
 
   "&&" {
@@ -252,14 +252,20 @@
 
 <LINE_COMMENT>
 {
-  \n        { yy_pop_state(); }
+  \n        { yy_pop_state();
+              first.line++;
+              first.column = 0;
+            }
   [^\n]+    { /* ignored */ }
 }
 
 <BLOCK_COMMENT>
 {
   "*/"      { yy_pop_state(); }
-  \n        { /* ignored */ }
+  \n        { /* ignored */
+              first.line++;
+              first.column = 0;
+            }
   .         { /* ignored */ }
 }
 
