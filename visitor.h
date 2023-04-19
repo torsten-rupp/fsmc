@@ -34,6 +34,7 @@ class AbstractDeclarator;
 class StorageClassDeclarationSpecifiers;
 class Declaration;
 class DirectDeclarator;
+class Pointer;
 class Declarator;
 
 class Expression;
@@ -118,6 +119,7 @@ class Visitor
     ACCEPT(StorageClassDeclarationSpecifiers);
     ACCEPT(Declaration);
     ACCEPT(DirectDeclarator);
+    ACCEPT(Pointer);
     ACCEPT(Declarator);
 
     ACCEPT(Expression);

@@ -275,8 +275,14 @@ break;
       output << directDeclarator.identifier;
     }
 
+    void accept(const Pointer &pointer) override
+    {
+      output << "*";
+    }
+
     void accept(const Declarator &declarator) override
     {
+      if (declarator.pointer != nullptr) declarator.pointer->traverse(*this);
       declarator.directDeclarator->traverse(*this);
     }
 
@@ -330,7 +336,7 @@ break;
           output << "." << *postfixExpression.identifier;
           break;
         case PostfixExpression::Type::POINTER:
-          output << "&";
+          output << "->";
           postfixExpression.expression->traverse(*this);
           break;
         case PostfixExpression::Type::INCREMENT:
