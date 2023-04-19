@@ -59,7 +59,7 @@
   static FSM::Parser::symbol_type yylex(FSM::Scanner &scanner)
   {
     return scanner.get_next_token();
-  } 
+  }
 
   FSM::Identifier currentStateName;
 }
@@ -144,7 +144,7 @@
 
 %token               INCREMENT          "++"
 %token               DECREMENT          "--"
-%token               DEREFERENCE        "->"
+%token               POINTER            "->"
 %token               EQUALS             "=="
 %token               NOT_EQUALS         "!="
 %token               LOWER              "<"
@@ -157,7 +157,7 @@
 %token               SHIFT_LEFT         "<<"
 %token               SHIFT_RIGHT        ">>"
 
-%token               POINTER             "*&"
+//%token               POINTER             "*&"
 
 %token               ELLIPSIS            "..."
 
@@ -174,8 +174,9 @@
 %type <AbstractDeclarator*>                abstractDeclarator;
 %type <StorageClassDeclarationSpecifiers*> storageClassDeclarationSpecifiers;
 %type <Declaration*>                       declaration;
-%type <Declarator*>                        declarator;
 %type <DirectDeclarator*>                  directDeclarator;
+%type <Declarator*>                        declarator;
+%type <Pointer*>                           pointer;
 %type <Initializer*>                       initializer;
 %type <InitDeclarator*>                    initDeclarator;
 %type <InitDeclaratorList*>                initDeclaratorList;
@@ -199,22 +200,27 @@
 %type <Expression*>                        logicalAndExpression;
 %type <Expression*>                        logicalOrExpression;
 %type <Expression*>                        conditionalExpression;
+%type <Expression*>                        expression;
 %type <Expression*>                        assignmentExpression;
+%type <Expression*>                        functionCallPostfixExpression;
+%type <Expression*>                        functionCallUnaryExpression;
+%type <Expression*>                        functionCallCastExpression;
+%type <Expression*>                        functionCallExpression;
 %type <ArgumentExpressionList*>            argumentExpressionList;
 %type <AssignmentExpression::Operator>     assignmentOperator;
-%type <Expression*>                        expression;
 %type <Expression*>                        constantExpression;
 
 %type <Statement*>                         statement;
 %type <Statement*>                         labeledStatement;
 %type <CompoundStatement*>                 compoundStatement;
+%type <ExpressionStatement*>               assignmentFunctionCallStatement;
 %type <ExpressionStatement*>               expressionStatement;
 %type <Statement*>                         selectionStatement;
 %type <Statement*>                         iterationStatement;
 %type <JumpStatement*>                     jumpStatement;
 %type <NewStateStatement*>                 newStateStatement;
 %type <NewStateStatement::PrefixOperator>  newStateStatementPrefixOperator;
-%type <NewStateStatement::Options>         newStateStatementOptions;
+%type <NewStateStatement::Options*>        newStateStatementOptions;
 %type <double>                             number;
 
 %start start
@@ -309,7 +315,8 @@ externalDeclaration
     {
       $$ = $declaration;
     }
-//  | function_definition
+  // Note: reduced C standard: no function definitions
+  // | function_definition
   ;
 
 declaration
@@ -434,9 +441,9 @@ unaryExpression
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
-  | postfixExpression[a]
+  | postfixExpression
     {
-      $$ = $a;
+      $$ = $postfixExpression;
     }
   ;
 
@@ -494,6 +501,10 @@ multiplicativeExpression
   | castExpression
     {
       $$ = $castExpression;
+    }
+  | functionCallExpression
+    {
+      $$ = $functionCallExpression;
     }
   ;
 
@@ -621,7 +632,7 @@ logicalOrExpression
   ;
 
 conditionalExpression
-  : logicalOrExpression[a] '?' expression[b] ':' conditionalExpression[c]
+  : logicalOrExpression[a] '?' expression[b] ':' expression[c]
     {
       $$ = new ConditionalExpression($a, $b, $c);
     }
@@ -631,27 +642,124 @@ conditionalExpression
     }
   ;
 
+functionCallPostfixExpression
+  : functionCallPostfixExpression[a] '[' expression[b] ']'
+    {
+      $$ = new PostfixExpression(PostfixExpression::Type::SUBSCRIPT, $a, $b);
+    }
+/*
+  | functionCallPostfixExpression[a] '(' ')'
+    {
+      $$ = new PostfixExpression(PostfixExpression::Type::FUNCTION_CALL, $a);
+    }
+  | functionCallPostfixExpression[a] '(' argumentExpressionList[b] ')'
+    {
+      $$ = new PostfixExpression(PostfixExpression::Type::FUNCTION_CALL, $a, $b);
+    }
+/**/
+  | functionCallPostfixExpression[a] '.' IDENTIFIER[name]
+    {
+      $$ = new PostfixExpression(PostfixExpression::Type::MEMBER,$a,$name);
+    }
+  | functionCallPostfixExpression[a] POINTER IDENTIFIER[name]
+    {
+      $$ = new PostfixExpression(PostfixExpression::Type::POINTER,$a,$name);
+    }
+  | functionCallPostfixExpression[a] INCREMENT
+    {
+      $$ = new PostfixExpression(PostfixExpression::Type::INCREMENT,$a);
+    }
+  | functionCallPostfixExpression[a] DECREMENT
+    {
+      $$ = new PostfixExpression(PostfixExpression::Type::DECREMENT,$a);
+    }
+  | primaryExpression
+    {
+      $$ = $primaryExpression;
+    }
+  ;
+
+functionCallUnaryExpression
+  : INCREMENT functionCallUnaryExpression[a]
+    {
+      $$ = new UnaryExpression(UnaryExpression::Operator::INCREMENT, $a);
+    }
+  | DECREMENT functionCallUnaryExpression[a]
+    {
+      $$ = new UnaryExpression(UnaryExpression::Operator::DECREMENT, $a);
+    }
+  | unaryOperator functionCallCastExpression[a]
+    {
+      $$ = new UnaryExpression($unaryOperator, $a);
+    }
+  | KEYWORD_SIZEOF functionCallUnaryExpression[a]
+    {
+      $$ = new UnaryExpression(UnaryExpression::Operator::SIZEOF, $a);
+    }
+  | KEYWORD_SIZEOF '(' typeName ')'
+    {
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
+    }
+  | functionCallPostfixExpression
+    {
+      $$ = $functionCallPostfixExpression;
+    }
+  ;
+
+functionCallCastExpression
+  : '(' typeName[a] ')' functionCallCastExpression[b]
+    {
+      $$ = new CastExpression($a, $b);
+    }
+  | functionCallUnaryExpression
+    {
+      $$ = $functionCallUnaryExpression;
+    }
+  ;
+
+functionCallExpression
+   : functionCallCastExpression[a] '(' ')'
+    {
+      $$ = new PostfixExpression(PostfixExpression::Type::FUNCTION_CALL, $a);
+    }
+  | functionCallCastExpression[a] '(' argumentExpressionList[b] ')'
+    {
+      $$ = new PostfixExpression(PostfixExpression::Type::FUNCTION_CALL, $a, $b);
+    }
+  ;/**/
+
+expression
+  : conditionalExpression
+  ;
+
 argumentExpressionList
-  : argumentExpressionList ',' assignmentExpression
+  // Note: reduced C standard: only allow expressions
+  //  : argumentExpressionList ',' assignmentExpression
+  : argumentExpressionList ',' expression
     {
       $1->add($3);
       $$ = $1;
     }
-  | assignmentExpression
+  //  | assignmentExpression
+  | expression
     {
       $$ = new ArgumentExpressionList($1);
     }
   ;
 
 assignmentExpression
-  : unaryExpression[a] assignmentOperator assignmentExpression[b]
+  // Note: reduced C standard: only allow expressions
+  //  : unaryExpression[a] assignmentOperator assignmentExpression[b]
+  : unaryExpression[a] assignmentOperator expression[b]
     {
       $$ = new AssignmentExpression($assignmentOperator,$a,$b);
-    }
-  | conditionalExpression
+    }/**/
+  | unaryExpression[a] assignmentOperator castExpression[b]
     {
-      $$ = $conditionalExpression;
-    }
+      $$ = new AssignmentExpression($assignmentOperator,$a,$b);
+    }/**/
+  // | expression
   ;
 
 assignmentOperator
@@ -701,22 +809,10 @@ assignmentOperator
     }
   ;
 
-expression
-  : expression ',' assignmentExpression
-    {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
-      YYABORT;
-    }
-  | assignmentExpression
-    {
-      $$ = $assignmentExpression;
-    }
-  ;
-
 constantExpression
-  : conditionalExpression
+  : expression
     {
-      $$ = $conditionalExpression;
+      $$ = $expression;
     }
   ;
 
@@ -994,10 +1090,7 @@ typeQualifierList
 declarator
   : pointer directDeclarator
     {
-// TODO:
-      $$ = new Declarator($directDeclarator);
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
-      YYABORT;
+      $$ = new Declarator($pointer, $directDeclarator);
     }
   | directDeclarator
     {
@@ -1045,8 +1138,7 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
 pointer
   : '*'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
-      YYABORT;
+      $$ = new Pointer();
     }
   | '*' typeQualifierList
     {
@@ -1079,12 +1171,12 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
   ;
 
 parameter_list
-  : parameter_declaration
+  : parameter_list ',' parameter_declaration
     {
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
-  | parameter_list ',' parameter_declaration
+  | parameter_declaration
     {
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
@@ -1204,6 +1296,10 @@ initializer
     {
       $$ = new Initializer($assignmentExpression);
     }
+  | expression
+    {
+      $$ = new Initializer($expression);
+    }
   | '{' initializer_list '}'
     {
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
@@ -1238,10 +1334,10 @@ statement
     {
       $$ = $compoundStatement;
     }
-  | expressionStatement
+  | assignmentFunctionCallStatement
     {
-      $$ = $expressionStatement;
-    }
+      $$ = $assignmentFunctionCallStatement;
+    }/**/
   | selectionStatement
     {
       $$ = $selectionStatement;
@@ -1287,14 +1383,23 @@ compoundStatement
     }
   ;
 
+assignmentFunctionCallStatement
+  // Note: reduced C standard: only allow assignment+function call expressions
+/*  : assignmentExpression[a] ';'
+    {
+      $$ = new ExpressionStatement($a);
+    }/**/
+  // : expression[a] ';'
+  : functionCallExpression[a] ';'
+    {
+      $$ = new ExpressionStatement($a);
+    }/**/
+  ;
+
 expressionStatement
-  : expression ';'
+  : expression[a] ';'
     {
-      $$ = new ExpressionStatement($expression);
-    }
-  | ';'
-    {
-      $$ = new ExpressionStatement();
+      $$ = new ExpressionStatement($a);
     }
   ;
 
@@ -1358,37 +1463,37 @@ jumpStatement
   ;
 
 newStateStatement
-  : DEREFERENCE newStateStatementPrefixOperator IDENTIFIER[stateName] '(' newStateStatementOptions ')' ';'
+  : POINTER newStateStatementPrefixOperator IDENTIFIER[stateName] '(' newStateStatementOptions ')' ';'
     {
       NewStateStatement *newStateStatement = new NewStateStatement($stateName,$newStateStatementPrefixOperator,$newStateStatementOptions);
       ast.addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
-  | DEREFERENCE newStateStatementPrefixOperator IDENTIFIER[stateName] '(' ')' ';'
+  | POINTER newStateStatementPrefixOperator IDENTIFIER[stateName] '(' ')' ';'
     {
       NewStateStatement *newStateStatement = new NewStateStatement($stateName,$newStateStatementPrefixOperator);
       ast.addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
-  | DEREFERENCE newStateStatementPrefixOperator IDENTIFIER[stateName] ';'
+  | POINTER newStateStatementPrefixOperator IDENTIFIER[stateName] ';'
     {
       NewStateStatement *newStateStatement = new NewStateStatement($stateName,$newStateStatementPrefixOperator);
       ast.addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
-  | DEREFERENCE IDENTIFIER[stateName] '(' newStateStatementOptions ')' ';'
+  | POINTER IDENTIFIER[stateName] '(' newStateStatementOptions ')' ';'
     {
       NewStateStatement *newStateStatement = new NewStateStatement($stateName,$newStateStatementOptions);
       ast.addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
-  | DEREFERENCE IDENTIFIER[stateName] '(' ')' ';'
+  | POINTER IDENTIFIER[stateName] '(' ')' ';'
     {
       NewStateStatement *newStateStatement = new NewStateStatement($stateName);
       ast.addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
-  | DEREFERENCE IDENTIFIER[stateName] ';'
+  | POINTER IDENTIFIER[stateName] ';'
     {
       NewStateStatement *newStateStatement = new NewStateStatement($stateName);
       ast.addStateTransition(currentStateName,newStateStatement);
@@ -1419,15 +1524,15 @@ newStateStatementPrefixOperator
 newStateStatementOptions
   : STRING[label] ',' IDENTIFIER[color] ',' number[lineWidth]
     {
-      $$ = NewStateStatement::Options($label, $color, $lineWidth);
+      $$ = new NewStateStatement::Options($label, $color, $lineWidth);
     }
   | STRING[label] ',' IDENTIFIER[color]
     {
-      $$ = NewStateStatement::Options($label, $color);
+      $$ = new NewStateStatement::Options($label, $color);
     }
   | STRING[label]
     {
-      $$ = NewStateStatement::Options($label);
+      $$ = new NewStateStatement::Options($label);
     }
   ;
 

@@ -35,22 +35,22 @@ static std::string optionsToString(const NewStateStatement &newStateStatement)
   std::stringstream buffer;
   bool              first = true;
 
-  if (!newStateStatement.options.label.empty())
+  if (!newStateStatement.options->label.empty())
   {
     if (!first) buffer << ", ";
-    buffer << "label=\"" << newStateStatement.options.label << "\"";
+    buffer << "label=\"" << newStateStatement.options->label << "\"";
     first = false;
   }
-  if (!newStateStatement.options.color.empty())
+  if (!newStateStatement.options->color.empty())
   {
     if (!first) buffer << ", ";
-    buffer << "color=" << newStateStatement.options.color;
+    buffer << "color=" << newStateStatement.options->color;
     first = false;
   }
-  if (newStateStatement.options.lineWidth > 0)
+  if (newStateStatement.options->lineWidth > 0)
   {
     if (!first) buffer << ", ";
-    buffer << "penwidth=" << newStateStatement.options.lineWidth;
+    buffer << "penwidth=" << newStateStatement.options->lineWidth;
     first = false;
   }
 
