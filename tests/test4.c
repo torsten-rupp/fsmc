@@ -8,43 +8,59 @@ int main(int argc, const char *argv[])
   #fsm demo
     *INIT
     {
-      int xyz;
-      int xyz = 0;
-      const int xyz = 0;
-      const uint16_t xyz = 0;
-      static int xyz = 0;
-      uint16_t x = 2+3;
-      uint16_t x = 1*(2+3);
-      bool x = 1 != 0;
+      int a;
+      static int a;
+      uint16_t a;
+      bool a;
+      uint8_t* a;
 
-      xyz = 1;
-      xyz = 1+2;
-      xyz = 1+2*3;
-      xyz = (1+2)*3;
+      int a = 0;
+      const int a = 0;
+      const uint16_t a = 0;
+      static int a = 0;
+      uint16_t a = 2+3;
+      uint16_t a = 1*(2+3);
+      bool a = 1 != 0;
+      uint8_t* a = 0;
+      uint8_t a = b[i];
+      uint8_t a = &b[i];
+      uint8_t a = &b[i].c[d];
+      uint8_t* a = &b[i].c[d];
 
+      a = 0;
+      a = b.c;
+      a = b();
+      a = b[i];
       a = b.c.d;
+      a = 1;
+      a = 1+2;
+      a = 1+2*3;
+      a = (1+2)*3;
+
+      foo();
       foo(a, b, c);
       a = sizeof(b);
-      (void)a;
+
+      (void)a();
 
       {
-        abc = 123;
+        a = 123;
       }
 
-      if (abc)
+      if (a)
       {
         -> INIT;
         return;
       }
-      
+
       switch (a)
       {
         case b:
           break;
-        defeault:
+        default:
           break;
       }
-     
+
       for (i = 0; i < n; i++)
       {
       }

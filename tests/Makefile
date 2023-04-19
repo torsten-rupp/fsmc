@@ -49,7 +49,7 @@ test%d: ../fsmc
 
 .PHONY: test%
 test%: ../fsmc
-	cat test$*.c|../fsmc > /dev/null
+	../fsmc test$*.c > /dev/null
 
 # --- tests with stack
 .PHONY: test1%
