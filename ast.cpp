@@ -298,11 +298,11 @@ class PrintVisitor : public Visitor
     {
       switch (storageClassSpecifier.type)
       {
-        case StorageClassSpecifier::Type::TYPEDEF:  output << "typedef";  break;
-        case StorageClassSpecifier::Type::EXTERN:   output << "extern";   break;
-        case StorageClassSpecifier::Type::STATIC:   output << "static";   break;
-        case StorageClassSpecifier::Type::AUTO:     output << "auto";     break;
-        case StorageClassSpecifier::Type::REGISTER: output << "register"; break;
+        case StorageClassSpecifier::Type::TYPEDEF:  output << " 'typedef' ";  break;
+        case StorageClassSpecifier::Type::EXTERN:   output << " 'extern' ";   break;
+        case StorageClassSpecifier::Type::STATIC:   output << " 'static' ";   break;
+        case StorageClassSpecifier::Type::AUTO:     output << " 'auto' ";     break;
+        case StorageClassSpecifier::Type::REGISTER: output << " 'register' "; break;
       }
     }
 
@@ -310,8 +310,8 @@ class PrintVisitor : public Visitor
     {
       switch (typeQualifier.type)
       {
-        case TypeQualifier::Type::CONST:    output << "const"; break;
-        case TypeQualifier::Type::VOLATILE: output << "volatile"; break;
+        case TypeQualifier::Type::CONST:    output << " 'const' "; break;
+        case TypeQualifier::Type::VOLATILE: output << " 'volatile' "; break;
       }
     }
 
@@ -319,8 +319,16 @@ class PrintVisitor : public Visitor
     {
       switch (typeSpecifier.type)
       {
-        case TypeSpecifier::Type::INT:        output << "int"; break;
-        case TypeSpecifier::Type::IDENTIFIER: output << typeSpecifier.identifier; break;
+        case TypeSpecifier::Type::VOID:       output << " 'void' "; break;
+        case TypeSpecifier::Type::CHAR:       output << " 'char' "; break;
+        case TypeSpecifier::Type::SHORT:      output << " 'short' "; break;
+        case TypeSpecifier::Type::INT:        output << " 'int' "; break;
+        case TypeSpecifier::Type::LONG:       output << " 'long' "; break;
+        case TypeSpecifier::Type::FLOAT:      output << " 'float' "; break;
+        case TypeSpecifier::Type::DOUBLE:     output << " 'double' "; break;
+        case TypeSpecifier::Type::SIGNED:     output << " 'signed' "; break;
+        case TypeSpecifier::Type::UNSIGNED:   output << " 'unsigned' "; break;
+        case TypeSpecifier::Type::IDENTIFIER: output << "'" << typeSpecifier.identifier << "'"; break;
       }
     }
 
@@ -337,21 +345,30 @@ class PrintVisitor : public Visitor
 
     void accept(const DirectDeclarator &directDeclarator) override
     {
-      output << directDeclarator.identifier;
+      output << "'" << directDeclarator.identifier << "'";
+    }
+
+    void accept(const Pointer &pointer) override
+    {
+      output << " '*' ";
     }
 
     void accept(const Declarator &declarator) override
     {
+      if (declarator.pointer != nullptr) declarator.pointer->traverse(*this);
       declarator.directDeclarator->traverse(*this);
     }
 
     void accept(const Initializer &initializer) override
     {
+// TODO:
+//if (initializer.expression != nullptr)
       initializer.expression->traverse(*this);
     }
 
     void accept(const InitDeclarator &initDeclarator) override
     {
+      output << "InitDeclarator: ";
       if (initDeclarator.storageClassDeclarationSpecifiers != nullptr)
       {
         initDeclarator.storageClassDeclarationSpecifiers->traverse(*this);
@@ -360,14 +377,14 @@ class PrintVisitor : public Visitor
       initDeclarator.declarator->traverse(*this);
       if (initDeclarator.initializer != nullptr)
       {
-        output << " = ";
+        output << " '=' ";
         initDeclarator.initializer->traverse(*this);
       }
     }
 
     void accept(const Declaration &declaration) override
     {
-      output << indentSpaces();
+      output << indentSpaces() << "Declaration: ";
       if (declaration.storageClassDeclarationSpecifiers != nullptr)
       {
         declaration.storageClassDeclarationSpecifiers->traverse(*this);
@@ -379,100 +396,102 @@ class PrintVisitor : public Visitor
 
     void accept(const PrimaryExpression &primaryExpression) override
     {
+      output << "PrimaryExpression: ";
       switch (primaryExpression.type)
       {
-        case PrimaryExpression::Type::IDENTIFIER: output << primaryExpression.identifier; break;
-        case PrimaryExpression::Type::INTEGER:    output << primaryExpression.n; break;
-        case PrimaryExpression::Type::STRING:     output << "\"" << primaryExpression.string << "\""; break;
+        case PrimaryExpression::Type::IDENTIFIER: output << "'" << primaryExpression.identifier << "'"; break;
+        case PrimaryExpression::Type::INTEGER:    output << "'" << primaryExpression.n << "'"; break;
+        case PrimaryExpression::Type::STRING:     output << " '\"' " << primaryExpression.string << " '\"' "; break;
         case PrimaryExpression::Type::EXPRESSION:
-          output << '(';
+          output << " '(' ";
           primaryExpression.expression->traverse(*this);
-          output << ')';
+          output << " ')' ";
           break;
       }
     }
 
     void accept(const PostfixExpression &postfixExpression) override
     {
+      output << "PostfixExpression: ";
       switch (postfixExpression.type)
       {
         case PostfixExpression::Type::SUBSCRIPT:
           postfixExpression.array->traverse(*this);
-          output << "[";
+          output << " '[' ";
           postfixExpression.index->traverse(*this);
-          output << "]";
+          output << " ']' ";
           break;
         case PostfixExpression::Type::FUNCTION_CALL:
           postfixExpression.call->traverse(*this);
-          output << "(";
+          output << " '(' ";
           if (postfixExpression.argumentExpressionList != nullptr)
           {
             postfixExpression.argumentExpressionList->traverse(*this);
           }
-          output << ")";
+          output << " ')' ";
           break;
         case PostfixExpression::Type::MEMBER:
           postfixExpression.structure->traverse(*this);
-          output << "." << postfixExpression.identifier;
+          output << " '.' " << *postfixExpression.identifier;
           break;
       }
     }
 
     void accept(const UnaryExpression &unaryExpression) override
     {
+      output << "UnaryExpression: ";
       switch (unaryExpression.operator_)
       {
-        case UnaryExpression::Operator::ADDRESS:     output << "&"; break;
-        case UnaryExpression::Operator::DEREFERENCE: output << "*"; break;
-        case UnaryExpression::Operator::PLUS:        output << "+"; break;
-        case UnaryExpression::Operator::MINUS:       output << "-"; break;
-        case UnaryExpression::Operator::NOT:         output << "~"; break;
-        case UnaryExpression::Operator::LOGICAL_NOT: output << "!"; break;
+        case UnaryExpression::Operator::ADDRESS:     output << " '&' "; break;
+        case UnaryExpression::Operator::DEREFERENCE: output << " '*' "; break;
+        case UnaryExpression::Operator::PLUS:        output << " '+' "; break;
+        case UnaryExpression::Operator::MINUS:       output << " '-' "; break;
+        case UnaryExpression::Operator::NOT:         output << " '~' "; break;
+        case UnaryExpression::Operator::LOGICAL_NOT: output << " '!' "; break;
       }
       unaryExpression.expression->traverse(*this);
     }
 
     void accept(const CastExpression &castExpression) override
     {
-//output << "castExpression";
-//fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__); asm("int3");
+      output << "CastExpression: ";
       castExpression.expression->traverse(*this);
     }
 
     void accept(const MultiplicativeExpression &multiplicativeExpression) override
     {
-//output << "multiplicativeExpression";
+      output << "MultiplicativeExpression: ";
       multiplicativeExpression.a->traverse(*this);
       switch (multiplicativeExpression.type)
       {
-        case MultiplicativeExpression::Type::MULTIPLY: output << " * "; break;
-        case MultiplicativeExpression::Type::DIVIDE:   output << " / "; break;
+        case MultiplicativeExpression::Type::MULTIPLY: output << " '*' "; break;
+        case MultiplicativeExpression::Type::DIVIDE:   output << " '/' "; break;
       }
       multiplicativeExpression.b->traverse(*this);
     }
 
     void accept(const AdditiveExpression &additiveExpression) override
     {
-//output << "additiveExpression";
+      output << "AdditiveExpression: ";
       additiveExpression.a->traverse(*this);
       switch (additiveExpression.type)
       {
-        case AdditiveExpression::Type::ADD:      output << " + "; break;
-        case AdditiveExpression::Type::SUBTRACT: output << " - "; break;
+        case AdditiveExpression::Type::ADD:      output << " '+' "; break;
+        case AdditiveExpression::Type::SUBTRACT: output << " '-' "; break;
       }
       additiveExpression.b->traverse(*this);
     }
 
     void accept(const ShiftExpression &shiftExpression) override
     {
-//output << "shiftExpression";
+      output << "ShiftExpression: ";
       shiftExpression.a->traverse(*this);
       if (shiftExpression.b != nullptr)
       {
         switch (shiftExpression.type)
         {
-          case ShiftExpression::Type::LEFT:  output << " << "; break;
-          case ShiftExpression::Type::RIGHT: output << " >> "; break;
+          case ShiftExpression::Type::LEFT:  output << " '<<' "; break;
+          case ShiftExpression::Type::RIGHT: output << " '>>' "; break;
         }
         shiftExpression.b->traverse(*this);
       }
@@ -480,27 +499,27 @@ class PrintVisitor : public Visitor
 
     void accept(const RelationalExpression &relationalExpression) override
     {
-//output << "relationalExpression";
+      output << "RelationalExpression: ";
       switch (relationalExpression.type)
       {
         case RelationalExpression::Type::LOWER:
           relationalExpression.a->traverse(*this);
-          output << " < ";
+          output << " '<' ";
           relationalExpression.b->traverse(*this);
           break;
         case RelationalExpression::Type::LOWER_EQUALS:
           relationalExpression.a->traverse(*this);
-          output << " <= ";
+          output << " '<=' ";
           relationalExpression.b->traverse(*this);
           break;
         case RelationalExpression::Type::GREATER:
           relationalExpression.a->traverse(*this);
-          output << " > ";
+          output << " '>' ";
           relationalExpression.b->traverse(*this);
           break;
         case RelationalExpression::Type::GREATER_EQUALS:
           relationalExpression.a->traverse(*this);
-          output << " >= ";
+          output << " '>=' ";
           relationalExpression.b->traverse(*this);
           break;
       }
@@ -508,17 +527,17 @@ class PrintVisitor : public Visitor
 
     void accept(const EqualityExpression &equalityExpression) override
     {
-//output << "equalityExpression";
+      output << "EqualityExpression: ";
       switch (equalityExpression.type)
       {
         case EqualityExpression::Type::EQUALS:
           equalityExpression.a->traverse(*this);
-          output << " == ";
+          output << " '==' ";
           equalityExpression.b->traverse(*this);
           break;
         case EqualityExpression::Type::NOT_EQUALS:
           equalityExpression.a->traverse(*this);
-          output << " != ";
+          output << " '!=' ";
           equalityExpression.b->traverse(*this);
           break;
       }
@@ -526,49 +545,49 @@ class PrintVisitor : public Visitor
 
     void accept(const AndExpression &andExpression) override
     {
-//output << "andExpression";
+      output << "AndExpression: ";
       andExpression.a->traverse(*this);
-      output << " & ";
+      output << " '&' ";
       andExpression.b->traverse(*this);
     }
 
     void accept(const ExclusiveOrExpression &exclusiveOrExpression) override
     {
-//output << "exclusiveOrExpression";
+      output << "ExclusiveOrExpression: ";
       exclusiveOrExpression.a->traverse(*this);
-      output << " ^ ";
+      output << " '^' ";
       exclusiveOrExpression.b->traverse(*this);
     }
 
     void accept(const InclusiveOrExpression &inclusiveOrExpression) override
     {
-//output << "inclusiveOrExpression";
+      output << "AndEInclusiveOrExpressionxpression: ";
       inclusiveOrExpression.a->traverse(*this);
-      output << " | ";
+      output << " '|' ";
       inclusiveOrExpression.b->traverse(*this);
     }
 
     void accept(const LogicalAndExpression &logicalAndExpression) override
     {
-//output << "logicalAndExpression";
+      output << "LogicalAndExpression: ";
       logicalAndExpression.a->traverse(*this);
-      output << " && ";
+      output << " '&&' ";
       logicalAndExpression.b->traverse(*this);
     }
 
     void accept(const LogicalOrExpression &logicalOrExpression) override
     {
-//output << "logicalOrExpression";
+      output << "LogicalOrExpression: ";
       logicalOrExpression.a->traverse(*this);
-      output << " || ";
+      output << " '||' ";
       logicalOrExpression.b->traverse(*this);
     }
 
     void accept(const ConditionalExpression &conditionalExpression) override
     {
-//output << "conditionalExpression";
+      output << "ConditionalExpression: ";
       conditionalExpression.condition->traverse(*this);
-      output << " ? ";
+      output << " '?' ";
       conditionalExpression.a->traverse(*this);
       output << " : ";
       conditionalExpression.b->traverse(*this);
@@ -576,30 +595,31 @@ class PrintVisitor : public Visitor
 
     void accept(const AssignmentExpression &assignmentExpression) override
     {
+      output << "AssignmentExpression: ";
       assignmentExpression.a->traverse(*this);
       switch (assignmentExpression.operator_)
       {
-        case AssignmentExpression::Operator::ASSIGN:             output << " = ";   break;
-        case AssignmentExpression::Operator::MULTIPLY_ASSIGN:    output << " *= ";  break;
-        case AssignmentExpression::Operator::DIVIDE_ASSIGN:      output << " /= ";  break;
-        case AssignmentExpression::Operator::MODULO_ASSIGN:      output << " %= ";  break;
-        case AssignmentExpression::Operator::ADD_ASSIGN:         output << " += ";  break;
-        case AssignmentExpression::Operator::SUB_ASSIGN:         output << " -= ";  break;
-        case AssignmentExpression::Operator::SHIFT_LEFT_ASSIGN:  output << " <<= "; break;
-        case AssignmentExpression::Operator::SHIFT_RIGHT_ASSIGN: output << " >>= "; break;
-        case AssignmentExpression::Operator::AND_ASSIGN:         output << " &= ";  break;
-        case AssignmentExpression::Operator::XOR_ASSIGN:         output << " ^= ";  break;
-        case AssignmentExpression::Operator::OR_ASSIGN:          output << " |= ";  break;
+        case AssignmentExpression::Operator::ASSIGN:             output << " '=' ";   break;
+        case AssignmentExpression::Operator::MULTIPLY_ASSIGN:    output << " '*=' ";  break;
+        case AssignmentExpression::Operator::DIVIDE_ASSIGN:      output << " '/=' ";  break;
+        case AssignmentExpression::Operator::MODULO_ASSIGN:      output << " '%=' ";  break;
+        case AssignmentExpression::Operator::ADD_ASSIGN:         output << " '+=' ";  break;
+        case AssignmentExpression::Operator::SUB_ASSIGN:         output << " '-=' ";  break;
+        case AssignmentExpression::Operator::SHIFT_LEFT_ASSIGN:  output << " '<<=' "; break;
+        case AssignmentExpression::Operator::SHIFT_RIGHT_ASSIGN: output << " '>>=' "; break;
+        case AssignmentExpression::Operator::AND_ASSIGN:         output << " '&=' ";  break;
+        case AssignmentExpression::Operator::XOR_ASSIGN:         output << " '^=' ";  break;
+        case AssignmentExpression::Operator::OR_ASSIGN:          output << " '|=' ";  break;
       }
       assignmentExpression.b->traverse(*this);
     }
 
     void accept(Visitor::Phases phase, const CompoundStatement &compoundStatement) override
     {
+      output << indentSpaces() << "CompoundStatement: " << std::endl;
       switch (phase)
       {
         case Phases::PRE:
-        output << "xxx";
           indent();
           break;
         case Phases::POST:
@@ -610,7 +630,7 @@ class PrintVisitor : public Visitor
 
     void accept(const IfStatement &ifStatement) override
     {
-      output << indentSpaces() << "if "; ifStatement.condition->traverse(*this); output << std::endl;
+      output << indentSpaces() << "IfStatement: "; ifStatement.condition->traverse(*this); output << std::endl;
       indent();
       ifStatement.ifStatement->traverse(*this);
       unindent();
@@ -625,44 +645,34 @@ class PrintVisitor : public Visitor
 
     void accept(const ForStatement &forStatement) override
     {
-      output << indentSpaces() << "for (";
+      output << indentSpaces() << "ForStatement: " << std::endl;
+      indent();
       forStatement.init->traverse(*this);
-      output << "; ";
       forStatement.condition->traverse(*this);
-      output << "; ";
-      forStatement.increment->traverse(*this);
-      output << ")" << std::endl;
+      if (forStatement.increment != nullptr) forStatement.increment->traverse(*this);
       forStatement.statement->traverse(*this);
+      unindent();
     }
 
     void accept(const WhileStatement &whileStatement) override
     {
-      output << indentSpaces() << "while (";
+      output << indentSpaces() << "WhileStatement: ";
       whileStatement.condition->traverse(*this);
-      output << ")" << std::endl;
+      output << " ')' " << std::endl;
       whileStatement.statement->traverse(*this);
     }
 
     void accept(const DoStatement &doStatement) override
     {
-      output << indentSpaces() << "do" << std::endl;
+      output << indentSpaces() << "DoStatement: ";
       doStatement.statement->traverse(*this);
-      output << indentSpaces() << "while (";
+      output << indentSpaces() << " ';' ";
       doStatement.condition->traverse(*this);
-      output << ");" << std::endl;
     }
 
-    void accept(Phases phase, const ExpressionStatement &expressionStatement) override
+    void accept(const ExpressionStatement &expressionStatement) override
     {
-      switch (phase)
-      {
-        case Phases::PRE:
-          output << indentSpaces();
-          break;
-        case Phases::POST:
-          output << std::endl;
-          break;
-      }
+      output << indentSpaces() << "ExpressionStatement: "; expressionStatement.expression->traverse(*this); output << " ';' " << std::endl;
     }
 
     void accept(const JumpStatement &jumpStatement) override
@@ -670,13 +680,13 @@ class PrintVisitor : public Visitor
       switch (jumpStatement.type)
       {
         case JumpStatement::Type::CONTINUE:
-          output << indentSpaces() << "continue" <<  std::endl;
+          output << indentSpaces() << " 'continue' " <<  std::endl;
           break;
         case JumpStatement::Type::BREAK:
-          output << indentSpaces() << "break" <<  std::endl;
+          output << indentSpaces() << " 'break' " <<  std::endl;
           break;
         case JumpStatement::Type::RETURN:
-          output << indentSpaces() << "return";
+          output << indentSpaces() << " 'return' ";
           if (jumpStatement.expression != nullptr)
           {
             output << " ";

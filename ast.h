@@ -474,23 +474,53 @@ class DirectDeclarator : public VisitorInterface
     }
 };
 
-class Declarator : public VisitorInterface
+class Pointer : public VisitorInterface
 {
   public:
-    const DirectDeclarator *directDeclarator;
-
-    Declarator(const DirectDeclarator *directDeclarator)
-      : directDeclarator(directDeclarator)
+    Pointer()
     {
     }
 
-    Declarator()
+    virtual ~Pointer()
+    {
+    }
+
+    virtual void traverse(Visitor &visitor) const
+    {
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
+      {
+        visitor.accept(Visitor::Phases::PRE, *this);
+        visitor.accept(Visitor::Phases::POST, *this);
+      }
+    }
+};
+
+class Declarator : public VisitorInterface
+{
+  public:
+    const Pointer          *pointer;
+    const DirectDeclarator *directDeclarator;
+
+    Declarator(const Pointer *pointer, const DirectDeclarator *directDeclarator)
+      : pointer(pointer)
+      , directDeclarator(directDeclarator)
+    {
+    }
+
+    Declarator(const DirectDeclarator *directDeclarator)
+      : pointer(nullptr)
+      , directDeclarator(directDeclarator)
     {
     }
 
     virtual ~Declarator()
     {
       delete(directDeclarator);
+      delete(pointer);
     }
 
     void traverse(Visitor &visitor) const
@@ -502,6 +532,7 @@ class Declarator : public VisitorInterface
       catch (const Visitor::Exception &)
       {
         visitor.accept(Visitor::Phases::PRE, *this);
+        if (pointer != nullptr) pointer->traverse(visitor);
         directDeclarator->traverse(visitor);
         visitor.accept(Visitor::Phases::POST, *this);
       }
@@ -758,6 +789,11 @@ class PostfixExpression : public Expression
             argumentExpressionList->traverse(visitor);
             break;
           case Type::MEMBER:
+            structure->traverse(visitor);
+            break;
+          case Type::POINTER:
+          case Type::INCREMENT:
+          case Type::DECREMENT:
             structure->traverse(visitor);
             break;
         }
@@ -1538,13 +1574,15 @@ class LabeledStatement : public Statement
     const Statement  *statement;
 
     LabeledStatement(const Expression *constantExpression, const Statement *statement)
-      : constantExpression(constantExpression)
+      : type(Type::CASE)
+      , constantExpression(constantExpression)
       , statement(statement)
     {
     }
 
     LabeledStatement(const Statement *statement)
-      : constantExpression(nullptr)
+      : type(Type::DEFAULT)
+      , constantExpression(nullptr)
       , statement(statement)
     {
     }
@@ -1980,9 +2018,9 @@ class NewStateStatement : public Statement
     Type           type;
     Identifier     name;
     PrefixOperator prefixOperator;
-    Options        options;
+    const Options  *options;
 
-    NewStateStatement(const Identifier &name, PrefixOperator prefixOperator, const Options &options)
+    NewStateStatement(const Identifier &name, PrefixOperator prefixOperator, const Options *options)
       : type(getType(name))
       , name(name)
       , prefixOperator(prefixOperator)
@@ -1994,11 +2032,11 @@ class NewStateStatement : public Statement
       : type(getType(name))
       , name(name)
       , prefixOperator(prefixOperator)
-      , options()
+      , options(new Options())
     {
     }
 
-    NewStateStatement(const Identifier &name, const Options &options)
+    NewStateStatement(const Identifier &name, const Options *options)
       : type(getType(name))
       , name(name)
       , prefixOperator(PrefixOperator::NONE)
@@ -2010,8 +2048,13 @@ class NewStateStatement : public Statement
       : type(getType(name))
       , name(name)
       , prefixOperator(PrefixOperator::NONE)
-      , options()
+      , options(new Options())
     {
+    }
+    
+    ~NewStateStatement() override
+    {
+      delete(options);
     }
 
     virtual void traverse(Visitor &visitor) const
@@ -2100,7 +2143,6 @@ class StateList : public std::vector<State*>
     {
       try
       {
-fprintf(stderr,"%s:%d: xxxxxx\n",__FILE__,__LINE__);
         visitor.accept(*this);
       }
       catch (const Visitor::Exception &)
@@ -2232,7 +2274,8 @@ class AST
      */
     void print() const;
 
-  private:
+// TODO:
+//  private:
     // allow access to private methods/members
     friend class Parser;
     friend class Visitor;
