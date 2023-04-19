@@ -47,6 +47,7 @@ int main(int argc, const char *argv[])
     uint        stateStackSize = 0;
     std::string logFunction = "";
     bool        asserts = false;
+    bool        debug = false;
     bool        dumpAST = false;
     int i = 1;
     while (i < argc)
@@ -62,6 +63,7 @@ int main(int argc, const char *argv[])
         fprintf(stdout, "-n|--state-stack-size <n>             state stack size\n");
         fprintf(stdout, "-l|--log-function <log function>      log function to call on state change\n");
         fprintf(stdout, "-a|--asserts                          generate asserts\n");
+        fprintf(stdout, "--debug                               debug output\n");
         fprintf(stdout, "--dump-ast                            dump abstract syntax tree\n");
         return 0;
       }
@@ -92,6 +94,11 @@ int main(int argc, const char *argv[])
       else if ((argument == "-a") || (argument == "--asserts"))
       {
         asserts = true;
+        i += 1;
+      }
+      else if (argument == "--debug")
+      {
+        debug = true;
         i += 1;
       }
       else if (argument == "--dump-ast")
@@ -214,8 +221,7 @@ int main(int argc, const char *argv[])
         // parse FSM
         AST ast(stateStackSize,asserts);
         Parser parser(!inputFilePath.empty() ? inputFilePath : "<stdin>", scanner, ast);
-const char *DEBUG = getenv("DEBUG");
-if ((DEBUG != nullptr) && (strcmp(DEBUG,"1") == 0)) parser.set_debug_level(1);
+        if (debug) parser.set_debug_level(1);
         if (parser.parse() != 0)
         {
           throw std::runtime_error("parsing failed");
@@ -229,7 +235,7 @@ if ((DEBUG != nullptr) && (strcmp(DEBUG,"1") == 0)) parser.set_debug_level(1);
           // generate code
           CodeGenerator codeGenerator(*output, fsmIndent, 2, logFunction);
           codeGenerator.generate(ast);
-
+          
           // generate .dot file
           if (!dotDirectoryPath.empty())
           {
