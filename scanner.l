@@ -1,3 +1,10 @@
+/***********************************************************************\
+*
+* Contents: scanner
+* Systems: all
+*
+\***********************************************************************/
+
 %option noinput nounput
 %option noyywrap
 
@@ -9,76 +16,79 @@
 %{
   #include <unordered_map>
 
+  #include "parser.h"
+  #include "parser.tab.h"
+  #include "location.h"
+
   #include "scanner.h"
-  #include "parser.hpp"
-  #include "position.hh"
-  #include "location.hh"
 
   using namespace std;
 
   // terminate macro
-  #define yyterminate() Parser::make_END(location());
+  #define yyterminate() TOKEN_EOF
 
   // track current scanner location
   #define YY_USER_ACTION \
     do \
     { \
-      last.line    = first.line; \
-      last.column  = first.column; \
-      first.line   = lineno(); \
-      first.column += yyleng; \
+      yylloc.last.line    = yylloc.first.line; \
+      yylloc.last.column  = yylloc.first.column; \
+      yylloc.first.line   = lineno(); \
+      yylloc.first.column += yyleng; \
     } \
     while (0);
 
-  static std::unordered_map<std::string, FSM::Parser::token::yytokentype> KEY_WORDS =
+  static std::unordered_map<std::string, int> KEY_WORDS =
   {
-    { "if",       FSM::Parser::token::yytokentype::TOKEN_KEYWORD_IF       },
-    { "else",     FSM::Parser::token::yytokentype::TOKEN_KEYWORD_ELSE     },
-    { "for",      FSM::Parser::token::yytokentype::TOKEN_KEYWORD_FOR      },
-    { "while",    FSM::Parser::token::yytokentype::TOKEN_KEYWORD_WHILE    },
-    { "do",       FSM::Parser::token::yytokentype::TOKEN_KEYWORD_DO       },
-    { "switch",   FSM::Parser::token::yytokentype::TOKEN_KEYWORD_SWITCH   },
-    { "case",     FSM::Parser::token::yytokentype::TOKEN_KEYWORD_CASE     },
-    { "default",  FSM::Parser::token::yytokentype::TOKEN_KEYWORD_DEFAULT  },
-    { "break",    FSM::Parser::token::yytokentype::TOKEN_KEYWORD_BREAK    },
-    { "continue", FSM::Parser::token::yytokentype::TOKEN_KEYWORD_CONTINUE },
-    { "return",   FSM::Parser::token::yytokentype::TOKEN_KEYWORD_RETURN   },
-    { "sizeof",   FSM::Parser::token::yytokentype::TOKEN_KEYWORD_SIZEOF   },
+    { "if",       KEYWORD_IF       },
+    { "else",     KEYWORD_ELSE     },
+    { "for",      KEYWORD_FOR      },
+    { "while",    KEYWORD_WHILE    },
+    { "do",       KEYWORD_DO       },
+    { "switch",   KEYWORD_SWITCH   },
+    { "case",     KEYWORD_CASE     },
+    { "default",  KEYWORD_DEFAULT  },
+    { "break",    KEYWORD_BREAK    },
+    { "continue", KEYWORD_CONTINUE },
+    { "return",   KEYWORD_RETURN   },
+    { "sizeof",   KEYWORD_SIZEOF   },
 
-    { "auto",     FSM::Parser::token::yytokentype::TOKEN_KEYWORD_AUTO     },
-    { "register", FSM::Parser::token::yytokentype::TOKEN_KEYWORD_REGISTER },
-    { "static",   FSM::Parser::token::yytokentype::TOKEN_KEYWORD_STATIC   },
-    { "extern",   FSM::Parser::token::yytokentype::TOKEN_KEYWORD_EXTERN   },
-    { "typedef",  FSM::Parser::token::yytokentype::TOKEN_KEYWORD_TYPEDEF  },
+    { "auto",     KEYWORD_AUTO     },
+    { "register", KEYWORD_REGISTER },
+    { "static",   KEYWORD_STATIC   },
+    { "extern",   KEYWORD_EXTERN   },
+    { "typedef",  KEYWORD_TYPEDEF  },
 
-    { "void",     FSM::Parser::token::yytokentype::TOKEN_KEYWORD_VOID     },
-    { "char",     FSM::Parser::token::yytokentype::TOKEN_KEYWORD_CHAR     },
-    { "short",    FSM::Parser::token::yytokentype::TOKEN_KEYWORD_SHORT    },
-    { "int",      FSM::Parser::token::yytokentype::TOKEN_KEYWORD_INT      },
-    { "long",     FSM::Parser::token::yytokentype::TOKEN_KEYWORD_LONG     },
-    { "float",    FSM::Parser::token::yytokentype::TOKEN_KEYWORD_FLOAT    },
-    { "double",   FSM::Parser::token::yytokentype::TOKEN_KEYWORD_DOUBLE   },
-    { "signed",   FSM::Parser::token::yytokentype::TOKEN_KEYWORD_SIGNED   },
-    { "unsigned", FSM::Parser::token::yytokentype::TOKEN_KEYWORD_UNSIGNED },
+    { "void",     KEYWORD_VOID     },
+    { "char",     KEYWORD_CHAR     },
+    { "short",    KEYWORD_SHORT    },
+    { "int",      KEYWORD_INT      },
+    { "long",     KEYWORD_LONG     },
+    { "float",    KEYWORD_FLOAT    },
+    { "double",   KEYWORD_DOUBLE   },
+    { "signed",   KEYWORD_SIGNED   },
+    { "unsigned", KEYWORD_UNSIGNED },
 
-    { "struct",   FSM::Parser::token::yytokentype::TOKEN_KEYWORD_STRUCT   },
-    { "union",    FSM::Parser::token::yytokentype::TOKEN_KEYWORD_UNION    },
+    { "struct",   KEYWORD_STRUCT   },
+    { "union",    KEYWORD_UNION    },
 
-    { "const",    FSM::Parser::token::yytokentype::TOKEN_KEYWORD_CONST    },
-    { "volatile", FSM::Parser::token::yytokentype::TOKEN_KEYWORD_VOLATILE },
-    { "struct",   FSM::Parser::token::yytokentype::TOKEN_KEYWORD_STRUCT   },
+    { "const",    KEYWORD_CONST    },
+    { "volatile", KEYWORD_VOLATILE },
+    { "struct",   KEYWORD_STRUCT   },
   };
 
-  static struct
-  {
-    uint line;
-    uint column;
-  } first, last;
-
   // get current token location (line, column)
-  static FSM::location currentLocation()
+  Location currentLocation()
   {
-    return FSM::location(FSM::position(YY_NULLPTR,first.line,first.column));
+//    return FSM::location(FSM::position(YY_NULLPTR,first.line,first.column));
+    Location location;
+
+    location.first.line   = yylloc.first.line;
+    location.first.column = yylloc.first.column;
+    location.last.line    = yylloc.last.line;
+    location.last.column  = yylloc.last.column;
+
+    return location;
   }
 %}
 
@@ -97,8 +107,8 @@
 
   /* LF */
   \n {
-    first.line++;
-    first.column = 0;
+    yylloc.first.line++;
+    yylloc.first.column = 0;
   }
 
   "//" {
@@ -110,10 +120,11 @@
 
   /* FSM begin/end */
   "#fsm" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_KEYWORD_FSM, currentLocation());
+//fprintf(stderr,"%s, %d: #fsm %s %d\n",__FILE__,__LINE__,yytext,yylloc.first.line);
+    return KEYWORD_FSM;
   }
   "#end" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_KEYWORD_END, currentLocation());
+    return KEYWORD_END;
   }
 
   /* keyword or identifier */
@@ -121,19 +132,21 @@
     auto keyword = KEY_WORDS.find(yytext);
     if (keyword != KEY_WORDS.end())
     {
-//fprintf(stderr,"%s, %d: KEY_WORD %s\n",__FILE__,__LINE__,yytext);
-      return FSM::Parser::symbol_type(keyword->second, currentLocation());
+//fprintf(stderr,"%s, %d: KEY_WORD %s %d\n",__FILE__,__LINE__,yytext,yylloc.first.line);
+      return keyword->second;
     }
     else
     {
-//fprintf(stderr,"%s, %d: IDENTIFIER %s\n",__FILE__,__LINE__,yytext);
-      return FSM::Parser::make_IDENTIFIER(FSM::Identifier(yytext), currentLocation());
+//fprintf(stderr,"%s, %d: IDENTIFIER %s %d\n",__FILE__,__LINE__,yytext,yylloc.first.line);
+      yylval.string = strdup(yytext);
+      return TOKEN_IDENTIFIER;
     }
   }
 
   /* char */
   '.' {
-    return FSM::Parser::make_CHAR(yytext[1], currentLocation());
+    yylval.literal = yytext[0];
+    return TOKEN_CHAR;
   }
 
   /* string */
@@ -143,118 +156,118 @@
 
   /* number */
   [0-9]*"."[0-9]+ {
-    double number = std::stod(yytext, 0);
-    return FSM::Parser::make_FLOAT(number, currentLocation());
+    yylval.float_ = std::stod(yytext, 0);
+    return TOKEN_FLOAT;
   }
   [0-9]+"."[0-9]* {
-    double number = std::stod(yytext, 0);
-    return FSM::Parser::make_INTEGER(number, currentLocation());
+    yylval.float_ = std::stod(yytext, 0);
+    return TOKEN_FLOAT;
   }
   [0-9]+ {
-    uint64_t number = std::stol(yytext, 0, 10);
-    return FSM::Parser::make_INTEGER(number, currentLocation());
+    yylval.integer = std::stol(yytext, 0, 10);
+    return TOKEN_INTEGER;
   }
 
   /* special operators */
   "*=" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_MULTIPLY_ASSIGN, currentLocation());
+    return TOKEN_MULTIPLY_ASSIGN;
   }
   "/=" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_DIVIDE_ASSIGN, currentLocation());
+    return TOKEN_DIVIDE_ASSIGN;
   }
   "%=" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_MODULO_ASSIGN, currentLocation());
+    return TOKEN_MODULO_ASSIGN;
   }
   "+=" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_ADD_ASSIGN, currentLocation());
+    return TOKEN_ADD_ASSIGN;
   }
   "-=" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_SUB_ASSIGN, currentLocation());
+    return TOKEN_SUB_ASSIGN;
   }
   "<<=" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_SHIFT_LEFT_ASSIGN, currentLocation());
+    return TOKEN_SHIFT_LEFT_ASSIGN;
   }
   ">>=" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_SHIFT_RIGHT_ASSIGN, currentLocation());
+    return TOKEN_SHIFT_RIGHT_ASSIGN;
   }
   "&=" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_XOR_ASSIGN, currentLocation());
+    return TOKEN_XOR_ASSIGN;
   }
   "^=" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_AND_ASSIGN, currentLocation());
+    return TOKEN_AND_ASSIGN;
   }
   "|=" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_OR_ASSIGN, currentLocation());
+    return TOKEN_OR_ASSIGN;
   }
 
   "++" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_INCREMENT, currentLocation());
+    return TOKEN_INCREMENT;
   }
   "--" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_DECREMENT, currentLocation());
+    return TOKEN_DECREMENT;
   }
   "==" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_EQUALS, currentLocation());
+    return TOKEN_EQUALS;
   }
   "!=" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_NOT_EQUALS, currentLocation());
+    return TOKEN_NOT_EQUALS;
   }
   /*
   "<" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_LOWER, currentLocation());
+    return TOKEN_LOWER;
   }
   ">" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_LOWER_EQUALS, currentLocation());
+    return TOKEN_LOWER_EQUALS;
   }
   */
   "<=" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_GREATER, currentLocation());
+    return TOKEN_GREATER;
   }
   ">=" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_GREATER_EQUALS, currentLocation());
+    return TOKEN_GREATER_EQUALS;
   }
 
   "->" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_POINTER, currentLocation());
+    return TOKEN_POINTER;
   }
 
   "&&" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_AND, currentLocation());
+    return TOKEN_AND;
   }
   "||" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_OR, currentLocation());
+    return TOKEN_OR;
   }
   "^" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_XOR, currentLocation());
+    return TOKEN_XOR;
   }
 
   "<<" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_SHIFT_LEFT, currentLocation());
+    return TOKEN_SHIFT_LEFT;
   }
   ">>" {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_SHIFT_RIGHT, currentLocation());
+    return TOKEN_SHIFT_RIGHT;
   }
 
   "..." {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_ELLIPSIS, currentLocation());
+    return TOKEN_ELLIPSIS;
   }
 
   /* any character */
   . {
-    return FSM::Parser::symbol_type(static_cast<FSM::Parser::token::yytokentype>(yytext[0]), currentLocation());
+    return yytext[0];
   }
 
   /* end of file */
   <<EOF>> {
-    return FSM::Parser::symbol_type(FSM::Parser::token::yytokentype::TOKEN_EOF, currentLocation());
+    return TOKEN_EOF;
   }
 }
 
 <LINE_COMMENT>
 {
   \n        { yy_pop_state();
-              first.line++;
-              first.column = 0;
+              yylloc.first.line++;
+              yylloc.first.column = 0;
             }
   [^\n]+    { /* ignored */ }
 }
@@ -263,8 +276,8 @@
 {
   "*/"      { yy_pop_state(); }
   \n        { /* ignored */
-              first.line++;
-              first.column = 0;
+              yylloc.first.line++;
+              yylloc.first.column = 0;
             }
   .         { /* ignored */ }
 }
@@ -273,7 +286,8 @@
 {
   "\""      { yy_pop_state();
               yytext[strlen(yytext)-1] = '\0';
-              return FSM::Parser::make_STRING(yytext, currentLocation());
+              yylval.string = strdup(yytext);
+              return TOKEN_STRING;
             }
   [^"]      { yymore(); }
 }
@@ -295,12 +309,12 @@ return "";
 
 uint Scanner::getLine()
 {
-    return last.line;
+  return yylloc.last.line;
 }
 
 uint Scanner::getColumn()
 {
-    return last.column;
+  return yylloc.last.column;
 }
 
-}  // namespace FSM
+} // namespace FSM

@@ -1,227 +1,271 @@
-%skeleton "lalr1.cc" /* -*- C++ -*- */
-%require "3.0"
+/***********************************************************************\
+*
+* Contents: parser
+* Systems: all
+*
+\***********************************************************************/
 
-%defines
-
-%define parser_class_name { Parser }
-
-%define api.token.constructor
-%define api.value.type variant
-%define api.namespace { FSM }
-%define api.token.prefix {TOKEN_}
-//%define api.pure full
-//%define api.value.type union
-
-// TODO: locationt type
-//%locations
-//%define api.location.type { Location }
-
-%define parse.assert
-%define parse.trace
-%define parse.error verbose
-
-// top of header before YYTYPE
-%code requires
-{
-  #include <iostream>
-  #include <string>
-  #include <vector>
-  #include <stdint.h>
-
-  #include "ast.h"
-
-  namespace FSM
-  {
-    class Scanner;
-  }
-
-  typedef struct
-  {
-    int first_line;
-  } Location;
+// definitions
+%code top {
+}
+%code requires {
+}
+%code provides {
 }
 
-// top of header after YYTYPE
-%code provides
-{
-}
+%{
+  static const std::string *inputFilePath;
+  static FSM::Scanner      *scanner;
+  static FSM::AST          *ast;
 
-// top of implementation
-%code top
-{
-  #include <iostream>
+  static FSM::Identifier currentStateName;
 
-  #include "scanner.h"
-  #include "parser.hpp"
-  #include "location.hh"
-  #include "ast.h"
+  #define YYERROR_DETAILED
 
-  static FSM::Parser::symbol_type yylex(FSM::Scanner &scanner)
-  {
-    return scanner.get_next_token();
-  }
+  #define YYDELETEVAL(v,n)
+  #define YYDELETEPOSN(v,n)
 
-  FSM::Identifier currentStateName;
-}
+  #define TRUE true
+  #define FALSE false
+%}
 
 // implementation
-%code
+%{
+  static int yylex()
+  {
+    return scanner->get_next_token();
+  }
+
+  static void yyerror(const YYLTYPE *location, const char *s, ...)
+  {
+    va_list arguments;
+
+    va_start(arguments,s);
+    fprintf(stderr,"ERROR: ");
+    vfprintf(stderr,s,arguments);
+    va_end(arguments);
+    fprintf(stderr," at %d:%d\n",location->first.line,location->first.column);
+  }
+
+#if 0
+  static void yyerror_detailed(char    *text,
+                               int     errt,
+                               YYSTYPE &errt_value,
+                               YYPOSN  &errt_posn
+                              )
+  {
+  }
+#endif
+%}
+
+%locations
+
+%union
 {
+  int                                    state;
+  char                                   literal;
+  char*                                  string;
+  long                                   integer;
+  double                                 float_;
+  int                                    enum_;
+
+  FSM::StorageClassSpecifier             *storageClassSpecifier;
+  FSM::TypeQualifier                     *typeQualifier;
+  FSM::TypeQualifierList                 *typeQualifierList;
+  FSM::TypeSpecifier                     *typeSpecifier;
+  FSM::SpecifierQualifierList            *specifierQualifierList;
+  FSM::TypeName                          *typeName;
+  FSM::AbstractDeclarator                *abstractDeclarator;
+  FSM::StorageClassDeclarationSpecifiers *storageClassDeclarationSpecifiers;
+  FSM::Declaration                       *declaration;
+  FSM::DirectDeclarator                  *directDeclarator;
+  FSM::Declarator                        *declarator;
+  FSM::Pointer                           *pointer;
+  FSM::Initializer                       *initializer;
+  FSM::InitDeclarator                    *initDeclarator;
+  FSM::InitDeclaratorList                *initDeclaratorList;
+  FSM::Declaration                       *externalDeclaration;
+  FSM::DeclarationStatement              *declarationStatement;
+  FSM::DeclarationStatementList          *declarationStatementList;
+
+  FSM::Expression                        *primaryExpression;
+  FSM::Expression                        *postfixExpression;
+  FSM::Expression                        *unaryExpression;
+  FSM::UnaryExpression::Operator         unaryExpressionOperator;
+  FSM::Expression                        *castExpression;
+  FSM::Expression                        *multiplicativeExpression;
+  FSM::Expression                        *additiveExpression;
+  FSM::Expression                        *shiftExpression;
+  FSM::Expression                        *relationalExpression;
+  FSM::Expression                        *equalityExpression;
+  FSM::Expression                        *andExpression;
+  FSM::Expression                        *exclusiveOrExpression;
+  FSM::Expression                        *inclusiveOrExpression;
+  FSM::Expression                        *logicalAndExpression;
+  FSM::Expression                        *logicalOrExpression;
+  FSM::Expression                        *conditionalExpression;
+  FSM::Expression                        *expression;
+  FSM::Expression                        *assignmentExpression;
+  FSM::ArgumentExpressionList            *argumentExpressionList;
+  FSM::AssignmentExpression::Operator    assignmentExpressionOperator;
+  FSM::Expression                        *constantExpression;
+
+  FSM::Statement                         *statement;
+  FSM::Statement                         *labeledStatement;
+  FSM::CompoundStatement                 *compoundStatement;
+  FSM::ExpressionStatement               *assignmentFunctionCallStatement;
+  FSM::ExpressionStatement               *expressionStatement;
+  FSM::Statement                         *selectionStatement;
+  FSM::Statement                         *iterationStatement;
+  FSM::JumpStatement                     *jumpStatement;
+  FSM::NewStateStatement                 *newStateStatement;
+  FSM::NewStateStatement::PrefixOperator newStateStatementPrefixOperator;
+  FSM::NewStateStatement::Options        *newStateStatementOptions;
+  double                                 number;
 }
 
-%lex-param { Scanner &scanner }
-%parse-param { const std::string inputFilePath }
-%parse-param { Scanner &scanner }
-%parse-param { AST &ast }
-%locations
-%verbose
+%token <kewword> KEYWORD_FSM                      ;
+%token <kewword> KEYWORD_END                      ;
 
-%token KEYWORD_FSM                      "#fsm";
-%token KEYWORD_END                      "#end";
+%token <keyword> KEYWORD_IF                       ;
+%token <keyword> KEYWORD_ELSE                     ;
+%token <keyword> KEYWORD_FOR                      ;
+%token <keyword> KEYWORD_WHILE                    ;
+%token <keyword> KEYWORD_DO                       ;
+%token <keyword> KEYWORD_SWITCH                   ;
+%token <keyword> KEYWORD_CASE                     ;
+%token <keyword> KEYWORD_DEFAULT                  ;
+%token <keyword> KEYWORD_BREAK                    ;
+%token <keyword> KEYWORD_CONTINUE                 ;
+%token <keyword> KEYWORD_RETURN                   ;
+%token <keyword> KEYWORD_SIZEOF                   ;
 
-%token KEYWORD_IF                       "if";
-%token KEYWORD_ELSE                     "else";
-%token KEYWORD_FOR                      "for";
-%token KEYWORD_WHILE                    "while";
-%token KEYWORD_DO                       "do";
-%token KEYWORD_SWITCH                   "switch";
-%token KEYWORD_CASE                     "case";
-%token KEYWORD_DEFAULT                  "default";
-%token KEYWORD_BREAK                    "break";
-%token KEYWORD_CONTINUE                 "continue";
-%token KEYWORD_RETURN                   "return";
-%token KEYWORD_SIZEOF                   "sizeof";
+%token <keyword> KEYWORD_AUTO                     ;
+%token <keyword> KEYWORD_REGISTE R                 ;
+%token <keyword> KEYWORD_STATIC                   ;
+%token <keyword> KEYWORD_EXTERN                   ;
+%token <keyword> KEYWORD_TYPEDEF                  ;
 
-%token KEYWORD_AUTO                     "auto";
-%token KEYWORD_REGISTER                 "register";
-%token KEYWORD_STATIC                   "static";
-%token KEYWORD_EXTERN                   "extern";
-%token KEYWORD_TYPEDEF                  "typedef";
+%token <keyword> KEYWORD_VOID
+%token <keyword> KEYWORD_CHAR
+%token <keyword> KEYWORD_SHORT
+%token <keyword> KEYWORD_INT
+%token <keyword> KEYWORD_LONG
+%token <keyword> KEYWORD_FLOAT
+%token <keyword> KEYWORD_DOUBLE
+%token <keyword> KEYWORD_SIGNED
+%token <keyword> KEYWORD_UNSIGNED
 
-%token KEYWORD_VOID                     "void"
-%token KEYWORD_CHAR                     "char"
-%token KEYWORD_SHORT                    "short"
-%token KEYWORD_INT                      "int"
-%token KEYWORD_LONG                     "long"
-%token KEYWORD_FLOAT                    "float"
-%token KEYWORD_DOUBLE                   "double"
-%token KEYWORD_SIGNED                   "signed"
-%token KEYWORD_UNSIGNED                 "unsigned"
+%token <keyword> KEYWORD_STRUCT                   ;
+%token <keyword> KEYWORD_UNION                    ;
 
-%token KEYWORD_STRUCT                   "struct";
-%token KEYWORD_UNION                    "union";
+%token <keyword> KEYWORD_CONST                    ;
+%token <keyword> KEYWORD_VOLATILE                 ;
 
-%token KEYWORD_CONST                    "const";
-%token KEYWORD_VOLATILE                 "volatile";
+%token <void> END TOKEN_EOF 0
 
-%token END EOF 0                        "end of file"
+%token <state>       STATE              ;
+%token <string>      TOKEN_IDENTIFIER         ;
+%token <char>        TOKEN_CHAR               ;
+%token <string>      TOKEN_STRING             ;
+%token <float_>      TOKEN_FLOAT              ;
+%token <integer>     TOKEN_INTEGER            ;
+%token <enum_>       TOKEN_ENUM               ;
 
-%token <std::string> STATE              "state";
-%token <Identifier>  IDENTIFIER         "identifier";
-%token <char>        CHAR               "charxxx";
-%token <std::string> STRING             "string";
-%token <double>      FLOAT              "floatxxx";
-%token <int64_t>     INTEGER            "integer";
-%token <int>         ENUM               "enum";
+%token               TOKEN_MULTIPLY_ASSIGN
+%token               TOKEN_DIVIDE_ASSIGN
+%token               TOKEN_MODULO_ASSIGN
+%token               TOKEN_ADD_ASSIGN
+%token               TOKEN_SUB_ASSIGN
+%token               TOKEN_SHIFT_LEFT_ASSIGN
+%token               TOKEN_SHIFT_RIGHT_ASSIGN
+%token               TOKEN_AND_ASSIGN
+%token               TOKEN_XOR_ASSIGN
+%token               TOKEN_OR_ASSIGN
 
-%token               MULTIPLY_ASSIGN    "*="
-%token               DIVIDE_ASSIGN      "/="
-%token               MODULO_ASSIGN      "%="
-%token               ADD_ASSIGN         "+="
-%token               SUB_ASSIGN         "-="
-%token               SHIFT_LEFT_ASSIGN  "<<="
-%token               SHIFT_RIGHT_ASSIGN ">>="
-%token               AND_ASSIGN         "&="
-%token               XOR_ASSIGN         "^="
-%token               OR_ASSIGN          "|="
+%token               TOKEN_PLUS
+%token               TOKEN_MINUS
+%token               TOKEN_NEG
+%token               TOKEN_NOT
+%token               TOKEN_MULTIPLY
+%token               TOKEN_DIVIDE
 
-%token               PLUS               "+"
-%token               MINUS              "-"
-%token               NEG                "~"
-%token               NOT                "!"
-%token               MULTIPLY           "*"
-%token               DIVIDE             "/"
+%token               TOKEN_INCREMENT
+%token               TOKEN_DECREMENT
+%token               TOKEN_POINTER
+%token               TOKEN_EQUALS
+%token               TOKEN_NOT_EQUALS
+%token               TOKEN_LOWER
+%token               TOKEN_GREATER
+%token               TOKEN_LOWER_EQUALS
+%token               TOKEN_GREATER_EQUALS
+%token               TOKEN_AND
+%token               TOKEN_OR
+%token               TOKEN_XOR
+%token               TOKEN_SHIFT_LEFT
+%token               TOKEN_SHIFT_RIGHT
 
-%token               INCREMENT          "++"
-%token               DECREMENT          "--"
-%token               POINTER            "->"
-%token               EQUALS             "=="
-%token               NOT_EQUALS         "!="
-%token               LOWER              "<"
-%token               GREATER            ">"
-%token               LOWER_EQUALS       "<="
-%token               GREATER_EQUALS     ">="
-%token               AND                "&&"
-%token               OR                 "||"
-%token               XOR                "^"
-%token               SHIFT_LEFT         "<<"
-%token               SHIFT_RIGHT        ">>"
+%token               TOKEN_ELLIPSIS
 
-//%token               POINTER             "*&"
+%left TOKEN_NEGATIVE
+%left TOKEN_PLUS TOKEN_MINUS
+%left TOKEN_MULTIPLY TOKEN_DIVIDE
 
-%token               ELLIPSIS            "..."
+%type <literal> '*' '(' ')', ',', ':';
 
-%left NEGATIVE
-%left PLUS MINUS
-%left MULTIPLY DIVIDE
+%type <storageClassSpecifier>             storageClassSpecifier;
+%type <typeQualifier>                     typeQualifier;
+%type <typeQualifierList>                 typeQualifierList;
+%type <typeSpecifier>                     typeSpecifier;
+%type <specifierQualifierList>            specifierQualifierList;
+%type <typeName>                          typeName;
+%type <abstractDeclarator>                abstractDeclarator;
+%type <storageClassDeclarationSpecifiers> storageClassDeclarationSpecifiers;
+%type <declaration>                       declaration;
+%type <directDeclarator>                  directDeclarator;
+%type <declarator>                        declarator;
+%type <pointer>                           pointer;
+%type <initializer>                       initializer;
+%type <initDeclarator>                    initDeclarator;
+%type <initDeclaratorList>                initDeclaratorList;
+%type <declaration>                       externalDeclaration;
+%type <declarationStatement>              declarationStatement;
+%type <declarationStatementList>          declarationStatementList;
 
-%type <StorageClassSpecifier*>             storageClassSpecifier;
-%type <TypeQualifier*>                     typeQualifier;
-%type <TypeQualifierList*>                 typeQualifierList;
-%type <TypeSpecifier*>                     typeSpecifier;
-%type <SpecifierQualifierList*>            specifierQualifierList;
-%type <TypeName*>                          typeName;
-%type <AbstractDeclarator*>                abstractDeclarator;
-%type <StorageClassDeclarationSpecifiers*> storageClassDeclarationSpecifiers;
-%type <Declaration*>                       declaration;
-%type <DirectDeclarator*>                  directDeclarator;
-%type <Declarator*>                        declarator;
-%type <Pointer*>                           pointer;
-%type <Initializer*>                       initializer;
-%type <InitDeclarator*>                    initDeclarator;
-%type <InitDeclaratorList*>                initDeclaratorList;
-%type <Declaration*>                       externalDeclaration;
-%type <DeclarationStatement*>              declarationStatement;
-%type <DeclarationStatementList*>          declarationStatementList;
+%type <expression>                        primaryExpression;
+%type <expression>                        postfixExpression;
+%type <expression>                        unaryExpression;
+%type <unaryExpressionOperator>           unaryExpressionOperator;
+%type <expression>                        castExpression;
+%type <expression>                        multiplicativeExpression;
+%type <expression>                        additiveExpression;
+%type <expression>                        shiftExpression;
+%type <expression>                        relationalExpression;
+%type <expression>                        equalityExpression;
+%type <expression>                        andExpression;
+%type <expression>                        exclusiveOrExpression;
+%type <expression>                        inclusiveOrExpression;
+%type <expression>                        logicalAndExpression;
+%type <expression>                        logicalOrExpression;
+%type <expression>                        conditionalExpression;
+%type <expression>                        expression;
+%type <expression>                        assignmentExpression;
+%type <argumentExpressionList>            argumentExpressionList;
+%type <assignmentExpressionOperator>      assignmentExpressionOperator;
+%type <expression>                        constantExpression;
 
-%type <Expression*>                        primaryExpression;
-%type <Expression*>                        postfixExpression;
-%type <Expression*>                        unaryExpression;
-%type <UnaryExpression::Operator>          unaryOperator;
-%type <Expression*>                        castExpression;
-%type <Expression*>                        multiplicativeExpression;
-%type <Expression*>                        additiveExpression;
-%type <Expression*>                        shiftExpression;
-%type <Expression*>                        relationalExpression;
-%type <Expression*>                        equalityExpression;
-%type <Expression*>                        andExpression;
-%type <Expression*>                        exclusiveOrExpression;
-%type <Expression*>                        inclusiveOrExpression;
-%type <Expression*>                        logicalAndExpression;
-%type <Expression*>                        logicalOrExpression;
-%type <Expression*>                        conditionalExpression;
-%type <Expression*>                        expression;
-%type <Expression*>                        assignmentExpression;
-%type <Expression*>                        functionCallPostfixExpression;
-%type <Expression*>                        functionCallUnaryExpression;
-%type <Expression*>                        functionCallCastExpression;
-%type <Expression*>                        functionCallExpression;
-%type <ArgumentExpressionList*>            argumentExpressionList;
-%type <AssignmentExpression::Operator>     assignmentOperator;
-%type <Expression*>                        constantExpression;
-
-%type <Statement*>                         statement;
-%type <Statement*>                         labeledStatement;
-%type <CompoundStatement*>                 compoundStatement;
-%type <ExpressionStatement*>               assignmentFunctionCallStatement;
-%type <ExpressionStatement*>               expressionStatement;
-%type <Statement*>                         selectionStatement;
-%type <Statement*>                         iterationStatement;
-%type <JumpStatement*>                     jumpStatement;
-%type <NewStateStatement*>                 newStateStatement;
-%type <NewStateStatement::PrefixOperator>  newStateStatementPrefixOperator;
-%type <NewStateStatement::Options*>        newStateStatementOptions;
-%type <double>                             number;
+%type <statement>                         statement;
+%type <statement>                         labeledStatement;
+%type <compoundStatement>                 compoundStatement;
+%type <expressionStatement>               assignmentFunctionCallStatement;
+%type <expressionStatement>               expressionStatement;
+%type <statement>                         selectionStatement;
+%type <statement>                         iterationStatement;
+%type <jumpStatement>                     jumpStatement;
+%type <newStateStatement>                 newStateStatement;
+%type <newStateStatementPrefixOperator>   newStateStatementPrefixOperator;
+%type <newStateStatementOptions>          newStateStatementOptions;
+%type <float_>                            number;
 
 %start start
 
@@ -233,9 +277,9 @@ start:
     {
       // empty
     }
-  | start KEYWORD_FSM IDENTIFIER[fsmName] stateDefinitions KEYWORD_END
+  | start KEYWORD_FSM TOKEN_IDENTIFIER stateDefinitions KEYWORD_END
     {
-      ast.setFSMName($fsmName);
+      ast->setFSMName($3);
     }
   ;
 
@@ -259,29 +303,29 @@ stateDefinitions:
   ;
 
 stateDefinition:
-    '*' IDENTIFIER[stateName]
+    '*' TOKEN_IDENTIFIER
     {
-      currentStateName = $stateName;
+      currentStateName = FSM::Identifier($2);
     }
     compoundStatement
     {
-      ast.addState(new State(State::Type::START,$stateName,$compoundStatement));
+      ast->addState(new FSM::State(FSM::State::Type::START,currentStateName,$4));
     }
-  | IDENTIFIER[stateName]
+  | TOKEN_IDENTIFIER
     {
-      currentStateName = $stateName;
+      currentStateName = FSM::Identifier($1);
     }
     compoundStatement
     {
-      ast.addState(new State(State::Type::CUSTOM,$stateName,$compoundStatement));
+      ast->addState(new FSM::State(FSM::State::Type::CUSTOM,currentStateName,$3));
     }
   | KEYWORD_DEFAULT
     {
-      currentStateName = Identifier("default");
+      currentStateName = FSM::Identifier("default");
     }
     compoundStatement
     {
-      ast.addState(new State(State::Type::DEFAULT,$compoundStatement));
+      ast->addState(new FSM::State(FSM::State::Type::DEFAULT,$3));
     }
   ;
 
@@ -290,30 +334,32 @@ stateDefinition:
 declarationStatementList
   : declarationStatementList declarationStatement
     {
-      $1->add($declarationStatement);
+      $1->add($2);
       $$ = $1;
     }
   | declarationStatement
     {
-      $$ = new DeclarationStatementList($declarationStatement);
+      $$ = new FSM::DeclarationStatementList($1);
     }
   ;
 
 declarationStatement
   : externalDeclaration
     {
-      $$ = $externalDeclaration;
+      $$ = $1;
+      YYVALID;
     }
   | statement
     {
-      $$ = $statement;
+      $$ = $1;
+      YYVALID;
     }
   ;
 
 externalDeclaration
   : declaration
     {
-      $$ = $declaration;
+      $$ = $1;
     }
   // Note: reduced C standard: no function definitions
   // | function_definition
@@ -322,7 +368,7 @@ externalDeclaration
 declaration
   : initDeclaratorList ';'
     {
-      $$ = new Declaration($initDeclaratorList);
+      $$ = new FSM::Declaration($1);
     }
   ;
 
@@ -332,12 +378,12 @@ storageClassDeclarationSpecifiers
 //      $2.prepend($1);
       $1->add($2);
       $$ = $1;
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | storageClassSpecifier
     {
-      $$ = new StorageClassDeclarationSpecifiers($storageClassSpecifier);
+      $$ = new FSM::StorageClassDeclarationSpecifiers($1);
     }
 //  : typeSpecifier storageClassDeclarationSpecifiers
   | storageClassDeclarationSpecifiers typeSpecifier
@@ -348,7 +394,7 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
     }
   | typeSpecifier
     {
-      $$ = new StorageClassDeclarationSpecifiers($typeSpecifier);
+      $$ = new FSM::StorageClassDeclarationSpecifiers($1);
     }
 //  | typeQualifier storageClassDeclarationSpecifiers
   | storageClassDeclarationSpecifiers typeQualifier
@@ -358,578 +404,489 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
     }
   | typeQualifier
     {
-      $$ = new StorageClassDeclarationSpecifiers($typeQualifier);
+      $$ = new FSM::StorageClassDeclarationSpecifiers($1);
     }
   ;
 
 // ---------------------------------------------------------------------
 
 primaryExpression
-  : IDENTIFIER[name]
+  : TOKEN_IDENTIFIER
     {
-      $$ = new PrimaryExpression($name);
+      $$ = new FSM::PrimaryExpression(FSM::Identifier($1));
     }
   //| CONSTANT
-  | INTEGER[n]
+  | TOKEN_INTEGER
     {
-      $$ = new PrimaryExpression($n);
+      $$ = new FSM::PrimaryExpression($1);
     }
-  | STRING[string]
+  | TOKEN_STRING
     {
-      $$ = new PrimaryExpression($string);
+      $$ = new FSM::PrimaryExpression(std::string($1));
     }
   | '(' expression ')'
     {
-      $$ = new PrimaryExpression($expression);
+      $$ = new FSM::PrimaryExpression($2);
     }
   ;
 
 postfixExpression
-  : postfixExpression[a] '[' expression[b] ']'
+  : postfixExpression '[' expression ']'
     {
-      $$ = new PostfixExpression(PostfixExpression::Type::SUBSCRIPT, $a, $b);
+      $$ = new FSM::PostfixExpression(FSM::PostfixExpression::Type::SUBSCRIPT, $1, $3);
     }
-  | postfixExpression[a] '(' ')'
+  | postfixExpression '(' ')'
     {
-      $$ = new PostfixExpression(PostfixExpression::Type::FUNCTION_CALL, $a);
+      $$ = new FSM::PostfixExpression(FSM::PostfixExpression::Type::FUNCTION_CALL, $1);
     }
-  | postfixExpression[a] '(' argumentExpressionList[b] ')'
+  | postfixExpression '(' argumentExpressionList ')'
     {
-      $$ = new PostfixExpression(PostfixExpression::Type::FUNCTION_CALL, $a, $b);
+      $$ = new FSM::PostfixExpression(FSM::PostfixExpression::Type::FUNCTION_CALL, $1, $3);
     }
-  | postfixExpression[a] '.' IDENTIFIER[name]
+  | postfixExpression '.' TOKEN_IDENTIFIER
     {
-      $$ = new PostfixExpression(PostfixExpression::Type::MEMBER,$a,$name);
+      $$ = new FSM::PostfixExpression(FSM::PostfixExpression::Type::MEMBER,$1,std::string($3));
     }
-  | postfixExpression[a] POINTER IDENTIFIER[name]
+  | postfixExpression TOKEN_POINTER TOKEN_IDENTIFIER
     {
-      $$ = new PostfixExpression(PostfixExpression::Type::POINTER,$a,$name);
+      $$ = new FSM::PostfixExpression(FSM::PostfixExpression::Type::POINTER,$1,std::string($3));
     }
-  | postfixExpression[a] INCREMENT
+  | postfixExpression TOKEN_INCREMENT
     {
-      $$ = new PostfixExpression(PostfixExpression::Type::INCREMENT,$a);
+      $$ = new FSM::PostfixExpression(FSM::PostfixExpression::Type::INCREMENT,$1);
     }
-  | postfixExpression[a] DECREMENT
+  | postfixExpression TOKEN_DECREMENT
     {
-      $$ = new PostfixExpression(PostfixExpression::Type::DECREMENT,$a);
+      $$ = new FSM::PostfixExpression(FSM::PostfixExpression::Type::DECREMENT,$1);
     }
   | primaryExpression
     {
-      $$ = $primaryExpression;
+      $$ = $1;
     }
   ;
 
 unaryExpression
-  : INCREMENT unaryExpression[a]
+  : TOKEN_INCREMENT unaryExpression
     {
-      $$ = new UnaryExpression(UnaryExpression::Operator::INCREMENT, $a);
+      $$ = new FSM::UnaryExpression(FSM::UnaryExpression::Operator::INCREMENT, $2);
     }
-  | DECREMENT unaryExpression[a]
+  | TOKEN_DECREMENT unaryExpression
     {
-      $$ = new UnaryExpression(UnaryExpression::Operator::DECREMENT, $a);
+      $$ = new FSM::UnaryExpression(FSM::UnaryExpression::Operator::DECREMENT, $2);
     }
-  | unaryOperator castExpression[a]
+  | unaryExpressionOperator castExpression
     {
-      $$ = new UnaryExpression($unaryOperator, $a);
+      $$ = new FSM::UnaryExpression($1, $2);
     }
-  | KEYWORD_SIZEOF unaryExpression[a]
+  | KEYWORD_SIZEOF unaryExpression
     {
-      $$ = new UnaryExpression(UnaryExpression::Operator::SIZEOF, $a);
+      $$ = new FSM::UnaryExpression(FSM::UnaryExpression::Operator::SIZEOF, $2);
     }
   | KEYWORD_SIZEOF '(' typeName ')'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | postfixExpression
     {
-      $$ = $postfixExpression;
+      $$ = $1;
     }
   ;
 
-unaryOperator
+unaryExpressionOperator
   : '&'
     {
-      $$ = UnaryExpression::Operator::ADDRESS;
+      $$ = FSM::UnaryExpression::Operator::ADDRESS;
     }
   | '*'
     {
-      $$ = UnaryExpression::Operator::DEREFERENCE;
+      $$ = FSM::UnaryExpression::Operator::DEREFERENCE;
     }
   | '+'
     {
-      $$ = UnaryExpression::Operator::PLUS;
+      $$ = FSM::UnaryExpression::Operator::PLUS;
     }
   | '-'
     {
-      $$ = UnaryExpression::Operator::MINUS;
+      $$ = FSM::UnaryExpression::Operator::MINUS;
     }
   | '~'
     {
-      $$ = UnaryExpression::Operator::NOT;
+      $$ = FSM::UnaryExpression::Operator::NOT;
     }
   | '!'
     {
-      $$ = UnaryExpression::Operator::LOGICAL_NOT;
+      $$ = FSM::UnaryExpression::Operator::LOGICAL_NOT;
     }
   ;
 
 castExpression
-  : '(' typeName[a] ')' castExpression[b]
+  : '(' typeName ')' castExpression
     {
-      $$ = new CastExpression($a, $b);
+      $$ = new FSM::CastExpression($2, $4);
     }
   | unaryExpression
     {
-      $$ = $unaryExpression;
+      $$ = $1;
     }
   ;
 
 multiplicativeExpression
-  : multiplicativeExpression[a] '*' castExpression[b]
+  : multiplicativeExpression '*' castExpression
     {
-      $$ = new MultiplicativeExpression(MultiplicativeExpression::Type::MULTIPLY, $a, $b);
+      $$ = new FSM::MultiplicativeExpression(FSM::MultiplicativeExpression::Type::MULTIPLY, $1, $3);
     }
-  | multiplicativeExpression[a] '/' castExpression[b]
+  | multiplicativeExpression '/' castExpression
     {
-      $$ = new MultiplicativeExpression(MultiplicativeExpression::Type::DIVIDE, $a, $b);
+      $$ = new FSM::MultiplicativeExpression(FSM::MultiplicativeExpression::Type::DIVIDE, $1, $3);
     }
-  | multiplicativeExpression[a] '%' castExpression[b]
+  | multiplicativeExpression '%' castExpression
     {
-      $$ = new MultiplicativeExpression(MultiplicativeExpression::Type::MODULO, $a, $b);
+      $$ = new FSM::MultiplicativeExpression(FSM::MultiplicativeExpression::Type::MODULO, $1, $3);
     }
   | castExpression
     {
-      $$ = $castExpression;
-    }
-  | functionCallExpression
-    {
-      $$ = $functionCallExpression;
+      $$ = $1;
     }
   ;
 
 additiveExpression
-  : additiveExpression[a] '+' multiplicativeExpression[b]
+  : additiveExpression '+' multiplicativeExpression
     {
-      $$ = new AdditiveExpression(AdditiveExpression::Type::ADD, $a, $b);
+      $$ = new FSM::AdditiveExpression(FSM::AdditiveExpression::Type::ADD, $1, $3);
     }
-  | additiveExpression[a] '-' multiplicativeExpression[b]
+  | additiveExpression '-' multiplicativeExpression
     {
-      $$ = new AdditiveExpression(AdditiveExpression::Type::SUBTRACT, $a, $b);
+      $$ = new FSM::AdditiveExpression(FSM::AdditiveExpression::Type::SUBTRACT, $1, $3);
     }
   | multiplicativeExpression
     {
-      $$ = $multiplicativeExpression;
+      $$ = $1;
     }
   ;
 
 shiftExpression
-  : shiftExpression[a] SHIFT_LEFT additiveExpression[b]
+  : shiftExpression TOKEN_SHIFT_LEFT additiveExpression
     {
-      $$ = new ShiftExpression(ShiftExpression::Type::LEFT, $a, $b);
+      $$ = new FSM::ShiftExpression(FSM::ShiftExpression::Type::LEFT, $1, $3);
     }
-  | shiftExpression[a] SHIFT_RIGHT additiveExpression[b]
+  | shiftExpression TOKEN_SHIFT_RIGHT additiveExpression
     {
-      $$ = new ShiftExpression(ShiftExpression::Type::RIGHT, $a, $b);
+      $$ = new FSM::ShiftExpression(FSM::ShiftExpression::Type::RIGHT, $1, $3);
     }
   | additiveExpression
     {
-      $$ = $additiveExpression;
+      $$ = $1;
     }
   ;
 
 relationalExpression
-  : relationalExpression[a] '<' shiftExpression[b]
+  : relationalExpression '<' shiftExpression
     {
-      $$ = new RelationalExpression(RelationalExpression::Type::LOWER, $a, $b);
+      $$ = new FSM::RelationalExpression(FSM::RelationalExpression::Type::LOWER, $1, $3);
     }
-  | relationalExpression[a] '>' shiftExpression[b]
+  | relationalExpression '>' shiftExpression
     {
-      $$ = new RelationalExpression(RelationalExpression::Type::GREATER, $a, $b);
+      $$ = new FSM::RelationalExpression(FSM::RelationalExpression::Type::GREATER, $1, $3);
     }
-  | relationalExpression[a] LOWER_EQUALS shiftExpression[b]
+  | relationalExpression TOKEN_LOWER_EQUALS shiftExpression
     {
-      $$ = new RelationalExpression(RelationalExpression::Type::LOWER_EQUALS, $a, $b);
+      $$ = new FSM::RelationalExpression(FSM::RelationalExpression::Type::LOWER_EQUALS, $1, $3);
     }
-  | relationalExpression[a] GREATER_EQUALS shiftExpression[b]
+  | relationalExpression TOKEN_GREATER_EQUALS shiftExpression
     {
-      $$ = new RelationalExpression(RelationalExpression::Type::GREATER_EQUALS, $a, $b);
+      $$ = new FSM::RelationalExpression(FSM::RelationalExpression::Type::GREATER_EQUALS, $1, $3);
     }
   | shiftExpression
     {
-      $$ = $shiftExpression;
+      $$ = $1;
     }
   ;
 
 equalityExpression
-  : equalityExpression[a] EQUALS relationalExpression[b]
+  : equalityExpression TOKEN_EQUALS relationalExpression
     {
-      $$ = new EqualityExpression(EqualityExpression::Type::EQUALS, $a, $b);
+      $$ = new FSM::EqualityExpression(FSM::EqualityExpression::Type::EQUALS, $1, $3);
     }
-  | equalityExpression[a] NOT_EQUALS relationalExpression[b]
+  | equalityExpression TOKEN_NOT_EQUALS relationalExpression
     {
-      $$ = new EqualityExpression(EqualityExpression::Type::NOT_EQUALS, $a, $b);
+      $$ = new FSM::EqualityExpression(FSM::EqualityExpression::Type::NOT_EQUALS, $1, $3);
     }
   | relationalExpression
     {
-      $$ = $relationalExpression;
+      $$ = $1;
     }
   ;
 
 andExpression
-  : andExpression[a] '&' equalityExpression[b]
+  : andExpression '&' equalityExpression
     {
-      $$ = new AndExpression($a, $b);
+      $$ = new FSM::AndExpression($1, $3);
     }
   | equalityExpression
     {
-      $$ = $equalityExpression;
+      $$ = $1;
     }
   ;
 
 exclusiveOrExpression
-  : exclusiveOrExpression[a] '^' andExpression[b]
+  : exclusiveOrExpression '^' andExpression
     {
-      $$ = new ExclusiveOrExpression($a, $b);
+      $$ = new FSM::ExclusiveOrExpression($1, $3);
     }
   | andExpression
   {
-    $$ = $andExpression;
+    $$ = $1;
   }
   ;
 
 inclusiveOrExpression
-  : inclusiveOrExpression[a] '|' exclusiveOrExpression[b]
+  : inclusiveOrExpression '|' exclusiveOrExpression
     {
-      $$ = new InclusiveOrExpression($a, $b);
+      $$ = new FSM::InclusiveOrExpression($1, $3);
     }
   | exclusiveOrExpression
     {
-      $$ = $exclusiveOrExpression;
+      $$ = $1;
     }
   ;
 
 logicalAndExpression
-  : logicalAndExpression[a] AND inclusiveOrExpression[b]
+  : logicalAndExpression TOKEN_AND inclusiveOrExpression
     {
-      $$ = new LogicalAndExpression($a, $b);
+      $$ = new FSM::LogicalAndExpression($1, $3);
     }
   | inclusiveOrExpression
     {
-      $$ = $inclusiveOrExpression;
+      $$ = $1;
     }
   ;
 
 logicalOrExpression
-  : logicalOrExpression[a] OR logicalAndExpression[b]
+  : logicalOrExpression TOKEN_OR logicalAndExpression
     {
-      $$ = new LogicalOrExpression($a, $b);
+      $$ = new FSM::LogicalOrExpression($1, $3);
     }
   | logicalAndExpression
     {
-      $$ = $logicalAndExpression;
+      $$ = $1;
     }
   ;
 
 conditionalExpression
-  : logicalOrExpression[a] '?' expression[b] ':' expression[c]
+  : logicalOrExpression '?' expression ':' expression
     {
-      $$ = new ConditionalExpression($a, $b, $c);
+      $$ = new FSM::ConditionalExpression($1, $3, $5);
     }
   | logicalOrExpression
     {
-      $$ = $logicalOrExpression;
+      $$ = $1;
     }
   ;
-
-functionCallPostfixExpression
-  : functionCallPostfixExpression[a] '[' expression[b] ']'
-    {
-      $$ = new PostfixExpression(PostfixExpression::Type::SUBSCRIPT, $a, $b);
-    }
-/*
-  | functionCallPostfixExpression[a] '(' ')'
-    {
-      $$ = new PostfixExpression(PostfixExpression::Type::FUNCTION_CALL, $a);
-    }
-  | functionCallPostfixExpression[a] '(' argumentExpressionList[b] ')'
-    {
-      $$ = new PostfixExpression(PostfixExpression::Type::FUNCTION_CALL, $a, $b);
-    }
-/**/
-  | functionCallPostfixExpression[a] '.' IDENTIFIER[name]
-    {
-      $$ = new PostfixExpression(PostfixExpression::Type::MEMBER,$a,$name);
-    }
-  | functionCallPostfixExpression[a] POINTER IDENTIFIER[name]
-    {
-      $$ = new PostfixExpression(PostfixExpression::Type::POINTER,$a,$name);
-    }
-  | functionCallPostfixExpression[a] INCREMENT
-    {
-      $$ = new PostfixExpression(PostfixExpression::Type::INCREMENT,$a);
-    }
-  | functionCallPostfixExpression[a] DECREMENT
-    {
-      $$ = new PostfixExpression(PostfixExpression::Type::DECREMENT,$a);
-    }
-  | primaryExpression
-    {
-      $$ = $primaryExpression;
-    }
-  ;
-
-functionCallUnaryExpression
-  : INCREMENT functionCallUnaryExpression[a]
-    {
-      $$ = new UnaryExpression(UnaryExpression::Operator::INCREMENT, $a);
-    }
-  | DECREMENT functionCallUnaryExpression[a]
-    {
-      $$ = new UnaryExpression(UnaryExpression::Operator::DECREMENT, $a);
-    }
-  | unaryOperator functionCallCastExpression[a]
-    {
-      $$ = new UnaryExpression($unaryOperator, $a);
-    }
-  | KEYWORD_SIZEOF functionCallUnaryExpression[a]
-    {
-      $$ = new UnaryExpression(UnaryExpression::Operator::SIZEOF, $a);
-    }
-  | KEYWORD_SIZEOF '(' typeName ')'
-    {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
-      YYABORT;
-    }
-  | functionCallPostfixExpression
-    {
-      $$ = $functionCallPostfixExpression;
-    }
-  ;
-
-functionCallCastExpression
-  : '(' typeName[a] ')' functionCallCastExpression[b]
-    {
-      $$ = new CastExpression($a, $b);
-    }
-  | functionCallUnaryExpression
-    {
-      $$ = $functionCallUnaryExpression;
-    }
-  ;
-
-functionCallExpression
-   : functionCallCastExpression[a] '(' ')'
-    {
-      $$ = new PostfixExpression(PostfixExpression::Type::FUNCTION_CALL, $a);
-    }
-  | functionCallCastExpression[a] '(' argumentExpressionList[b] ')'
-    {
-      $$ = new PostfixExpression(PostfixExpression::Type::FUNCTION_CALL, $a, $b);
-    }
-  ;/**/
 
 expression
-  : conditionalExpression
+  : expression ',' assignmentExpression
+    {
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+      YYABORT;
+    }
+  | assignmentExpression
+    {
+      $$ = $1;
+    }
   ;
 
 argumentExpressionList
-  // Note: reduced C standard: only allow expressions
-  //  : argumentExpressionList ',' assignmentExpression
-  : argumentExpressionList ',' expression
+  : argumentExpressionList ',' assignmentExpression
     {
       $1->add($3);
       $$ = $1;
     }
-  //  | assignmentExpression
-  | expression
+  | assignmentExpression
     {
-      $$ = new ArgumentExpressionList($1);
+      $$ = new FSM::ArgumentExpressionList($1);
     }
   ;
 
 assignmentExpression
-  // Note: reduced C standard: only allow expressions
-  //  : unaryExpression[a] assignmentOperator assignmentExpression[b]
-  : unaryExpression[a] assignmentOperator expression[b]
+  : unaryExpression assignmentExpressionOperator assignmentExpression
     {
-      $$ = new AssignmentExpression($assignmentOperator,$a,$b);
-    }/**/
-  | unaryExpression[a] assignmentOperator castExpression[b]
+      $$ = new FSM::AssignmentExpression($2,$1,$3);
+    }
+  | conditionalExpression
     {
-      $$ = new AssignmentExpression($assignmentOperator,$a,$b);
-    }/**/
-  // | expression
+      $$ = $1;
+    }
   ;
 
-assignmentOperator
+assignmentExpressionOperator
   : '='
     {
-      $$ = AssignmentExpression::Operator::ASSIGN;
+      $$ = FSM::AssignmentExpression::Operator::ASSIGN;
     }
-  | MULTIPLY_ASSIGN
+  | TOKEN_MULTIPLY_ASSIGN
     {
-      $$ = AssignmentExpression::Operator::MULTIPLY_ASSIGN;
+      $$ = FSM::AssignmentExpression::Operator::MULTIPLY_ASSIGN;
     }
-  | DIVIDE_ASSIGN
+  | TOKEN_DIVIDE_ASSIGN
     {
-      $$ = AssignmentExpression::Operator::DIVIDE_ASSIGN;
+      $$ = FSM::AssignmentExpression::Operator::DIVIDE_ASSIGN;
     }
-  | MODULO_ASSIGN
+  | TOKEN_MODULO_ASSIGN
     {
-      $$ = AssignmentExpression::Operator::MODULO_ASSIGN;
+      $$ = FSM::AssignmentExpression::Operator::MODULO_ASSIGN;
     }
-  | ADD_ASSIGN
+  | TOKEN_ADD_ASSIGN
     {
-      $$ = AssignmentExpression::Operator::ADD_ASSIGN;
+      $$ = FSM::AssignmentExpression::Operator::ADD_ASSIGN;
     }
-  | SUB_ASSIGN
+  | TOKEN_SUB_ASSIGN
     {
-      $$ = AssignmentExpression::Operator::SUB_ASSIGN;
+      $$ = FSM::AssignmentExpression::Operator::SUB_ASSIGN;
     }
-  | SHIFT_LEFT_ASSIGN
+  | TOKEN_SHIFT_LEFT_ASSIGN
     {
-      $$ = AssignmentExpression::Operator::SHIFT_LEFT_ASSIGN;
+      $$ = FSM::AssignmentExpression::Operator::SHIFT_LEFT_ASSIGN;
     }
-  | SHIFT_RIGHT_ASSIGN
+  | TOKEN_SHIFT_RIGHT_ASSIGN
     {
-      $$ = AssignmentExpression::Operator::SHIFT_RIGHT_ASSIGN;
+      $$ = FSM::AssignmentExpression::Operator::SHIFT_RIGHT_ASSIGN;
     }
-  | AND_ASSIGN
+  | TOKEN_AND_ASSIGN
     {
-      $$ = AssignmentExpression::Operator::AND_ASSIGN;
+      $$ = FSM::AssignmentExpression::Operator::AND_ASSIGN;
     }
-  | XOR_ASSIGN
+  | TOKEN_XOR_ASSIGN
     {
-      $$ = AssignmentExpression::Operator::XOR_ASSIGN;
+      $$ = FSM::AssignmentExpression::Operator::XOR_ASSIGN;
     }
-  | OR_ASSIGN
+  | TOKEN_OR_ASSIGN
     {
-      $$ = AssignmentExpression::Operator::OR_ASSIGN;
+      $$ = FSM::AssignmentExpression::Operator::OR_ASSIGN;
     }
   ;
 
 constantExpression
   : expression
     {
-      $$ = $expression;
+      $$ = $1;
     }
   ;
 
 initDeclaratorList
   : initDeclaratorList ',' initDeclarator
     {
-      $1->add($initDeclarator);
+      $1->add($3);
       $$ = $1;
     }
   | initDeclarator
     {
-      $$ = new InitDeclaratorList($initDeclarator);
+      $$ = new FSM::InitDeclaratorList($1);
     }
   ;
 
 initDeclarator
   : storageClassDeclarationSpecifiers declarator '=' initializer
     {
-      $$ = new InitDeclarator($storageClassDeclarationSpecifiers, $declarator, $initializer);
+      $$ = new FSM::InitDeclarator($1, $2, $4);
     }
   | storageClassDeclarationSpecifiers declarator
     {
-      $$ = new InitDeclarator($storageClassDeclarationSpecifiers, $declarator);
+      $$ = new FSM::InitDeclarator($1, $2);
     }
   ;
 
 storageClassSpecifier
   : KEYWORD_TYPEDEF
     {
-      $$ = new StorageClassSpecifier(StorageClassSpecifier::Type::TYPEDEF);
+      $$ = new FSM::StorageClassSpecifier(FSM::StorageClassSpecifier::Type::TYPEDEF);
     }
   | KEYWORD_EXTERN
     {
-      $$ = new StorageClassSpecifier(StorageClassSpecifier::Type::EXTERN);
+      $$ = new FSM::StorageClassSpecifier(FSM::StorageClassSpecifier::Type::EXTERN);
     }
   | KEYWORD_STATIC
     {
-      $$ = new StorageClassSpecifier(StorageClassSpecifier::Type::STATIC);
+      $$ = new FSM::StorageClassSpecifier(FSM::StorageClassSpecifier::Type::STATIC);
     }
   | KEYWORD_AUTO
     {
-      $$ = new StorageClassSpecifier(StorageClassSpecifier::Type::AUTO);
+      $$ = new FSM::StorageClassSpecifier(FSM::StorageClassSpecifier::Type::AUTO);
     }
   | KEYWORD_REGISTER
     {
-      $$ = new StorageClassSpecifier(StorageClassSpecifier::Type::REGISTER);
+      $$ = new FSM::StorageClassSpecifier(FSM::StorageClassSpecifier::Type::REGISTER);
     }
   ;
 
 typeSpecifier
   : KEYWORD_VOID
     {
-      $$ = new TypeSpecifier(TypeSpecifier::Type::VOID);
+      $$ = new FSM::TypeSpecifier(FSM::TypeSpecifier::Type::VOID);
     }
   | KEYWORD_CHAR
     {
-      $$ = new TypeSpecifier(TypeSpecifier::Type::CHAR);
+      $$ = new FSM::TypeSpecifier(FSM::TypeSpecifier::Type::CHAR);
     }
   | KEYWORD_SHORT
     {
-      $$ = new TypeSpecifier(TypeSpecifier::Type::SHORT);
+      $$ = new FSM::TypeSpecifier(FSM::TypeSpecifier::Type::SHORT);
     }
   | KEYWORD_INT
     {
-      $$ = new TypeSpecifier(TypeSpecifier::Type::INT);
+      $$ = new FSM::TypeSpecifier(FSM::TypeSpecifier::Type::INT);
     }
   | KEYWORD_LONG
     {
-      $$ = new TypeSpecifier(TypeSpecifier::Type::LONG);
+      $$ = new FSM::TypeSpecifier(FSM::TypeSpecifier::Type::LONG);
     }
   | KEYWORD_FLOAT
     {
-      $$ = new TypeSpecifier(TypeSpecifier::Type::FLOAT);
+      $$ = new FSM::TypeSpecifier(FSM::TypeSpecifier::Type::FLOAT);
     }
   | KEYWORD_DOUBLE
     {
-      $$ = new TypeSpecifier(TypeSpecifier::Type::DOUBLE);
+      $$ = new FSM::TypeSpecifier(FSM::TypeSpecifier::Type::DOUBLE);
     }
   | KEYWORD_SIGNED
     {
-      $$ = new TypeSpecifier(TypeSpecifier::Type::SIGNED);
+      $$ = new FSM::TypeSpecifier(FSM::TypeSpecifier::Type::SIGNED);
     }
   | KEYWORD_UNSIGNED
     {
-      $$ = new TypeSpecifier(TypeSpecifier::Type::UNSIGNED);
+      $$ = new FSM::TypeSpecifier(FSM::TypeSpecifier::Type::UNSIGNED);
     }
   | struct_or_union_specifier
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | enum_specifier
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   //| typeName
-  | IDENTIFIER[name]
+  | TOKEN_IDENTIFIER
     {
-      $$ = new TypeSpecifier($name);
+      $$ = new FSM::TypeSpecifier(std::string($1));
     }
   ;
 
 struct_or_union_specifier
-  : struct_or_union IDENTIFIER '{' struct_declarationList '}'
+  : struct_or_union TOKEN_IDENTIFIER '{' struct_declarationList '}'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | struct_or_union '{' struct_declarationList '}'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
-  | struct_or_union IDENTIFIER
+  | struct_or_union TOKEN_IDENTIFIER
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   ;
@@ -937,12 +894,12 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
 struct_or_union
   : KEYWORD_STRUCT
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | KEYWORD_UNION
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   ;
@@ -950,12 +907,12 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
 struct_declarationList
   : struct_declaration
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | struct_declarationList struct_declaration
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   ;
@@ -963,7 +920,7 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
 struct_declaration
   : specifierQualifierList struct_declarator_list ';'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   ;
@@ -976,7 +933,7 @@ specifierQualifierList
     }
   | typeSpecifier
     {
-      $$ = new SpecifierQualifierList($1);
+      $$ = new FSM::SpecifierQualifierList($1);
     }
   | specifierQualifierList typeQualifier
     {
@@ -985,19 +942,19 @@ specifierQualifierList
     }
   | typeQualifier
     {
-      $$ = new SpecifierQualifierList($1);
+      $$ = new FSM::SpecifierQualifierList($1);
     }
   ;
 
 struct_declarator_list
   : struct_declarator
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | struct_declarator_list ',' struct_declarator
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   ;
@@ -1005,35 +962,35 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
 struct_declarator
   : declarator
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | ':' constantExpression
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | declarator ':' constantExpression
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   ;
 
 enum_specifier
-  : ENUM '{' enumerator_list '}'
+  : TOKEN_ENUM '{' enumerator_list '}'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
-  | ENUM IDENTIFIER '{' enumerator_list '}'
+  | TOKEN_ENUM TOKEN_IDENTIFIER '{' enumerator_list '}'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
-  | ENUM IDENTIFIER
+  | TOKEN_ENUM TOKEN_IDENTIFIER
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   ;
@@ -1041,25 +998,25 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
 enumerator_list
   : enumerator
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | enumerator_list ',' enumerator
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   ;
 
 enumerator
-  : IDENTIFIER
+  : TOKEN_IDENTIFIER
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
-  | IDENTIFIER '=' constantExpression
+  | TOKEN_IDENTIFIER '=' constantExpression
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   ;
@@ -1067,70 +1024,70 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
 typeQualifier
   : KEYWORD_CONST
     {
-      $$ = new TypeQualifier(TypeQualifier::Type::CONST);
+      $$ = new FSM::TypeQualifier(FSM::TypeQualifier::Type::CONST);
     }
   | KEYWORD_VOLATILE
     {
-      $$ = new TypeQualifier(TypeQualifier::Type::VOLATILE);
+      $$ = new FSM::TypeQualifier(FSM::TypeQualifier::Type::VOLATILE);
     }
   ;
 
 typeQualifierList
   : typeQualifierList typeQualifier
     {
-      $1->add($typeQualifier);
+      $1->add($2);
       $$ = $1;
     }
   | typeQualifier
     {
-      $$ = new TypeQualifierList($typeQualifier);
+      $$ = new FSM::TypeQualifierList($1);
     }
   ;
 
 declarator
   : pointer directDeclarator
     {
-      $$ = new Declarator($pointer, $directDeclarator);
+      $$ = new FSM::Declarator($1, $2);
     }
   | directDeclarator
     {
-      $$ = new Declarator($directDeclarator);
+      $$ = new FSM::Declarator($1);
     }
   ;
 
 directDeclarator
-  : IDENTIFIER[name]
+  : TOKEN_IDENTIFIER
     {
-      $$ = new DirectDeclarator($name);
+      $$ = new FSM::DirectDeclarator(std::string($1));
     }
   | '(' declarator ')'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | directDeclarator '[' constantExpression ']'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | directDeclarator '[' ']'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | directDeclarator '(' parameter_type_list ')'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | directDeclarator '(' identifier_list ')'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | directDeclarator '(' ')'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   ;
@@ -1138,21 +1095,21 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
 pointer
   : '*'
     {
-      $$ = new Pointer();
+      $$ = new FSM::Pointer();
     }
   | '*' typeQualifierList
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | '*' pointer
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | '*' typeQualifierList pointer
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   ;
@@ -1160,12 +1117,12 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
 parameter_type_list
   : parameter_list
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
-  | parameter_list ',' ELLIPSIS
+  | parameter_list ',' TOKEN_ELLIPSIS
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   ;
@@ -1173,12 +1130,12 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
 parameter_list
   : parameter_list ',' parameter_declaration
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | parameter_declaration
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   ;
@@ -1186,30 +1143,30 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
 parameter_declaration
   : storageClassDeclarationSpecifiers declarator
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | storageClassDeclarationSpecifiers abstractDeclarator
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | storageClassDeclarationSpecifiers
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   ;
 
 identifier_list
-  : identifier_list ',' IDENTIFIER
+  : identifier_list ',' TOKEN_IDENTIFIER
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
-  | IDENTIFIER
+  | TOKEN_IDENTIFIER
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   ;
@@ -1217,28 +1174,28 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
 typeName
   : specifierQualifierList abstractDeclarator
     {
-      $$ = new TypeName($specifierQualifierList,$abstractDeclarator);
+      $$ = new FSM::TypeName($1,$2);
     }
   | specifierQualifierList
     {
-      $$ = new TypeName($specifierQualifierList);
+      $$ = new FSM::TypeName($1);
     }
   ;
 
 abstractDeclarator
   : pointer
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | direct_abstractDeclarator
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | pointer direct_abstractDeclarator
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   ;
@@ -1246,47 +1203,47 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
 direct_abstractDeclarator
   : '(' abstractDeclarator ')'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | '[' ']'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | '[' constantExpression ']'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | direct_abstractDeclarator '[' ']'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | direct_abstractDeclarator '[' constantExpression ']'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | '(' ')'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | '(' parameter_type_list ')'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | direct_abstractDeclarator '(' ')'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | direct_abstractDeclarator '(' parameter_type_list ')'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   ;
@@ -1294,20 +1251,20 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
 initializer
   : assignmentExpression
     {
-      $$ = new Initializer($assignmentExpression);
+      $$ = new FSM::Initializer($1);
     }
   | expression
     {
-      $$ = new Initializer($expression);
+      $$ = new FSM::Initializer($1);
     }
   | '{' initializer_list '}'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | '{' initializer_list ',' '}'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   ;
@@ -1315,12 +1272,12 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
 initializer_list
   : initializer_list ',' initializer
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | initializer
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   ;
@@ -1328,211 +1285,219 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.colu
 statement
   : labeledStatement
     {
-      $$ = $labeledStatement;
+      $$ = $1;
+      YYVALID;
     }
   | compoundStatement
     {
-      $$ = $compoundStatement;
+      $$ = $1;
+      YYVALID;
     }
-  | assignmentFunctionCallStatement
+//  | assignmentFunctionCallStatement
+  | expressionStatement
     {
-      $$ = $assignmentFunctionCallStatement;
+      $$ = $1;
+      YYVALID;
     }/**/
   | selectionStatement
     {
-      $$ = $selectionStatement;
+      $$ = $1;
+      YYVALID;
     }
   | iterationStatement
     {
-      $$ = $iterationStatement;
+      $$ = $1;
+      YYVALID;
     }
   | jumpStatement
     {
-      $$ = $jumpStatement;
+      $$ = $1;
+      YYVALID;
     }
   | newStateStatement
     {
-      $$ = $newStateStatement;
+      $$ = $1;
+      YYVALID;
     }
   ;
 
 labeledStatement
-  : IDENTIFIER ':' statement
+  : TOKEN_IDENTIFIER ':' statement
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | KEYWORD_CASE constantExpression ':' statement
     {
-      $$ = new LabeledStatement($constantExpression, $statement);
+      $$ = new FSM::LabeledStatement($2, $4);
     }
   | KEYWORD_DEFAULT ':' statement
     {
-      $$ = new LabeledStatement($statement);
+      $$ = new FSM::LabeledStatement($3);
     }
   ;
 
 compoundStatement
   : '{' '}'
     {
-      $$ = new CompoundStatement();
+      $$ = new FSM::CompoundStatement();
     }
   | '{' declarationStatementList '}'
     {
-      $$ = new CompoundStatement($declarationStatementList);
+      $$ = new FSM::CompoundStatement($2);
     }
   ;
 
 assignmentFunctionCallStatement
-  // Note: reduced C standard: only allow assignment+function call expressions
-/*  : assignmentExpression[a] ';'
+  : assignmentExpression ';'
     {
-      $$ = new ExpressionStatement($a);
-    }/**/
-  // : expression[a] ';'
-  : functionCallExpression[a] ';'
+      $$ = new FSM::ExpressionStatement($1);
+    }
+  | expression ';'
     {
-      $$ = new ExpressionStatement($a);
-    }/**/
+      $$ = new FSM::ExpressionStatement($1);
+    }
   ;
 
 expressionStatement
-  : expression[a] ';'
+  : expression ';'
     {
-      $$ = new ExpressionStatement($a);
+      $$ = new FSM::ExpressionStatement($1);
+      YYVALID;
     }
   ;
 
 selectionStatement
   : KEYWORD_IF '(' expression ')' statement
     {
-      $$ = new IfStatement($expression,$statement);
+      $$ = new FSM::IfStatement($3,$5);
     }
-  | KEYWORD_IF '(' expression ')' statement[ifStatement] KEYWORD_ELSE statement[elseStatement]
+  | KEYWORD_IF '(' expression ')' statement KEYWORD_ELSE statement
     {
-      $$ = new IfStatement($expression,$ifStatement,$elseStatement);
+      $$ = new FSM::IfStatement($3,$5,$7);
     }
   | KEYWORD_SWITCH '(' expression ')' statement
     {
-      $$ = new SwitchStatement($expression,$statement);
+      $$ = new FSM::SwitchStatement($3,$5);
     }
   ;
 
 iterationStatement
   : KEYWORD_WHILE '(' expression ')' statement
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
+//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
   | KEYWORD_DO statement KEYWORD_WHILE '(' expression ')' ';'
     {
-      $$ = new DoStatement($statement, $expression);
+      $$ = new FSM::DoStatement($2, $5);
     }
-  | KEYWORD_FOR '(' declarationStatement[init] expressionStatement[condition] expression[increment] ')' statement
+  | KEYWORD_FOR '(' declarationStatement expressionStatement expression ')' statement
     {
-      $$ = new ForStatement($init,$condition,$statement);
+      $$ = new FSM::ForStatement($3,$4,$5,$7);
     }
-  | KEYWORD_FOR '(' expressionStatement[init] expressionStatement[condition] ')' statement
+  | KEYWORD_FOR '(' expressionStatement expressionStatement ')' statement
     {
-      $$ = new ForStatement($init,$condition,$statement);
+      $$ = new FSM::ForStatement($3,$4,$6);
     }
-  | KEYWORD_FOR '(' expressionStatement[init] expressionStatement[condition] expression[increment] ')' statement
+  | KEYWORD_FOR '(' expressionStatement expressionStatement expression ')' statement
     {
-      $$ = new ForStatement($init,$condition,$increment,$statement);
+      $$ = new FSM::ForStatement($3,$4,$5,$7);
     }
   ;
 
 jumpStatement
-//  : GOTO IDENTIFIER ';'
+//  : GOTO TOKEN_IDENTIFIER ';'
   : KEYWORD_CONTINUE ';'
     {
-      $$ = new JumpStatement(JumpStatement::Type::CONTINUE);
+      $$ = new FSM::JumpStatement(FSM::JumpStatement::Type::CONTINUE);
     }
   | KEYWORD_BREAK ';'
     {
-      $$ = new JumpStatement(JumpStatement::Type::BREAK);
+      $$ = new FSM::JumpStatement(FSM::JumpStatement::Type::BREAK);
     }
   | KEYWORD_RETURN ';'
     {
-      $$ = new JumpStatement(JumpStatement::Type::RETURN);
+      $$ = new FSM::JumpStatement(FSM::JumpStatement::Type::RETURN);
     }
   | KEYWORD_RETURN expression ';'
     {
-      $$ = new JumpStatement(JumpStatement::Type::RETURN, $expression);
+      $$ = new FSM::JumpStatement(FSM::JumpStatement::Type::RETURN, $2);
     }
   ;
 
 newStateStatement
-  : POINTER newStateStatementPrefixOperator IDENTIFIER[stateName] '(' newStateStatementOptions ')' ';'
+  : TOKEN_POINTER newStateStatementPrefixOperator TOKEN_IDENTIFIER '(' newStateStatementOptions ')' ';'
     {
-      NewStateStatement *newStateStatement = new NewStateStatement($stateName,$newStateStatementPrefixOperator,$newStateStatementOptions);
-      ast.addStateTransition(currentStateName,newStateStatement);
+      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(std::string($3),$2,$5);
+      ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
-  | POINTER newStateStatementPrefixOperator IDENTIFIER[stateName] '(' ')' ';'
+  | TOKEN_POINTER newStateStatementPrefixOperator TOKEN_IDENTIFIER '(' ')' ';'
     {
-      NewStateStatement *newStateStatement = new NewStateStatement($stateName,$newStateStatementPrefixOperator);
-      ast.addStateTransition(currentStateName,newStateStatement);
+      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(std::string($3),$2);
+      ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
-  | POINTER newStateStatementPrefixOperator IDENTIFIER[stateName] ';'
+  | TOKEN_POINTER newStateStatementPrefixOperator TOKEN_IDENTIFIER ';'
     {
-      NewStateStatement *newStateStatement = new NewStateStatement($stateName,$newStateStatementPrefixOperator);
-      ast.addStateTransition(currentStateName,newStateStatement);
+      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(std::string($3),$2);
+      ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
-  | POINTER IDENTIFIER[stateName] '(' newStateStatementOptions ')' ';'
+  | TOKEN_POINTER TOKEN_IDENTIFIER '(' newStateStatementOptions ')' ';'
     {
-      NewStateStatement *newStateStatement = new NewStateStatement($stateName,$newStateStatementOptions);
-      ast.addStateTransition(currentStateName,newStateStatement);
+      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(std::string($2),$4);
+      ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
-  | POINTER IDENTIFIER[stateName] '(' ')' ';'
+  | TOKEN_POINTER TOKEN_IDENTIFIER '(' ')' ';'
     {
-      NewStateStatement *newStateStatement = new NewStateStatement($stateName);
-      ast.addStateTransition(currentStateName,newStateStatement);
+      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(std::string($2));
+      ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
-  | POINTER IDENTIFIER[stateName] ';'
+  | TOKEN_POINTER TOKEN_IDENTIFIER ';'
     {
-      NewStateStatement *newStateStatement = new NewStateStatement($stateName);
-      ast.addStateTransition(currentStateName,newStateStatement);
+      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(std::string($2));
+      ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
   ;
 
 newStateStatementPrefixOperator
-  : IDENTIFIER[name] ','
+  : TOKEN_IDENTIFIER ','
     {
-      if      ($name == "push")
+      if      ($1 == "push")
       {
-        $$ = NewStateStatement::PrefixOperator::PUSH;
+        $$ = FSM::NewStateStatement::PrefixOperator::PUSH;
       }
-      else if ($name == "reset")
+      else if ($1 == "reset")
       {
-        $$ = NewStateStatement::PrefixOperator::RESET;
+        $$ = FSM::NewStateStatement::PrefixOperator::RESET;
       }
       else
       {
         std::stringstream buffer;
-        buffer << "unknown new state prefix operator '" << $name << "'";
-        error(@$,buffer.str());
+        buffer << "unknown new state prefix operator '" << $1 << "'";
+//        error(@$,buffer.str());
+yyerror(&@$,buffer.str().c_str());
       }
     }
   ;
 
 newStateStatementOptions
-  : STRING[label] ',' IDENTIFIER[color] ',' number[lineWidth]
+  : TOKEN_STRING ',' TOKEN_IDENTIFIER ',' number
     {
-      $$ = new NewStateStatement::Options($label, $color, $lineWidth);
+      $$ = new FSM::NewStateStatement::Options(std::string($1), std::string($3), $5);
     }
-  | STRING[label] ',' IDENTIFIER[color]
+  | TOKEN_STRING ',' TOKEN_IDENTIFIER
     {
-      $$ = new NewStateStatement::Options($label, $color);
+      $$ = new FSM::NewStateStatement::Options(std::string($1), std::string($3));
     }
-  | STRING[label]
+  | TOKEN_STRING
     {
-      $$ = new NewStateStatement::Options($label);
+      $$ = new FSM::NewStateStatement::Options(std::string($1));
     }
   ;
 
@@ -1546,21 +1511,25 @@ newStateStatementOptions
 // ---------------------------------------------------------------------
 
 number:
-    INTEGER[n]
+    TOKEN_INTEGER
     {
-      $$ = (double)$n;
+      $$ = (double)($1);
     }
-  | FLOAT[n]
+  | TOKEN_FLOAT
     {
-      $$ = $n;
+      $$ = $1;
     }
   ;
 
 %%
 
+#if 0
 void FSM::Parser::error(const location_type &location, const std::string &message)
 {
   std::stringstream buffer;
   buffer << inputFilePath << ":" << location.begin.line << ":" << location.begin.column << ": " << message;
   throw std::runtime_error(buffer.str());
 }
+#endif
+
+//}

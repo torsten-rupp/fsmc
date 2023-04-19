@@ -1,0 +1,9 @@
+build/*
+*.o
+
+*~
+
+.geany*
+Makefile.user
+
+fsmc

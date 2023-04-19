@@ -24,6 +24,9 @@
 
 /***************************** Datatypes *******************************/
 
+// parser forward reference
+int yyparse();
+
 // TODO: FSM -> AST
 namespace FSM
 {
@@ -2156,7 +2159,7 @@ class StateList : public std::vector<State*>
       }
     }
 };
-
+  
 class AST
 {
   public:
@@ -2274,11 +2277,11 @@ class AST
      */
     void print() const;
 
-// TODO:
-//  private:
+  private:
     // allow access to private methods/members
     friend class Parser;
     friend class Visitor;
+    friend int ::yyparse();
 
     void setFSMName(const std::string &fsmName)
     {

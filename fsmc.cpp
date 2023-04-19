@@ -15,7 +15,7 @@
 #include <stdexcept>
 
 #include "scanner.h"
-#include "parser.hpp"
+#include "parser.h"
 #include "ast.h"
 #include "codegenerator.h"
 #include "dotgenerator.h"
@@ -220,12 +220,8 @@ int main(int argc, const char *argv[])
 
         // parse FSM
         AST ast(stateStackSize,asserts);
-        Parser parser(!inputFilePath.empty() ? inputFilePath : "<stdin>", scanner, ast);
-        if (debug) parser.set_debug_level(1);
-        if (parser.parse() != 0)
-        {
-          throw std::runtime_error("parsing failed");
-        }
+        Parser parser(!inputFilePath.empty() ? inputFilePath : "<stdin>", scanner, ast, debug);
+        parser.parse();
 
         // validate
         ast.validateStates();
@@ -256,6 +252,7 @@ int main(int argc, const char *argv[])
         else
         {
           ast.print();
+          std::cout << "---" << std::endl;
         }
       }
     }

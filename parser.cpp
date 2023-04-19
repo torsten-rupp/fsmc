@@ -1,50 +1,54 @@
 /***********************************************************************\
 *
-* Contents: .dot file generator
+* Contents: 
 * Systems: all
 *
 \***********************************************************************/
-#ifndef __DOT_GENERATOR__
-#define __DOT_GENERATOR__
 
 /****************************** Includes *******************************/
-#include <iostream>
-#include <vector>
+#include <stdio.h>
+#include <stdarg.h>
 
+#include <iostream>
+
+#include "location.h"
+#include "scanner.h"
+#include "parser.h"
 #include "ast.h"
+
+using namespace FSM;
 
 /****************** Conditional compilation switches *******************/
 
 /***************************** Constants *******************************/
 
 /***************************** Datatypes *******************************/
-namespace FSM
-{
-
-class DotGenerator
-{
-  public:
-    DotGenerator(std::ostream &output)
-      : output(output)
-    {
-    }
-
-  void generate(const AST &ast);
-
-  private:
-    std::ostream &output;
-
-    std::vector<const State*> getPushStates(const AST &ast, const State *state) const;
-};
-
-} // namespace FSM
 
 /***************************** Variables *******************************/
 
 /***************************** Forwards ********************************/
 
+
 /***************************** Functions *******************************/
 
-#endif // __DOT_GENERATOR__
+#include "parser.tab.c"
+
+Parser::Parser(const std::string &inputFilePath, FSM::Scanner &scanner, FSM::AST &ast, bool debug)
+{
+  extern int yydebug;
+
+  ::inputFilePath = &inputFilePath;
+  ::scanner = &scanner;
+  ::ast = &ast;
+  ::yydebug = debug ? 1 : 0;
+}
+
+void Parser::parse()
+{
+  if (::yyparse() != 0)
+  {
+    throw std::runtime_error("parsing failed");
+  }
+}
 
 /* end of file */

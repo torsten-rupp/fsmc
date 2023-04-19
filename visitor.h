@@ -4,8 +4,8 @@
 * Systems: all
 *
 \***********************************************************************/
-#ifndef VISITOR_H
-#define VISITOR_H
+#ifndef __VISITOR__
+#define __VISITOR__
 
 /****************************** Includes *******************************/
 #include <iostream>
@@ -168,6 +168,6 @@ class Visitor
 
 /***************************** Functions *******************************/
 
-#endif // VISITOR_H
+#endif // __VISITOR__
 
 /* end of file */

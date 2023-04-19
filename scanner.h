@@ -4,6 +4,8 @@
 * Systems: all
 *
 \***********************************************************************/
+#ifndef __SCANNER__
+#define __SCANNER__
 
 /****************************** Includes *******************************/
 
@@ -19,8 +21,6 @@
 
 /***************************** Functions *******************************/
 
-#ifndef SCANNER_H
-#define SCANNER_H
 
 /**
  * Generated Flex class name is yyFlexLexer by default. If we want to use more flex-generated
@@ -39,9 +39,12 @@
 // Sinice Bison 3 uses symbol_type, we must change returned type. We also rename it
 // to something sane, since you cannot overload return type.
 #undef YY_DECL
-#define YY_DECL FSM::Parser::symbol_type FSM::Scanner::get_next_token()
+#define YY_DECL int FSM::Scanner::get_next_token()
 
-#include "parser.hpp"
+//#include "ast.h"
+//#include "location.h"
+
+//#include "parser.tab.h"
 
 namespace FSM
 {
@@ -49,7 +52,7 @@ namespace FSM
 class Scanner : public yyFlexLexer
 {
   public:
-    virtual FSM::Parser::symbol_type get_next_token();
+    virtual int get_next_token();
 
     void setLineNumber(uint lineNb);
 
@@ -62,6 +65,6 @@ class Scanner : public yyFlexLexer
 
 }  // namespace FSM
 
-#endif
+#endif  // __SCANNER__
 
 /* end of file */

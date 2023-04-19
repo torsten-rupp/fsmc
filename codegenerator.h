@@ -4,8 +4,8 @@
 * Systems: all
 *
 \***********************************************************************/
-#ifndef CODE_GENERATOR_H
-#define CODE_GENERATOR_H
+#ifndef __CODE_GENERATOR__
+#define __CODE_GENERATOR__
 
 /****************************** Includes *******************************/
 #include <iostream>
@@ -56,6 +56,6 @@ class CodeGenerator
 
 /***************************** Functions *******************************/
 
-#endif // CODE_GENERATOR_H
+#endif // __CODE_GENERATOR__
 
 /* end of file */
