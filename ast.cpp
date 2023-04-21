@@ -82,8 +82,9 @@ const State* AST::getStartState() const
                                                      return pair.second->type == State::Type::START;
                                                    }
                                                   );
+  if (iterator == states.end()) throw std::runtime_error("no start state defined");
 
-  return (iterator != states.end()) ? iterator->second : nullptr;
+  return iterator->second;
 }
 
 const State* AST::getDefaultState() const
@@ -94,7 +95,9 @@ const State* AST::getDefaultState() const
                                                    }
                                                   );
 
-  return (iterator != states.end()) ? iterator->second : nullptr;
+  if (iterator == states.end()) throw std::runtime_error("no default state defined");
+
+  return iterator->second;
 }
 
 void AST::doStates(const State                                                                  *toState,
