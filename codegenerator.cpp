@@ -112,9 +112,10 @@ class CVisitor : public Visitor
               break;
           }
           indent();
+          output << indentSpaces();
           break;
         case Phases::POST:
-          output << indentSpaces() << "break;" << std::endl;
+          output << std::endl << indentSpaces() << "break;" << std::endl;
           unindent();
           unindent();
           break;
@@ -227,7 +228,7 @@ throw std::runtime_error("NYI");
 break;
       }
     }
-    
+
     void accept(const SpecifierQualifierList &specifierQualifierList) override
     {
       bool first = true;
@@ -306,7 +307,7 @@ break;
       bool first = true;
       for (const Expression *expression : argumentExpressionList)
       {
-        if (!first) output << ", ";        
+        if (!first) output << ", ";
         expression->traverse(*this);
         first = false;
       }
@@ -558,33 +559,14 @@ break;
         declaration.storageClassDeclarationSpecifiers->traverse(*this);
         output << " ";
       }
-      declaration.initDeclaratorList->traverse(*this);
+      declaration.initDeclaratorList->traverse(*this); output << ';';
     }
 
     void accept(const DeclarationStatementList &declarationStatementList) override
     {
       for (const DeclarationStatement *declarationStatement : declarationStatementList)
       {
-        output << indentSpaces(); declarationStatement->traverse(*this); output << ";" << std::endl;
-      }
-    }
-
-    void accept(const LabeledStatement &labeledStatement) override
-    {
-      switch (labeledStatement.type)
-      {
-        case LabeledStatement::Type::CASE:
-          output << indentSpaces() << "case "; labeledStatement.constantExpression->traverse(*this); output << ":" << std::endl;
-          indent();
-          labeledStatement.statement->traverse(*this);
-          unindent();
-          break;
-        case LabeledStatement::Type::DEFAULT:
-          output << indentSpaces() << "case default:" << std::endl;
-          indent();
-          labeledStatement.statement->traverse(*this);
-          unindent();
-          break;
+        output << indentSpaces(); declarationStatement->traverse(*this); output << std::endl;
       }
     }
 
@@ -598,33 +580,53 @@ break;
           compoundStatement.declarationStatementList->traverse(*this);
         }
       });
-      output << indentSpaces() << "}" << std::endl;
+      output << indentSpaces() << "}";
     }
 
     void accept(const IfStatement &ifStatement) override
     {
-      output << indentSpaces() << "if ("; ifStatement.condition->traverse(*this); output << ")" << std::endl;
-      ifStatement.ifStatement->traverse(*this);
+      output << "if ("; ifStatement.condition->traverse(*this); output << ")" << std::endl;
+      output << indentSpaces(); ifStatement.ifStatement->traverse(*this);
       if (ifStatement.elseStatement != nullptr)
       {
-        output << indentSpaces() << "else" << std::endl;
-        ifStatement.elseStatement->traverse(*this);
+        output << std::endl << indentSpaces() << "else" << std::endl;
+        output << indentSpaces(); ifStatement.elseStatement->traverse(*this);
       }
     }
 
     void accept(const SwitchStatement &switchStatement) override
     {
-      output << indentSpaces() << "switch ("; switchStatement.expression->traverse(*this); output << ")" << std::endl;
-      switchStatement.statement->traverse(*this);
+      output << "switch ("; switchStatement.expression->traverse(*this); output << ")" << std::endl;
+      indent();
+      output << indentSpaces(); switchStatement.statement->traverse(*this);
+    }
+
+    void accept(const LabeledStatement &labeledStatement) override
+    {
+      switch (labeledStatement.type)
+      {
+        case LabeledStatement::Type::CASE:
+          unindent();
+          output << "case "; labeledStatement.constantExpression->traverse(*this); output << ":" << std::endl;
+          indent();
+          output << indentSpaces(); labeledStatement.statement->traverse(*this);
+          break;
+        case LabeledStatement::Type::DEFAULT:
+          unindent();
+          output << "case default:" << std::endl;
+          indent();
+          output << indentSpaces(); labeledStatement.statement->traverse(*this);
+          break;
+      }
     }
 
     void accept(const ForStatement &forStatement) override
     {
       output << "for (";
       forStatement.init->traverse(*this);
-      output << "; ";
+      output << " ";
       forStatement.condition->traverse(*this);
-      output << "; ";
+      output << " ";
       if (forStatement.increment != nullptr)
       {
         forStatement.increment->traverse(*this);
@@ -635,44 +637,43 @@ break;
 
     void accept(const WhileStatement &whileStatement) override
     {
-      output << indentSpaces() << "while (";
-      whileStatement.condition->traverse(*this);
-      output << ")" << std::endl;
-      whileStatement.statement->traverse(*this);
+      output << "while ("; whileStatement.condition->traverse(*this); output << ")" << std::endl;
+      output << indentSpaces(); whileStatement.statement->traverse(*this);
     }
 
     void accept(const DoStatement &doStatement) override
     {
-      output << indentSpaces() << "do" << std::endl;
-      doStatement.statement->traverse(*this);
+      output << "do" << std::endl;
+      output << indentSpaces(); doStatement.statement->traverse(*this); output << std::endl;
       output << indentSpaces() << "while (";
       doStatement.condition->traverse(*this);
       output << ");" << std::endl;
+      output << indentSpaces();
     }
-    
+
     void accept(const ExpressionStatement &expressionStatement) override
     {
-      expressionStatement.expression->traverse(*this);
-    }   
+      expressionStatement.expression->traverse(*this); output << ';';
+    }
 
     void accept(const JumpStatement &jumpStatement) override
     {
       switch (jumpStatement.type)
       {
         case JumpStatement::Type::CONTINUE:
-          output << indentSpaces() << "continue" << ';' <<  std::endl;
+          output << std::endl << indentSpaces() << "continue" << ';';
           break;
         case JumpStatement::Type::BREAK:
-          output << indentSpaces() << "break" << ';' <<  std::endl;
+          output << std::endl << indentSpaces() << "break" << ';';
           break;
         case JumpStatement::Type::RETURN:
-          output << indentSpaces() << "return";
+          output << "return";
           if (jumpStatement.expression != nullptr)
           {
             output << " ";
             jumpStatement.expression->traverse(*this);
           }
-          output << ";" << std::endl;
+          output << ";";
         break;
       }
     }
@@ -756,7 +757,7 @@ break;
       }
       unindent();
       output << indentSpaces() << "}" << std::endl;
-      output << indentSpaces() << "while (0);" << std::endl;
+      output << indentSpaces() << "while (0);";
     }
 
   private:

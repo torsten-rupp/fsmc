@@ -27,7 +27,7 @@
 
   #define TRUE true
   #define FALSE false
-  
+
   #if YYBTYACC
   #else
     #define YYVALID
@@ -1374,8 +1374,7 @@ selectionStatement
 iterationStatement
   : KEYWORD_WHILE '(' expression ')' statement
     {
-//fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
-      YYABORT;
+      $$ = new FSM::WhileStatement($3, $5);
     }
   | KEYWORD_DO statement KEYWORD_WHILE '(' expression ')' ';' [YYVALID;]
     {

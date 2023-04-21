@@ -68,6 +68,15 @@ int main(int argc, const char *argv[])
       {
       }
 
+      while (a)
+      {
+      }
+
+      do
+      {
+      }
+      while (a);
+
       -> STATE1("abc",blue,4);
     }
 

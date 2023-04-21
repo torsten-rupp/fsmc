@@ -82,6 +82,7 @@ const State* AST::getStartState() const
                                                      return pair.second->type == State::Type::START;
                                                    }
                                                   );
+
   if (iterator == states.end()) throw std::runtime_error("no start state defined");
 
   return iterator->second;
@@ -95,9 +96,7 @@ const State* AST::getDefaultState() const
                                                    }
                                                   );
 
-  if (iterator == states.end()) throw std::runtime_error("no default state defined");
-
-  return iterator->second;
+  return (iterator != states.end()) ? iterator->second : nullptr;
 }
 
 void AST::doStates(const State                                                                  *toState,
@@ -644,6 +643,34 @@ class PrintVisitor : public Visitor
         ifStatement.elseStatement->traverse(*this);
         unindent();
       }
+    }
+
+    void accept(const SwitchStatement &switchStatement) override
+    {
+      output << indentSpaces() << "SwitchStatement: "; switchStatement.expression->traverse(*this); output << std::endl;
+      indent();
+      switchStatement.statement->traverse(*this);
+      unindent();
+    }
+
+    void accept(const LabeledStatement &labeledStatement) override
+    {
+      output << indentSpaces() << "LabeledStatement: " << std::endl;
+      indent();
+      switch (labeledStatement.type)
+      {
+        case LabeledStatement::Type::CASE:
+          output << indentSpaces() << "'case' "; labeledStatement.constantExpression->traverse(*this);
+          break;
+        case LabeledStatement::Type::DEFAULT:
+          output << indentSpaces() << "'default'";
+          break;
+      }
+      output << std::endl;
+      indent();
+      labeledStatement.statement->traverse(*this);
+      unindent();
+      unindent();
     }
 
     void accept(const ForStatement &forStatement) override
