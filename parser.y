@@ -27,6 +27,11 @@
 
   #define TRUE true
   #define FALSE false
+  
+  #if YYBTYACC
+  #else
+    #define YYVALID
+  #endif
 %}
 
 // implementation
@@ -35,7 +40,9 @@
   {
     return scanner->get_next_token();
   }
-
+int yywrap(){
+    return 1;
+}
   static void yyerror(const YYLTYPE *location, const char *s, ...)
   {
     va_list arguments;
@@ -46,16 +53,6 @@
     va_end(arguments);
     fprintf(stderr," at %d:%d\n",location->first.line,location->first.column);
   }
-
-#if 0
-  static void yyerror_detailed(char    *text,
-                               int     errt,
-                               YYSTYPE &errt_value,
-                               YYPOSN  &errt_posn
-                              )
-  {
-  }
-#endif
 %}
 
 %locations
@@ -296,6 +293,8 @@ stateDefinitions:
       // empty
     }
   | stateDefinitions stateDefinition
+    {
+    }
   | error
     {
       YYABORT;
@@ -347,12 +346,10 @@ declarationStatement
   : externalDeclaration
     {
       $$ = $1;
-      YYVALID;
     }
   | statement
     {
       $$ = $1;
-      YYVALID;
     }
   ;
 
@@ -366,7 +363,7 @@ externalDeclaration
   ;
 
 declaration
-  : initDeclaratorList ';'
+  : initDeclaratorList ';' [YYVALID;]
     {
       $$ = new FSM::Declaration($1);
     }
@@ -918,7 +915,7 @@ struct_declarationList
   ;
 
 struct_declaration
-  : specifierQualifierList struct_declarator_list ';'
+  : specifierQualifierList struct_declarator_list ';' [YYVALID;]
     {
 //fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
@@ -1286,38 +1283,31 @@ statement
   : labeledStatement
     {
       $$ = $1;
-      YYVALID;
     }
   | compoundStatement
     {
       $$ = $1;
-      YYVALID;
     }
 //  | assignmentFunctionCallStatement
   | expressionStatement
     {
       $$ = $1;
-      YYVALID;
     }/**/
   | selectionStatement
     {
       $$ = $1;
-      YYVALID;
     }
   | iterationStatement
     {
       $$ = $1;
-      YYVALID;
     }
   | jumpStatement
     {
       $$ = $1;
-      YYVALID;
     }
   | newStateStatement
     {
       $$ = $1;
-      YYVALID;
     }
   ;
 
@@ -1338,32 +1328,31 @@ labeledStatement
   ;
 
 compoundStatement
-  : '{' '}'
+  : '{' '}' [YYVALID;]
     {
       $$ = new FSM::CompoundStatement();
     }
-  | '{' declarationStatementList '}'
+  | '{' declarationStatementList '}' [YYVALID;]
     {
       $$ = new FSM::CompoundStatement($2);
     }
   ;
 
 assignmentFunctionCallStatement
-  : assignmentExpression ';'
+  : assignmentExpression ';' [YYVALID;]
     {
       $$ = new FSM::ExpressionStatement($1);
     }
-  | expression ';'
+  | expression ';' [YYVALID;]
     {
       $$ = new FSM::ExpressionStatement($1);
     }
   ;
 
 expressionStatement
-  : expression ';'
+  : expression ';' [YYVALID;]
     {
       $$ = new FSM::ExpressionStatement($1);
-      YYVALID;
     }
   ;
 
@@ -1388,7 +1377,7 @@ iterationStatement
 //fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.begin.line,@$.begin.column);
       YYABORT;
     }
-  | KEYWORD_DO statement KEYWORD_WHILE '(' expression ')' ';'
+  | KEYWORD_DO statement KEYWORD_WHILE '(' expression ')' ';' [YYVALID;]
     {
       $$ = new FSM::DoStatement($2, $5);
     }
@@ -1408,56 +1397,56 @@ iterationStatement
 
 jumpStatement
 //  : GOTO TOKEN_IDENTIFIER ';'
-  : KEYWORD_CONTINUE ';'
+  : KEYWORD_CONTINUE ';' [YYVALID;]
     {
       $$ = new FSM::JumpStatement(FSM::JumpStatement::Type::CONTINUE);
     }
-  | KEYWORD_BREAK ';'
+  | KEYWORD_BREAK ';' [YYVALID;]
     {
       $$ = new FSM::JumpStatement(FSM::JumpStatement::Type::BREAK);
     }
-  | KEYWORD_RETURN ';'
+  | KEYWORD_RETURN ';' [YYVALID;]
     {
       $$ = new FSM::JumpStatement(FSM::JumpStatement::Type::RETURN);
     }
-  | KEYWORD_RETURN expression ';'
+  | KEYWORD_RETURN expression ';' [YYVALID;]
     {
       $$ = new FSM::JumpStatement(FSM::JumpStatement::Type::RETURN, $2);
     }
   ;
 
 newStateStatement
-  : TOKEN_POINTER newStateStatementPrefixOperator TOKEN_IDENTIFIER '(' newStateStatementOptions ')' ';'
+  : TOKEN_POINTER newStateStatementPrefixOperator TOKEN_IDENTIFIER '(' newStateStatementOptions ')' ';' [YYVALID;]
     {
       FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(std::string($3),$2,$5);
       ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
-  | TOKEN_POINTER newStateStatementPrefixOperator TOKEN_IDENTIFIER '(' ')' ';'
+  | TOKEN_POINTER newStateStatementPrefixOperator TOKEN_IDENTIFIER '(' ')' ';' [YYVALID;]
     {
       FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(std::string($3),$2);
       ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
-  | TOKEN_POINTER newStateStatementPrefixOperator TOKEN_IDENTIFIER ';'
+  | TOKEN_POINTER newStateStatementPrefixOperator TOKEN_IDENTIFIER ';' [YYVALID;]
     {
       FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(std::string($3),$2);
       ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
-  | TOKEN_POINTER TOKEN_IDENTIFIER '(' newStateStatementOptions ')' ';'
+  | TOKEN_POINTER TOKEN_IDENTIFIER '(' newStateStatementOptions ')' ';' [YYVALID;]
     {
       FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(std::string($2),$4);
       ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
-  | TOKEN_POINTER TOKEN_IDENTIFIER '(' ')' ';'
+  | TOKEN_POINTER TOKEN_IDENTIFIER '(' ')' ';' [YYVALID;]
     {
       FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(std::string($2));
       ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
-  | TOKEN_POINTER TOKEN_IDENTIFIER ';'
+  | TOKEN_POINTER TOKEN_IDENTIFIER ';' [YYVALID;]
     {
       FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(std::string($2));
       ast->addStateTransition(currentStateName,newStateStatement);

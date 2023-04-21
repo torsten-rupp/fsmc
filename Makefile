@@ -56,6 +56,7 @@ scanner.cpp: scanner.l
 	flex -o scanner.cpp scanner.l
 parser.tab.c parser.tab.h: parser.y
 	byacc -B -b parser -d -t parser.y
+#	byacc -b parser -d -t parser.y
 
 fsmc.o: fsmc.cpp scanner.h parser.h ast.h parser.tab.h
 scanner.o: scanner.cpp scanner.h parser.tab.h
