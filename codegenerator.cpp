@@ -783,8 +783,8 @@ break;
       std::regex toStateNameRegEx("@toStateName@");
 
       std::string string = logFunction;
-      string = std::regex_replace(string,fromStateNameRegEx,"\""+currentState->name+"\"");
-      string = std::regex_replace(string,toStateNameRegEx,"\""+toStateName+"\"");
+      string = std::regex_replace(string,fromStateNameRegEx,currentState->name);
+      string = std::regex_replace(string,toStateNameRegEx,toStateName);
       return string;
     }
 };

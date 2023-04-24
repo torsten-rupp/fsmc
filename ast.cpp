@@ -84,7 +84,7 @@ const State* AST::getStartState() const
                                                    }
                                                   );
 
-  if (iterator == states.end()) throw std::runtime_error("no start state defined");
+  if (iterator == states.end()) throw std::runtime_error("no start state defined for FSM '"+fsmName+"'");
 
   return iterator->second;
 }
@@ -96,8 +96,9 @@ const State* AST::getDefaultState() const
                                                      return pair.second->type == State::Type::DEFAULT;
                                                    }
                                                   );
+  if (iterator == states.end()) throw std::runtime_error("no default state defined for FSM '"+fsmName+"'");
 
-  return (iterator != states.end()) ? iterator->second : nullptr;
+  return iterator->second;
 }
 
 void AST::doStates(const State                                                                  *toState,
