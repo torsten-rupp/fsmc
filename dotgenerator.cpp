@@ -28,6 +28,8 @@ using namespace FSM;
 
 /***************************** Forwards ********************************/
 
+/****************************** Macros *********************************/
+
 /***************************** Functions *******************************/
 
 static std::string optionsToString(const NewStateStatement &newStateStatement)

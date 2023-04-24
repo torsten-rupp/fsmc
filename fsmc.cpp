@@ -25,6 +25,7 @@ using namespace FSM;
 /****************** Conditional compilation switches *******************/
 
 /***************************** Constants *******************************/
+const char *VERSION = "1";
 
 /***************************** Datatypes *******************************/
 
@@ -32,6 +33,11 @@ using namespace FSM;
 
 /***************************** Forwards ********************************/
 
+/****************************** Macros *********************************/
+
+// stringify
+#define STRINGIFY(s) __STRINGIFY__(s)
+#define __STRINGIFY__(s) #s
 
 /***************************** Functions *******************************/
 
@@ -106,11 +112,29 @@ int main(int argc, const char *argv[])
         dumpAST = true;
         i += 1;
       }
+      else if (argument == "--version")
+      {
+        fprintf(stdout, "%s version %s (commit hash %s)\n", argv[0],VERSION,STRINGIFY(GIT_HASH));
+        return 0;
+      }
+      else if (argument == "--")
+      {
+        break;
+      }
+      else if (argument[0] == '-')
+      {
+        throw std::runtime_error("unknown option '"+argument+"'");
+      }
       else
       {
         inputFilePath = argv[i];
         i += 1;
       }
+    }
+    while (i < argc)
+    {
+      inputFilePath = argv[i];
+      i += 1;
     }
 
     // open input file/stdin

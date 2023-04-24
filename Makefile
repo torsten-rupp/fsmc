@@ -59,6 +59,7 @@ parser.tab.c parser.tab.h: parser.y
 #	byacc -b parser -d -t parser.y
 
 fsmc.o: fsmc.cpp scanner.h parser.h ast.h parser.tab.h
+	g++ $(CXXFLAGS) -DGIT_HASH=$(shell git rev-parse HEAD) -std=c++11 -c -g $*.cpp -o $@
 scanner.o: scanner.cpp scanner.h parser.tab.h
 parser.o: parser.cpp parser.h scanner.h ast.h parser.tab.c parser.tab.h
 ast.o: ast.cpp ast.h visitor.h
