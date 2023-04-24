@@ -615,7 +615,7 @@ break;
           break;
         case LabeledStatement::Type::DEFAULT:
           unindent();
-          output << "case default:" << std::endl;
+          output << "default:" << std::endl;
           indent();
           output << indentSpaces(); labeledStatement.statement->traverse(*this);
           break;
