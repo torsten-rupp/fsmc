@@ -65,7 +65,7 @@ Options
 "<label>",<color>,<line width>
 ```
 
-# Example
+# Example traffic_lights.c
 
 ```
 #include <stdlib.h>
@@ -160,6 +160,11 @@ int main(int argc, const char *argv[])
 
   return 0;
 }
+```
+
+Compile with:
+```
+fsmc -o build/traffic_lights.c traffic_lights.c -d --log-function 'logStateChange("@fromStateName@","@toStatename@")'
 ```
 
 .dot output with Graphviz:

@@ -276,7 +276,7 @@ start:
     }
   | start KEYWORD_FSM TOKEN_IDENTIFIER stateDefinitions KEYWORD_END
     {
-      ast->setFSMName($3);
+      ast->setFSMName(std::string($3));
     }
   ;
 
@@ -1456,11 +1456,11 @@ newStateStatement
 newStateStatementPrefixOperator
   : TOKEN_IDENTIFIER ','
     {
-      if      ($1 == "push")
+      if      (std::string($1) == "push")
       {
         $$ = FSM::NewStateStatement::PrefixOperator::PUSH;
       }
-      else if ($1 == "reset")
+      else if (std::string($1) == "reset")
       {
         $$ = FSM::NewStateStatement::PrefixOperator::RESET;
       }
@@ -1468,8 +1468,7 @@ newStateStatementPrefixOperator
       {
         std::stringstream buffer;
         buffer << "unknown new state prefix operator '" << $1 << "'";
-//        error(@$,buffer.str());
-yyerror(&@$,buffer.str().c_str());
+        yyerror(&@$,buffer.str().c_str());
       }
     }
   ;

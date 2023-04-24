@@ -58,4 +58,4 @@ test1%: ../fsmc
 
 .PHONY: test1%d
 test1%d: ../fsmc
-	gdb --args ../fsmc test1$(*:%d=).c -d . --state-stack-size 123 --asserts --log-function "logStateChange(@fromStateName@,@toStateName@)"
+	gdb --args ../fsmc test1$(*:%d=).c -d . --state-stack-size 123 --asserts --log-function 'logStateChange("@fromStateName@","@toStateName@")'
