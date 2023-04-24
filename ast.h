@@ -400,10 +400,10 @@ class StorageClassDeclarationSpecifiers : public std::vector<StorageClassDeclara
 class AbstractDeclarator : public VisitorInterface
 {
   public:
-    Identifier identifier;
+    const Pointer *pointer;
 
-    AbstractDeclarator(const Identifier &identifier)
-      : identifier(identifier)
+    AbstractDeclarator(const Pointer *pointer)
+      : pointer(pointer)
     {
     }
 

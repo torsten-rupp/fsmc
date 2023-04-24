@@ -257,6 +257,14 @@ break;
       }
     }
 
+    void accept(const AbstractDeclarator &abstractDeclarator) override
+    {
+      if (abstractDeclarator.pointer != nullptr)
+      {
+        output << "*";
+      }
+    }
+
     void accept(const StorageClassDeclarationSpecifiers &storageClassDeclarationSpecifiers) override
     {
       bool first = true;
@@ -266,11 +274,6 @@ break;
         storageClassDeclarationSpecifier->traverse(*this);
         first = false;
       }
-    }
-
-    void accept(const AbstractDeclarator &abstractDeclarator) override
-    {
-// TODO:      output << abstractDeclarator.identifier;
     }
 
     void accept(const DirectDeclarator &directDeclarator) override
