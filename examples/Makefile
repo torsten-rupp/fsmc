@@ -37,6 +37,9 @@ all: \
 clean:
 	rm -f traffic_lights traffic_lights.o
 
+../fsmc:
+	$(MAKE) -C .. fsmc
+
 .PHONY: traffic_lights
 traffic_lights: traffic_lights.c ../fsmc
-	../fsmc traffic_lights.c -d . -n 8 -a -l 'logStateChange(@fromStateName@,@toStateName@)'| gcc $(CFLAGS) -std=c99 -x c - -o traffic_lights
+	../fsmc traffic_lights.c -d . -n 8 -a -l 'logStateChange("@fromStateName@","@toStateName@")'| gcc $(CFLAGS) -std=c99 -x c - -o traffic_lights

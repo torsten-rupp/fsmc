@@ -37,19 +37,20 @@
   } while (0)
 
 /***************************** Datatypes *******************************/
-typedef struct
+class Location
 {
-  struct
-  {
-    uint line;
-    uint column;
-  } first;
-  struct
-  {
-    uint line;
-    uint column;
-  } last;
-} Location;
+  public:
+    struct
+    {
+      uint line;
+      uint column;
+    } first;
+    struct
+    {
+      uint line;
+      uint column;
+    } last;
+};
 
 /***************************** Variables *******************************/
 

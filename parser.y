@@ -41,6 +41,7 @@
     return scanner->get_next_token();
   }
 int yywrap(){
+fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
     return 1;
 }
   static void yyerror(const YYLTYPE *location, const char *s, ...)
@@ -308,7 +309,7 @@ stateDefinition:
     }
     compoundStatement
     {
-      ast->addState(new FSM::State(FSM::State::Type::START,currentStateName,$4));
+      ast->addState(new FSM::State(@$,FSM::State::Type::START,currentStateName,$4));
     }
   | TOKEN_IDENTIFIER
     {
@@ -316,7 +317,7 @@ stateDefinition:
     }
     compoundStatement
     {
-      ast->addState(new FSM::State(FSM::State::Type::CUSTOM,currentStateName,$3));
+      ast->addState(new FSM::State(@$,FSM::State::Type::CUSTOM,currentStateName,$3));
     }
   | KEYWORD_DEFAULT
     {
@@ -324,7 +325,7 @@ stateDefinition:
     }
     compoundStatement
     {
-      ast->addState(new FSM::State(FSM::State::Type::DEFAULT,$3));
+      ast->addState(new FSM::State(@$,FSM::State::Type::DEFAULT,$3));
     }
   ;
 
@@ -1182,7 +1183,6 @@ typeName
 abstractDeclarator
   : pointer
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       $$ = new FSM::AbstractDeclarator($1);
     }
   | direct_abstractDeclarator
@@ -1319,78 +1319,78 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.colu
     }
   | KEYWORD_CASE constantExpression ':' statement
     {
-      $$ = new FSM::LabeledStatement($2, $4);
+      $$ = new FSM::LabeledStatement(@$,$2, $4);
     }
   | KEYWORD_DEFAULT ':' statement
     {
-      $$ = new FSM::LabeledStatement($3);
+      $$ = new FSM::LabeledStatement(@$,$3);
     }
   ;
 
 compoundStatement
-  : '{' '}' [YYVALID;]
+  : '{' declarationStatementList '}' [YYVALID;]
     {
-      $$ = new FSM::CompoundStatement();
+      $$ = new FSM::CompoundStatement(@$,$2);
     }
-  | '{' declarationStatementList '}' [YYVALID;]
+  | '{' '}' [YYVALID;]
     {
-      $$ = new FSM::CompoundStatement($2);
+      $$ = new FSM::CompoundStatement(@$);
     }
   ;
 
 assignmentFunctionCallStatement
   : assignmentExpression ';' [YYVALID;]
     {
-      $$ = new FSM::ExpressionStatement($1);
+      $$ = new FSM::ExpressionStatement(@$,$1);
     }
   | expression ';' [YYVALID;]
     {
-      $$ = new FSM::ExpressionStatement($1);
+      $$ = new FSM::ExpressionStatement(@$,$1);
     }
   ;
 
 expressionStatement
   : expression ';' [YYVALID;]
     {
-      $$ = new FSM::ExpressionStatement($1);
+      $$ = new FSM::ExpressionStatement(@$,$1);
     }
   ;
 
 selectionStatement
   : KEYWORD_IF '(' expression ')' statement
     {
-      $$ = new FSM::IfStatement($3,$5);
+      $$ = new FSM::IfStatement(@$,$3,$5);
     }
   | KEYWORD_IF '(' expression ')' statement KEYWORD_ELSE statement
     {
-      $$ = new FSM::IfStatement($3,$5,$7);
+      $$ = new FSM::IfStatement(@$,$3,$5,$7);
     }
   | KEYWORD_SWITCH '(' expression ')' statement
     {
-      $$ = new FSM::SwitchStatement($3,$5);
+      $$ = new FSM::SwitchStatement(@$,$3,$5);
     }
   ;
 
 iterationStatement
   : KEYWORD_WHILE '(' expression ')' statement
     {
-      $$ = new FSM::WhileStatement($3, $5);
+      $$ = new FSM::WhileStatement(@$,$3, $5);
     }
   | KEYWORD_DO statement KEYWORD_WHILE '(' expression ')' ';' [YYVALID;]
     {
-      $$ = new FSM::DoStatement($2, $5);
+      $$ = new FSM::DoStatement(@$,$2, $5);
     }
   | KEYWORD_FOR '(' declarationStatement expressionStatement expression ')' statement
     {
-      $$ = new FSM::ForStatement($3,$4,$5,$7);
+      $$ = new FSM::ForStatement(@$,$3,$4,$5,$7);
     }
   | KEYWORD_FOR '(' expressionStatement expressionStatement ')' statement
     {
-      $$ = new FSM::ForStatement($3,$4,$6);
+      $$ = new FSM::ForStatement(@$,$3,$4,$6);
     }
   | KEYWORD_FOR '(' expressionStatement expressionStatement expression ')' statement
     {
-      $$ = new FSM::ForStatement($3,$4,$5,$7);
+      $$ = new FSM::ForStatement(@$,$3,$4,$5,$7);
     }
   ;
 
@@ -1398,56 +1398,56 @@ jumpStatement
 //  : GOTO TOKEN_IDENTIFIER ';'
   : KEYWORD_CONTINUE ';' [YYVALID;]
     {
-      $$ = new FSM::JumpStatement(FSM::JumpStatement::Type::CONTINUE);
+      $$ = new FSM::JumpStatement(@$,FSM::JumpStatement::Type::CONTINUE);
     }
   | KEYWORD_BREAK ';' [YYVALID;]
     {
-      $$ = new FSM::JumpStatement(FSM::JumpStatement::Type::BREAK);
+      $$ = new FSM::JumpStatement(@$,FSM::JumpStatement::Type::BREAK);
     }
   | KEYWORD_RETURN ';' [YYVALID;]
     {
-      $$ = new FSM::JumpStatement(FSM::JumpStatement::Type::RETURN);
+      $$ = new FSM::JumpStatement(@$,FSM::JumpStatement::Type::RETURN);
     }
   | KEYWORD_RETURN expression ';' [YYVALID;]
     {
-      $$ = new FSM::JumpStatement(FSM::JumpStatement::Type::RETURN, $2);
+      $$ = new FSM::JumpStatement(@$,FSM::JumpStatement::Type::RETURN, $2);
     }
   ;
 
 newStateStatement
   : TOKEN_POINTER newStateStatementPrefixOperator TOKEN_IDENTIFIER '(' newStateStatementOptions ')' ';' [YYVALID;]
     {
-      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(std::string($3),$2,$5);
+      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,std::string($3),$2,$5);
       ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
   | TOKEN_POINTER newStateStatementPrefixOperator TOKEN_IDENTIFIER '(' ')' ';' [YYVALID;]
     {
-      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(std::string($3),$2);
+      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,std::string($3),$2);
       ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
   | TOKEN_POINTER newStateStatementPrefixOperator TOKEN_IDENTIFIER ';' [YYVALID;]
     {
-      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(std::string($3),$2);
+      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,std::string($3),$2);
       ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
   | TOKEN_POINTER TOKEN_IDENTIFIER '(' newStateStatementOptions ')' ';' [YYVALID;]
     {
-      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(std::string($2),$4);
+      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,std::string($2),$4);
       ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
   | TOKEN_POINTER TOKEN_IDENTIFIER '(' ')' ';' [YYVALID;]
     {
-      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(std::string($2));
+      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,std::string($2));
       ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
   | TOKEN_POINTER TOKEN_IDENTIFIER ';' [YYVALID;]
     {
-      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(std::string($2));
+      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,std::string($2));
       ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }

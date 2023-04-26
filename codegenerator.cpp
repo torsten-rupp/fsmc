@@ -39,9 +39,10 @@ class CVisitor : public Visitor
   #define name(string) "__" << string << suffix << "__"
 
   public:
-    CVisitor(std::ostream &output, const AST &ast, uint indentCount, const std::string &logFunction)
+    CVisitor(std::ostream &output, const AST &ast, const std::string &filePath, uint indentCount, const std::string &logFunction)
       : Visitor()
       , ast(ast)
+      , filePath(filePath)
       , indentCount(indentCount)
       , logFunction(logFunction)
       , output(output)
@@ -99,6 +100,8 @@ class CVisitor : public Visitor
       switch (phase)
       {
         case Phases::PRE:
+          output << "#line " << state.first.line << " \"" << filePath << "\"" << std::endl;
+
           indent();
           switch (state.type)
           {
@@ -577,6 +580,7 @@ break;
 
     void accept(const CompoundStatement &compoundStatement) override
     {
+      output << "#line " << compoundStatement.first.line << " \"" << filePath << "\"" << std::endl;
       output << "{" << std::endl;
       indent([&]()
       {
@@ -590,7 +594,8 @@ break;
 
     void accept(const IfStatement &ifStatement) override
     {
-      output << "if ("; ifStatement.condition->traverse(*this); output << ")" << std::endl;
+      output << "#line " << ifStatement.first.line << " \"" << filePath << "\"" << std::endl;
+      output << indentSpaces() << "if ("; ifStatement.condition->traverse(*this); output << ")" << std::endl;
       output << indentSpaces(); ifStatement.ifStatement->traverse(*this);
       if (ifStatement.elseStatement != nullptr)
       {
@@ -601,6 +606,7 @@ break;
 
     void accept(const SwitchStatement &switchStatement) override
     {
+      output << "#line " << switchStatement.first.line << " \"" << filePath << "\"" << std::endl;
       output << "switch ("; switchStatement.expression->traverse(*this); output << ")" << std::endl;
       indent();
       output << indentSpaces(); switchStatement.statement->traverse(*this);
@@ -608,6 +614,7 @@ break;
 
     void accept(const LabeledStatement &labeledStatement) override
     {
+      output << "#line " << labeledStatement.first.line << " \"" << filePath << "\"" << std::endl;
       switch (labeledStatement.type)
       {
         case LabeledStatement::Type::CASE:
@@ -627,6 +634,7 @@ break;
 
     void accept(const ForStatement &forStatement) override
     {
+      output << "#line " << forStatement.first.line << " \"" << filePath << "\"" << std::endl;
       output << "for (";
       forStatement.init->traverse(*this);
       output << " ";
@@ -642,12 +650,14 @@ break;
 
     void accept(const WhileStatement &whileStatement) override
     {
+      output << "#line " << whileStatement.first.line << " \"" << filePath << "\"" << std::endl;
       output << "while ("; whileStatement.condition->traverse(*this); output << ")" << std::endl;
       output << indentSpaces(); whileStatement.statement->traverse(*this);
     }
 
     void accept(const DoStatement &doStatement) override
     {
+      output << "#line " << doStatement.first.line << " \"" << filePath << "\"" << std::endl;
       output << "do" << std::endl;
       output << indentSpaces(); doStatement.statement->traverse(*this); output << std::endl;
       output << indentSpaces() << "while (";
@@ -658,11 +668,13 @@ break;
 
     void accept(const ExpressionStatement &expressionStatement) override
     {
+      output << "#line " << expressionStatement.first.line << " \"" << filePath << "\"" << std::endl;
       expressionStatement.expression->traverse(*this); output << ';';
     }
 
     void accept(const JumpStatement &jumpStatement) override
     {
+      output << "#line " << jumpStatement.first.line << " \"" << filePath << "\"" << std::endl;
       switch (jumpStatement.type)
       {
         case JumpStatement::Type::CONTINUE:
@@ -685,7 +697,8 @@ break;
 
     void accept(const NewStateStatement &newStateStatement) override
     {
-      output << "do" << std::endl;
+      output << "#line " << newStateStatement.first.line << " \"" << filePath << "\"" << std::endl;
+      output << indentSpaces() << "do" << std::endl;
       output << indentSpaces() << "{" << std::endl;
       indent();
       switch (newStateStatement.prefixOperator)
@@ -762,12 +775,14 @@ break;
       }
       unindent();
       output << indentSpaces() << "}" << std::endl;
-      output << indentSpaces() << "while (0);";
+      output << indentSpaces() << "while (0);" << std::endl;
+      output << indentSpaces() << "#line " << newStateStatement.first.line << " \"" << filePath << "\"" << std::endl;
     }
 
   private:
     std::ostream      &output;
     const AST         &ast;
+    const std::string &filePath;
     uint              startIndentCount;
     uint              indentCount;
     const std::string &logFunction;
@@ -791,7 +806,7 @@ break;
 
 void CodeGenerator::generate(const AST &ast)
 {
-  CVisitor visitor(output, ast, indentCount, logFunction);
+  CVisitor visitor(output, ast, filePath, indentCount, logFunction);
 
   visitor.indent(startIndentCount);
   visitor.indent([&]()

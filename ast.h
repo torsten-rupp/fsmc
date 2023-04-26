@@ -16,6 +16,7 @@
 #include <functional>
 #include <cassert>
 
+#include "location.h"
 #include "visitor.h"
 
 /****************** Conditional compilation switches *******************/
@@ -1563,7 +1564,7 @@ class DeclarationStatementList : public std::vector<DeclarationStatement*>
     }
 };
 
-class LabeledStatement : public Statement
+class LabeledStatement : public Location, public Statement
 {
   public:
     enum class Type
@@ -1576,14 +1577,14 @@ class LabeledStatement : public Statement
     const Expression *constantExpression;
     const Statement  *statement;
 
-    LabeledStatement(const Expression *constantExpression, const Statement *statement)
+    LabeledStatement(const Location &location, const Expression *constantExpression, const Statement *statement)
       : type(Type::CASE)
       , constantExpression(constantExpression)
       , statement(statement)
     {
     }
 
-    LabeledStatement(const Statement *statement)
+    LabeledStatement(const Location &location, const Statement *statement)
       : type(Type::DEFAULT)
       , constantExpression(nullptr)
       , statement(statement)
@@ -1612,17 +1613,17 @@ class LabeledStatement : public Statement
     }
 };
 
-class CompoundStatement : public Statement
+class CompoundStatement : public Location, public Statement
 {
   public:
     const DeclarationStatementList *declarationStatementList;
 
-    CompoundStatement(const DeclarationStatementList *declarationStatementList)
+    CompoundStatement(const Location &location, const DeclarationStatementList *declarationStatementList)
       : declarationStatementList(declarationStatementList)
     {
     }
 
-    CompoundStatement()
+    CompoundStatement(const Location &location)
       : declarationStatementList(nullptr)
     {
     }
@@ -1650,22 +1651,24 @@ class CompoundStatement : public Statement
     }
 };
 
-class IfStatement : public Statement
+class IfStatement : public Location, public Statement
 {
   public:
     const Expression *condition;
     const Statement  *ifStatement;
     const Statement  *elseStatement;
 
-    IfStatement(const Expression *condition, const Statement *ifStatement, const Statement *elseStatement)
-      : condition(condition)
+    IfStatement(const Location &location, const Expression *condition, const Statement *ifStatement, const Statement *elseStatement)
+      : Location(location)
+      , condition(condition)
       , ifStatement(ifStatement)
       , elseStatement(elseStatement)
     {
     }
 
-    IfStatement(const Expression *condition, const Statement *ifStatement)
-      : condition(condition)
+    IfStatement(const Location &location, const Expression *condition, const Statement *ifStatement)
+      : Location(location)
+      , condition(condition)
       , ifStatement(ifStatement)
       , elseStatement(nullptr)
     {
@@ -1695,14 +1698,15 @@ class IfStatement : public Statement
     }
 };
 
-class SwitchStatement : public Statement
+class SwitchStatement : public Location, public Statement
 {
   public:
     const Expression *expression;
     const Statement  *statement;
 
-    SwitchStatement(const Expression *expression, const Statement *statement)
-      : expression(expression)
+    SwitchStatement(const Location &location, const Expression *expression, const Statement *statement)
+      : Location(location)
+      , expression(expression)
       , statement(statement)
     {
     }
@@ -1729,7 +1733,7 @@ class SwitchStatement : public Statement
     }
 };
 
-class ForStatement : public Statement
+class ForStatement : public Location, public Statement
 {
   public:
     const DeclarationStatement *init;
@@ -1737,16 +1741,18 @@ class ForStatement : public Statement
     const Expression           *increment;
     const Statement            *statement;
 
-    ForStatement(const DeclarationStatement *init, const Statement *condition, const Expression *increment, const Statement *statement)
-      : init(init)
+    ForStatement(const Location &location, const DeclarationStatement *init, const Statement *condition, const Expression *increment, const Statement *statement)
+      : Location(location)
+      , init(init)
       , condition(condition)
       , increment(increment)
       , statement(statement)
     {
     }
 
-    ForStatement(const DeclarationStatement *init, const Statement *condition, const Statement *statement)
-      : init(init)
+    ForStatement(const Location &location, const DeclarationStatement *init, const Statement *condition, const Statement *statement)
+      : Location(location)
+      , init(init)
       , condition(condition)
       , increment(nullptr)
       , statement(statement)
@@ -1779,14 +1785,15 @@ class ForStatement : public Statement
     }
 };
 
-class WhileStatement : public Statement
+class WhileStatement : public Location, public Statement
 {
   public:
     const Expression *condition;
     const Statement  *statement;
 
-    WhileStatement(const Expression *condition, const Statement *statement)
-      : condition(condition)
+    WhileStatement(const Location &location, const Expression *condition, const Statement *statement)
+      : Location(location)
+      , condition(condition)
       , statement(statement)
     {
     }
@@ -1813,14 +1820,15 @@ class WhileStatement : public Statement
     }
 };
 
-class DoStatement : public Statement
+class DoStatement : public Location, public Statement
 {
   public:
     const Statement  *statement;
     const Expression *condition;
 
-    DoStatement(const Statement *statement, const Expression *condition)
-      : statement(statement)
+    DoStatement(const Location &location, const Statement *statement, const Expression *condition)
+      : Location(location)
+      , statement(statement)
       , condition(condition)
     {
     }
@@ -1847,14 +1855,15 @@ class DoStatement : public Statement
     }
 };
 
-class AssignmentStatement : public Statement
+class AssignmentStatement : public Location, public Statement
 {
   public:
     const Expression *left;
     const Expression *right;
 
-    AssignmentStatement(const Expression *left, const Expression *right)
-      : left(left)
+    AssignmentStatement(const Location &location, const Expression *left, const Expression *right)
+      : Location(location)
+      , left(left)
       , right(right)
     {
     }
@@ -1881,20 +1890,24 @@ class AssignmentStatement : public Statement
     }
 };
 
-class ExpressionStatement : public Statement
+class ExpressionStatement : public Location, public Statement
 {
   public:
     Expression *expression;
 
-    ExpressionStatement(Expression *expression)
-      : expression(expression)
+    ExpressionStatement(const Location &location, Expression *expression)
+      : Location(location)
+      , expression(expression)
     {
     }
 
-    ExpressionStatement()
-      : expression(nullptr)
+#if 0
+    ExpressionStatement(const Location &location)
+      : Location(location)
+      , expression(nullptr)
     {
     }
+#endif
 
     ~ExpressionStatement() override
     {
@@ -1916,7 +1929,7 @@ class ExpressionStatement : public Statement
     }
 };
 
-class JumpStatement : public Statement
+class JumpStatement : public Location, public Statement
 {
   public:
     enum class Type
@@ -1929,14 +1942,16 @@ class JumpStatement : public Statement
     Type       type;
     Expression *expression;
 
-    JumpStatement(Type type, Expression *expression)
-      : type(type)
+    JumpStatement(const Location &location, Type type, Expression *expression)
+      : Location(location)
+      , type(type)
       , expression(expression)
     {
     }
 
-    JumpStatement(Type type)
-      : type(type)
+    JumpStatement(const Location &location, Type type)
+      : Location(location)
+      , type(type)
       , expression(nullptr)
     {
     }
@@ -1964,7 +1979,7 @@ class JumpStatement : public Statement
     }
 };
 
-class NewStateStatement : public Statement
+class NewStateStatement : public Location, public Statement
 {
   public:
     enum class Type
@@ -2023,32 +2038,36 @@ class NewStateStatement : public Statement
     PrefixOperator prefixOperator;
     const Options  *options;
 
-    NewStateStatement(const Identifier &name, PrefixOperator prefixOperator, const Options *options)
-      : type(getType(name))
+    NewStateStatement(const Location &location, const Identifier &name, PrefixOperator prefixOperator, const Options *options)
+      : Location(location)
+      , type(getType(name))
       , name(name)
       , prefixOperator(prefixOperator)
       , options(options)
     {
     }
 
-    NewStateStatement(const Identifier &name, PrefixOperator prefixOperator)
-      : type(getType(name))
+    NewStateStatement(const Location &location, const Identifier &name, PrefixOperator prefixOperator)
+      : Location(location)
+      , type(getType(name))
       , name(name)
       , prefixOperator(prefixOperator)
       , options(new Options())
     {
     }
 
-    NewStateStatement(const Identifier &name, const Options *options)
-      : type(getType(name))
+    NewStateStatement(const Location &location, const Identifier &name, const Options *options)
+      : Location(location)
+      , type(getType(name))
       , name(name)
       , prefixOperator(PrefixOperator::NONE)
       , options(options)
     {
     }
 
-    NewStateStatement(const Identifier &name)
-      : type(getType(name))
+    NewStateStatement(const Location &location, const Identifier &name)
+      : Location(location)
+      , type(getType(name))
       , name(name)
       , prefixOperator(PrefixOperator::NONE)
       , options(new Options())
@@ -2083,7 +2102,7 @@ class NewStateStatement : public Statement
     }
 };
 
-class State
+class State : public Location
 {
   public:
     enum class Type
@@ -2097,15 +2116,17 @@ class State
     const Identifier        name;
     const CompoundStatement *compoundStatement;
 
-    State(Type type, const Identifier &name, const CompoundStatement *compoundStatement)
-      : type(type)
+    State(const Location &location, Type type, const Identifier &name, const CompoundStatement *compoundStatement)
+      : Location(location)
+      , type(type)
       , name(name)
       , compoundStatement(compoundStatement)
     {
     }
 
-    State(Type type, const CompoundStatement *compoundStatement)
-      : type(type)
+    State(const Location &location, Type type, const CompoundStatement *compoundStatement)
+      : Location(location)
+      , type(type)
       , name()
       , compoundStatement(compoundStatement)
     {
@@ -2272,7 +2293,6 @@ class AST
      */
     void doStateTransitions(std::function<void(const NewStateStatement &newStateStatement)> handler) const;
 
-// TODO: use traverse
     /** print AST
      */
     void print() const;

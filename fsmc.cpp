@@ -253,7 +253,7 @@ int main(int argc, const char *argv[])
         if (!dumpAST)
         {
           // generate code
-          CodeGenerator codeGenerator(*output, fsmIndent, 2, logFunction);
+          CodeGenerator codeGenerator(*output, !inputFilePath.empty() ? inputFilePath : "<stdin>", fsmIndent, 2, logFunction);
           codeGenerator.generate(ast);
           
           // generate .dot file

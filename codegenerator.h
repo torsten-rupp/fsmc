@@ -26,23 +26,25 @@ class CodeGenerator
   public:
    /** indent
    * @param output output stream
+   * @param filePath source file path
    * @param startIndentCount start indention
    * @param indentCount indention
    * @param logFunction log function with macros
    */
-   CodeGenerator(std::ostream &output, uint startIndentCount, uint indentCount, const std::string &logFunction)
+   CodeGenerator(std::ostream &output, const std::string filePath, uint startIndentCount, uint indentCount, const std::string &logFunction)
       : output(output)
+      , filePath(filePath)
       , startIndentCount(startIndentCount)
       , indentCount(indentCount)
       , logFunction(logFunction)
     {
     }
 
-// TODO:const AST
   void generate(const AST &ast);
 
   private:
     std::ostream      &output;
+    const std::string filePath;
     uint              startIndentCount;
     uint              indentCount;
     const std::string &logFunction;

@@ -52,9 +52,9 @@ docker_update:
 docker_run:
 	docker run -i -t --rm --net=host -v $(HOME):$(HOME) -w $(PWD) -u $(shell id -u):$(shell id -g) fsmc /bin/bash
 
-scanner.cpp: scanner.l
+scanner.cpp: scanner.l location.h
 	flex -o scanner.cpp scanner.l
-parser.tab.c parser.tab.h: parser.y
+parser.tab.c parser.tab.h: parser.y location.h
 	byacc -B -b parser -d -t parser.y
 #	byacc -b parser -d -t parser.y
 
