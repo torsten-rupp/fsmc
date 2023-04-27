@@ -2189,7 +2189,37 @@ class AST
                                     std::hash<std::string>
                                    > StateTransitionMap;
 
+    /** construct AST
+     * @param stateStackSize state stack size of 0
+     * @param asserts true to generate asserts
+     */
     AST(uint stateStackSize, bool asserts);
+
+    /** clear AST
+     */
+    void clear();
+
+    /** travers AST
+     * @param visitor visitor
+     */
+    void traverse(Visitor &visitor) const;
+
+    /** get FSM name
+     * @return name
+     */
+    std::string getFSMName() const
+    {
+      return fsmName;
+    }
+
+    /** validate states
+     */
+    void validateStates() const;
+
+    /** check if stack is required: FSM with push/pop state changes
+     * @return true iff stack is required
+     */
+    bool isStackRequired() const;
 
     /** check if FSM with state stack
      * @return true iff FSM state stack
@@ -2214,27 +2244,6 @@ class AST
     {
       return asserts;
     }
-
-    /** clear AST
-     */
-    void clear();
-
-    /** travers AST
-     * @param visitor visitor
-     */
-    void traverse(Visitor &visitor) const;
-
-    /** get FSM name
-     * @return name
-     */
-    std::string getFSMName() const
-    {
-      return fsmName;
-    }
-
-    /** validate states
-     */
-    void validateStates() const;
 
     /** get FSM state
      * @param name state name

@@ -62,6 +62,22 @@ void AST::validateStates() const
   });
 }
 
+bool AST::isStackRequired() const
+{
+  for (const std::pair<const std::string,const NewStateStatement*> &pair : stateTransitions)
+  {
+    const NewStateStatement *newStateStatement = pair.second;
+    if (   (newStateStatement->type == NewStateStatement::Type::POP)
+        || (newStateStatement->prefixOperator == NewStateStatement::PrefixOperator::PUSH)
+       )
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 const State* AST::getState(const std::string &name) const
 {
   StateMap::const_iterator iterator = states.find(name);

@@ -172,9 +172,13 @@ class CVisitor : public Visitor
               output << " = " << name(startState->name);
             }
             output << ";" << std::endl;
-            uint stateStackSize = ast.getStateStackSize();
-            if (stateStackSize > 0)
+            if (ast.isStackRequired())
             {
+              uint stateStackSize = ast.getStateStackSize();
+              if (stateStackSize == 0)
+              {
+                throw std::runtime_error("no state stack defined");
+              }
               output << indentSpaces() << "static " << name("States") << " " << name("stateStack") << "[" << stateStackSize << "];" << std::endl;
               output << indentSpaces() << "static uint " << name("stateStackIndex") << " = 0;" << std::endl;
             }

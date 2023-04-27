@@ -50,7 +50,7 @@ int main(int argc, const char *argv[])
     std::string inputFilePath;
     std::string outputFilePath = "";
     std::string dotDirectoryPath = "";
-    uint        stateStackSize = 0;
+    uint        stateStackSize = 16;
     std::string logFunction = "";
     bool        asserts = false;
     bool        debug = false;
@@ -66,7 +66,7 @@ int main(int argc, const char *argv[])
         fprintf(stdout, "Options\n");
         fprintf(stdout, "-o|--output <file path>               output file\n");
         fprintf(stdout, "-d|--dot-directory <directory path>   .dot file directory\n");
-        fprintf(stdout, "-n|--state-stack-size <n>             state stack size\n");
+        fprintf(stdout, "-n|--state-stack-size <n>             state stack size (default: %d)\n", stateStackSize);
         fprintf(stdout, "-l|--log-function <log function>      log function to call on state change\n");
         fprintf(stdout, "-a|--asserts                          generate asserts\n");
         fprintf(stdout, "--debug                               debug output\n");
