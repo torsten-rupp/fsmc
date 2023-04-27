@@ -29,6 +29,7 @@ int main(int argc, const char *argv[])
 
       a = 0;
       a = b.c;
+      a = b->c;
       a = b();
       a = b[i];
       a = b.c.d;
