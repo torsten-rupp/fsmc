@@ -8,13 +8,14 @@
 %.c: %.y
 %.c: %.l
 
-CFLAGS   = -D_GNU_SOURCE -I.
-CXXFLAGS = -D_GNU_SOURCE -I.
+CFLAGS   = -std=c99 -g -D_GNU_SOURCE -I.
+CXXFLAGS = -std=c++11 -g -D_GNU_SOURCE -I. -g
+LDFLAGS  = -g
 
 %.o:%.c
-	gcc $(CFLAGS) -std=c99 -c -g $*.c -o $@
+	gcc $(CFLAGS) -c $*.c -o $@
 %.o:%.cpp
-	g++ $(CXXFLAGS) -std=c++11 -c -g $*.cpp -o $@
+	g++ $(CXXFLAGS) -c $*.cpp -o $@
 
 # ----------------------------------------------------------------------
 
@@ -24,6 +25,9 @@ default: all
 .PHONY: help
 help:
 	@echo "Help:"
+	@echo ""
+	@echo "docker_update   build/update docker build container"
+	@echo "docker_run      run docker build container"
 	@echo ""
 	@echo "make fsmc"
 	@echo "make clean"
@@ -46,17 +50,20 @@ clean:
 	$(MAKE) -C tests clean
 	$(MAKE) -C examples clean
 
+# ----------------------------------------------------------------------
+
 .PHONY: docker_update docker_run
 docker_update:
 	docker build -f docker/build.dockerfile -t fsmc docker
 docker_run:
 	docker run -i -t --rm --net=host -v $(HOME):$(HOME) -w $(PWD) -u $(shell id -u):$(shell id -g) fsmc /bin/bash
 
+# ----------------------------------------------------------------------
+
 scanner.cpp: scanner.l location.h
 	flex -o scanner.cpp scanner.l
 parser.tab.c parser.tab.h: parser.y location.h
 	byacc -B -b parser -d -t parser.y
-#	byacc -b parser -d -t parser.y
 
 fsmc.o: fsmc.cpp scanner.h parser.h ast.h parser.tab.h
 	g++ $(CXXFLAGS) -DGIT_HASH=$(shell git rev-parse HEAD) -std=c++11 -c -g $*.cpp -o $@
@@ -67,7 +74,9 @@ visitor.o: visitor.cpp visitor.h
 codegenerator.o: codegenerator.cpp codegenerator.h ast.h visitor.h
 dotgenerator.o: dotgenerator.cpp dotgenerator.h ast.h visitor.h
 fsmc: fsmc.o scanner.o parser.o ast.o visitor.o codegenerator.o dotgenerator.o
-	g++ -g $^ -o fsmc
+	g++ $(LDFLAGS) $^ -o fsmc
+
+# ----------------------------------------------------------------------
 
 .PHONY: tests
 tests:
@@ -75,6 +84,8 @@ tests:
 
 test%:
 	$(MAKE) -C tests test$*
+
+# ----------------------------------------------------------------------
 
 .PHONY: examples
 examples:
