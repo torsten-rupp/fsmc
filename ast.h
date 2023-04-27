@@ -751,7 +751,7 @@ class PostfixExpression : public Expression
       , structure(structure)
       , identifier(new Identifier(identifier))
     {
-      assert(type == Type::MEMBER);
+      assert((type == Type::MEMBER) || (type == Type::POINTER));
     }
 
     ~PostfixExpression() override
