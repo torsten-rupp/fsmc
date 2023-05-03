@@ -317,8 +317,20 @@ stateDefinition:
     }
     compoundStatement
     {
-      ast->addState(new FSM::State(@$,FSM::State::Type::CUSTOM,currentStateName,$3));
+      if (currentStateName == "initially")
+      {
+        ast->setInitially(@$,$3);
+      }
+      if (currentStateName == "finally")
+      {
+        ast->setFinally(@$,$3);
+      }
+      else
+      {
+        ast->addState(new FSM::State(@$,FSM::State::Type::CUSTOM,currentStateName,$3));
+      }
     }
+    // special case: default keyword
   | KEYWORD_DEFAULT
     {
       currentStateName = FSM::Identifier("default");
@@ -682,30 +694,6 @@ conditionalExpression
     }
   ;
 
-expression
-  : expression ',' assignmentExpression
-    {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
-      YYABORT;
-    }
-  | assignmentExpression
-    {
-      $$ = $1;
-    }
-  ;
-
-argumentExpressionList
-  : argumentExpressionList ',' assignmentExpression
-    {
-      $1->add($3);
-      $$ = $1;
-    }
-  | assignmentExpression
-    {
-      $$ = new FSM::ArgumentExpressionList($1);
-    }
-  ;
-
 assignmentExpression
   : unaryExpression assignmentExpressionOperator assignmentExpression
     {
@@ -768,6 +756,30 @@ constantExpression
   : expression
     {
       $$ = $1;
+    }
+  ;
+
+expression
+  : expression ',' assignmentExpression
+    {
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+      YYABORT;
+    }
+  | assignmentExpression
+    {
+      $$ = $1;
+    }
+  ;
+
+argumentExpressionList
+  : argumentExpressionList ',' assignmentExpression
+    {
+      $1->add($3);
+      $$ = $1;
+    }
+  | assignmentExpression
+    {
+      $$ = new FSM::ArgumentExpressionList($1);
     }
   ;
 

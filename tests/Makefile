@@ -38,11 +38,18 @@ clean:
 ../fsmc:
 	$(MAKE) -C .. fsmc
 
+.PHONY: tests
+tests: \
+  test1 \
+  test2 \
+  test3 \
+  test4 \
+
+# --- simple tests
 .PHONY: test0
 test0: ../fsmc
 	echo 'f(1,2,3);'|../fsmc > /dev/null
 
-# --- simple tests
 .PHONY: test%d
 test%d: ../fsmc
 	gdb --args ../fsmc test$(*:%d=).c -d .

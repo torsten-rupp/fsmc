@@ -80,7 +80,6 @@
   // get current token location (line, column)
   Location currentLocation()
   {
-//    return FSM::location(FSM::position(YY_NULLPTR,first.line,first.column));
     Location location;
 
     location.first.line   = yylloc.first.line;
@@ -92,8 +91,7 @@
   }
 %}
 
-/* stateList */
-%s CONDITIONS EVENTS
+/* scanner state list */
 %s LINE_COMMENT BLOCK_COMMENT
 %s STRING
 
@@ -120,7 +118,6 @@
 
   /* FSM begin/end */
   "#fsm" {
-//fprintf(stderr,"%s, %d: #fsm %s %d\n",__FILE__,__LINE__,yytext,yylloc.first.line);
     return KEYWORD_FSM;
   }
   "#end" {
@@ -141,12 +138,6 @@
       yylval.string = strdup(yytext);
       return TOKEN_IDENTIFIER;
     }
-  }
-
-  /* char */
-  '.' {
-    yylval.literal = yytext[0];
-    return TOKEN_CHAR;
   }
 
   /* string */
@@ -265,31 +256,46 @@
 
 <LINE_COMMENT>
 {
-  \n        { yy_pop_state();
-              yylloc.first.line++;
-              yylloc.first.column = 0;
-            }
-  [^\n]+    { /* ignored */ }
+  /* LF */
+  \n {
+    yylloc.first.line++;
+    yylloc.first.column = 0;
+    yy_pop_state();
+  }
+
+  /* ignored */
+  [^\n]+ {
+  }
 }
 
 <BLOCK_COMMENT>
 {
-  "*/"      { yy_pop_state(); }
-  \n        { /* ignored */
-              yylloc.first.line++;
-              yylloc.first.column = 0;
-            }
-  .         { /* ignored */ }
+  "*/" {
+    yy_pop_state();
+  }
+
+  /* LF */
+  \n {
+    yylloc.first.line++;
+    yylloc.first.column = 0;
+  }
+
+  /* ignored */
+  . {
+  }
 }
 
 <STRING>
 {
-  "\""      { yy_pop_state();
-              yytext[strlen(yytext)-1] = '\0';
-              yylval.string = strdup(yytext);
-              return TOKEN_STRING;
-            }
-  [^"]      { yymore(); }
+  "\"" { 
+    yy_pop_state();
+    yytext[strlen(yytext)-1] = '\0';
+    yylval.string = strdup(yytext);
+    return TOKEN_STRING;
+  }
+  [^"] {
+    yymore(); 
+  }
 }
 
 %%

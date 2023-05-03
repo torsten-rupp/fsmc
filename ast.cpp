@@ -32,7 +32,6 @@ using namespace FSM;
 AST::AST(uint stateStackSize, bool asserts)
   : stateStackSize(stateStackSize)
   , asserts(asserts)
-  , states()
 {
 }
 
@@ -43,7 +42,9 @@ void AST::clear()
 
 void AST::traverse(Visitor &visitor) const
 {
+  initially.traverse(visitor);
   getStateList().traverse(visitor);
+  finally.traverse(visitor);
 }
 
 void AST::validateStates() const
@@ -227,6 +228,22 @@ class PrintVisitor : public Visitor
       return indentString;
     }
 
+    void accept(const Initially &initially) override
+    {
+      output << indentSpaces() << "Initially" << std::endl;
+      indent();
+      initially.compoundStatement->traverse(*this);
+      unindent();
+    }
+
+    void accept(const Finally &finally) override
+    {
+      output << indentSpaces() << "Finally" << std::endl;
+      indent();
+      finally.compoundStatement->traverse(*this);
+      unindent();
+    }
+
     void accept(Phases phase, const State &state) override
     {
       currentState = &state;
@@ -255,64 +272,14 @@ class PrintVisitor : public Visitor
       }
     }
 
-#if 0
-    void accept(Phases phase, const StateList &stateList) override
+    void accept(const StateList &stateList) override
     {
-      switch (phase)
+      output << indentSpaces() << "States" << std::endl;
+      for (const State *state : stateList)
       {
-        case Phases::PRE:
-          {
-            // state type/variable suffix
-
-            // states
-            output << indentSpaces() << "typedef enum" << std::endl;
-            output << indentSpaces() <<"{" << std::endl;
-            indent([&]()
-            {
-              ast.doStates([&](const State *state)
-              {
-                switch (state->type)
-                {
-                  case State::Type::START:
-                    output << indentSpaces() << name(state->name) << "," << std::endl;
-                    output << indentSpaces() << name("STATE_START") << "," << std::endl;
-                    break;
-                  case State::Type::DEFAULT:
-                    output << indentSpaces() << name("STATE_DEFAULT") << "," << std::endl;
-                    break;
-                  case State::Type::CUSTOM:
-                    output << indentSpaces() << name(state->name) << "," << std::endl;
-                    break;
-                }
-              });
-            });
-            output << indentSpaces() <<"} " << name("States") << std::endl;
-
-            output << indentSpaces() << "static " << name("States") << " " << name("state");
-            const State *startState = ast.getStartState();
-            if (startState != nullptr)
-            {
-              output << " = " << name(startState->name);
-            }
-            output << std::endl;
-            uint stateStackSize = ast.getStateStackSize();
-            if (stateStackSize > 0)
-            {
-              output << indentSpaces() << "static " << name("States") << " " << name("stateStack") << "[" << stateStackSize << "];" << std::endl;
-              output << indentSpaces() << "static uint " << name("stateStackIndex") << " = 0;" << std::endl;
-            }
-            output << std::endl;
-
-            output << indentSpaces() << "switch (" << name("state") << ")" << std::endl;
-            output << indentSpaces() << "{" << std::endl;
-          }
-          break;
-        case Phases::POST:
-          output << indentSpaces() <<"}" << std::endl;
-          break;
+        state->traverse(*this);
       }
     }
-#endif
 
     void accept(const StorageClassSpecifier &storageClassSpecifier) override
     {
@@ -787,6 +754,22 @@ void AST::print() const
 
   std::cout << "AST:" << std::endl;
   printVisitor.run(*this);
+}
+
+void AST::setInitially(const Location &location, const CompoundStatement *compoundStatement)
+{
+  assert(compoundStatement != NULL);
+
+  initially.location          = location;
+  initially.compoundStatement = compoundStatement;
+}
+
+void AST::setFinally(const Location &location, const CompoundStatement *compoundStatement)
+{
+  assert(compoundStatement != NULL);
+
+  finally.location          = location;
+  finally.compoundStatement = compoundStatement;
 }
 
 void AST::addState(FSM::State *state)

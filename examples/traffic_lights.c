@@ -32,6 +32,15 @@ int main(int argc, const char *argv[])
   for (uint i = 0; i < 10; i++)
   {
     #fsm traffic_lights
+      initially
+      {
+        printf("FSM step\n");
+      }
+
+      finally
+      {
+      }
+
       *GREEN
       {
         if (isFailure() || isPower(OFF)) -> push,FAILURE;

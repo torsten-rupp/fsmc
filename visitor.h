@@ -21,6 +21,8 @@
 namespace FSM
 {
 
+class Initially;
+class Finally;
 class State;
 class StateList;
 
@@ -94,7 +96,6 @@ class Visitor
     {
     }
 
-// TODO: AST const &ast
     void run(const AST &ast);
 
     #define ACCEPT(Type) \
@@ -106,6 +107,8 @@ class Visitor
       { \
       }
 
+    ACCEPT(Initially);
+    ACCEPT(Finally);
     ACCEPT(State);
     ACCEPT(StateList);
 

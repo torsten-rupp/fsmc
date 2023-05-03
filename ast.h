@@ -2102,6 +2102,46 @@ class NewStateStatement : public Location, public Statement
     }
 };
 
+class Initially : VisitorInterface
+{
+  public:
+    Location                location;
+    const CompoundStatement *compoundStatement;
+
+    void traverse(Visitor &visitor) const override
+    {
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
+      {
+        visitor.accept(Visitor::Phases::PRE, *this);
+        visitor.accept(Visitor::Phases::POST, *this);
+      }
+    }
+};
+
+class Finally : VisitorInterface
+{
+  public:
+    Location                location;
+    const CompoundStatement *compoundStatement;
+
+    void traverse(Visitor &visitor) const override
+    {
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
+      {
+        visitor.accept(Visitor::Phases::PRE, *this);
+        visitor.accept(Visitor::Phases::POST, *this);
+      }
+    }
+};
+
 class State : public Location
 {
   public:
@@ -2222,7 +2262,7 @@ class AST
     bool isStackRequired() const;
 
     /** check if FSM with state stack
-     * @return true iff FSM state stack
+     * @return true iff has FSM state stack
      */
     bool hasStateStack() const
     {
@@ -2260,6 +2300,22 @@ class AST
      * @return default state or nullptr
      */
     const State* getDefaultState() const;
+    
+    /** get FSM initially statement
+     * @return initially or nullptr
+     */
+    const Initially *getInitiallyStatement() const
+    {
+      return (initially.compoundStatement != nullptr) ? &initially : nullptr;
+    }
+
+    /** get FSM finally statement
+     * @return finally or nullptr
+     */
+    const Finally *getFinallyStatement() const
+    {
+      return (finally.compoundStatement != nullptr) ? &finally : nullptr;
+    }
 
     /** get FSM state list
      * @return state list
@@ -2321,9 +2377,26 @@ class AST
     {
       this->startState = startState;
     }
+    
+    /** set initially code block
+     * @param state state
+     */
+    void setInitially(const Location &location, const CompoundStatement *compoundStatement);
 
+    /** set finally code block
+     * @param state state
+     */
+    void setFinally(const Location &location, const CompoundStatement *compoundStatement);
+
+    /** add state
+     * @param state state
+     */
     void addState(State *state);
 
+    /** add state transition
+     * @param name state name
+     * @param newStateStatement new state statement
+     */
     void addStateTransition(const Identifier &name, const NewStateStatement *newStateStatement)
     {
       std::pair<StateTransitionMap::const_iterator, StateTransitionMap::const_iterator> iterators = stateTransitions.equal_range(name);
@@ -2364,7 +2437,12 @@ class AST
     uint               stateStackSize;
     bool               asserts;
     std::string        fsmName;
+
     Identifier         startState;
+
+    Initially          initially;
+    Finally            finally;
+
     StateMap           states;
     StateTransitionMap stateTransitions;
 };

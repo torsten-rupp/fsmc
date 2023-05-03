@@ -33,6 +33,14 @@ Log function macros: @fromStateName@, @toStateName@
 FSM definitions
 
 ```
+initially
+{
+  <statement list>
+}
+finally
+{
+  <statement list>
+}
 [*]<state name>
 {
   <statement list>
@@ -44,8 +52,9 @@ default
 ...
 ```
 
-The * mark the initial state. &lt;statement list&gt; are C statements to
-execute in the given state.
+The * mark the initial state. &lt;initially&gt; resp. &lt;finally&gt; is
+executed before and after each FSM iteratation step. &lt;statement list&gt;
+are C statements to execute in the given state.
 
 To change to a new state use the syntax
 
@@ -102,6 +111,15 @@ int main(int argc, const char *argv[])
   for (uint i = 0; i < 10; i++)
   {
     #fsm traffic_lights
+      initially
+      {
+        printf("FSM step\n");
+      }
+
+      finally
+      {
+      }
+
       *GREEN
       {
         if (isFailure() || isPower(OFF)) -> push,FAILURE;
