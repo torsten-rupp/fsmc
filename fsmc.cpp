@@ -75,25 +75,25 @@ int main(int argc, const char *argv[])
       }
       else if ((argument == "-o") || (argument == "--output"))
       {
-        if (i >= argc) throw std::runtime_error("missing parameter for option --output");
+        if ((i+1) >= argc) throw std::runtime_error("missing parameter for option --output");
         outputFilePath = argv[i+1];
         i += 2;
       }
       else if ((argument == "-d") || (argument == "--dot"))
       {
-        if (i >= argc) throw std::runtime_error("missing parameter for option --dot-directory");
+        if ((i+1) >= argc) throw std::runtime_error("missing parameter for option --dot-directory");
         dotDirectoryPath = argv[i+1];
         i += 2;
       }
       else if ((argument == "-n") || (argument == "--state-stack-size"))
       {
-        if (i >= argc) throw std::runtime_error("missing parameter for option --state-stack-size");
+        if ((i+1) >= argc) throw std::runtime_error("missing parameter for option --state-stack-size");
         stateStackSize = static_cast<uint>(std::atoi(argv[i+1]));
         i += 2;
       }
       else if ((argument == "-l") || (argument == "--log-function"))
       {
-        if (i >= argc) throw std::runtime_error("missing parameter for option --log-function");
+        if ((i+1) >= argc) throw std::runtime_error("missing parameter for option --log-function");
         logFunction = argv[i+1];
         i += 2;
       }
