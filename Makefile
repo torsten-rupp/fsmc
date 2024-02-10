@@ -8,8 +8,8 @@
 %.c: %.y
 %.c: %.l
 
-CFLAGS   = -std=c99 -g -D_GNU_SOURCE -I.
-CXXFLAGS = -std=c++11 -g -D_GNU_SOURCE -I. -g
+CFLAGS   = -std=c99 -g -D_GNU_SOURCE -I. -O0
+CXXFLAGS = -std=c++11 -g -D_GNU_SOURCE -I. -g -O0
 LDFLAGS  = -g
 
 %.o:%.c

@@ -14,6 +14,9 @@ int main(int argc, const char *argv[])
       bool a;
       uint8_t* a;
 
+      struct a b;
+      union a b;
+
       int a = 0;
       const int a = 0;
       const uint16_t a = 0;

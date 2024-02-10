@@ -191,7 +191,7 @@ class CVisitor : public Visitor
               output << indentSpaces() << "static uint " << name("stateStackIndex") << " = 0;" << std::endl;
             }
             output << std::endl;
-            
+
             const Initially *initially = ast.getInitiallyStatement();
             if (initially != nullptr)
             {
@@ -234,8 +234,9 @@ class CVisitor : public Visitor
       {
         case TypeQualifier::Type::CONST:    output << "const"; break;
         case TypeQualifier::Type::VOLATILE: output << "volatile"; break;
-        case TypeQualifier::Type::STRUCT:
-throw std::runtime_error("NYI");
+        case TypeQualifier::Type::STRUCT:   output << "struct"; break;
+default:
+throw std::runtime_error("NYI void accept(const TypeQualifier &typeQualifier)");
 break;
       }
     }
@@ -253,9 +254,14 @@ break;
         case TypeSpecifier::Type::DOUBLE:     output << "int"; break;
         case TypeSpecifier::Type::SIGNED:     output << "int"; break;
         case TypeSpecifier::Type::UNSIGNED:   output << "int"; break;
+
+        case TypeSpecifier::Type::STRUCT:     output << "struct" << " " << typeSpecifier.identifier; break;
+        case TypeSpecifier::Type::UNION:      output << "union" << " " << typeSpecifier.identifier; break;
+
         case TypeSpecifier::Type::IDENTIFIER: output << typeSpecifier.identifier; break;
 default:
-throw std::runtime_error("NYI");
+fprintf(stderr,"%s:%d: %d\n",__FILE__,__LINE__,(int)typeSpecifier.type);
+throw std::runtime_error("NYI void accept(const TypeSpecifier &typeSpecifier");
 break;
       }
     }

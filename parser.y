@@ -71,6 +71,8 @@ fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
   FSM::TypeQualifier                     *typeQualifier;
   FSM::TypeQualifierList                 *typeQualifierList;
   FSM::TypeSpecifier                     *typeSpecifier;
+  FSM::TypeSpecifier                     *structUnionSpecifier;
+  FSM::TypeSpecifier::Type               structUnion;
   FSM::SpecifierQualifierList            *specifierQualifierList;
   FSM::TypeName                          *typeName;
   FSM::AbstractDeclarator                *abstractDeclarator;
@@ -122,47 +124,47 @@ fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
   double                                 number;
 }
 
-%token <kewword> KEYWORD_FSM                      ;
-%token <kewword> KEYWORD_END                      ;
+%token <kewword>     KEYWORD_FSM                      ;
+%token <kewword>     KEYWORD_END                      ;
 
-%token <keyword> KEYWORD_IF                       ;
-%token <keyword> KEYWORD_ELSE                     ;
-%token <keyword> KEYWORD_FOR                      ;
-%token <keyword> KEYWORD_WHILE                    ;
-%token <keyword> KEYWORD_DO                       ;
-%token <keyword> KEYWORD_SWITCH                   ;
-%token <keyword> KEYWORD_CASE                     ;
-%token <keyword> KEYWORD_DEFAULT                  ;
-%token <keyword> KEYWORD_BREAK                    ;
-%token <keyword> KEYWORD_CONTINUE                 ;
-%token <keyword> KEYWORD_RETURN                   ;
-%token <keyword> KEYWORD_SIZEOF                   ;
+%token <keyword>     KEYWORD_IF                       ;
+%token <keyword>     KEYWORD_ELSE                     ;
+%token <keyword>     KEYWORD_FOR                      ;
+%token <keyword>     KEYWORD_WHILE                    ;
+%token <keyword>     KEYWORD_DO                       ;
+%token <keyword>     KEYWORD_SWITCH                   ;
+%token <keyword>     KEYWORD_CASE                     ;
+%token <keyword>     KEYWORD_DEFAULT                  ;
+%token <keyword>     KEYWORD_BREAK                    ;
+%token <keyword>     KEYWORD_CONTINUE                 ;
+%token <keyword>     KEYWORD_RETURN                   ;
+%token <keyword>     KEYWORD_SIZEOF                   ;
 
-%token <keyword> KEYWORD_AUTO                     ;
-%token <keyword> KEYWORD_REGISTE R                 ;
-%token <keyword> KEYWORD_STATIC                   ;
-%token <keyword> KEYWORD_EXTERN                   ;
-%token <keyword> KEYWORD_TYPEDEF                  ;
+%token <keyword>     KEYWORD_AUTO                     ;
+%token <keyword>     KEYWORD_REGISTER                 ;
+%token <keyword>     KEYWORD_STATIC                   ;
+%token <keyword>     KEYWORD_EXTERN                   ;
+%token <keyword>     KEYWORD_TYPEDEF                  ;
 
-%token <keyword> KEYWORD_VOID
-%token <keyword> KEYWORD_CHAR
-%token <keyword> KEYWORD_SHORT
-%token <keyword> KEYWORD_INT
-%token <keyword> KEYWORD_LONG
-%token <keyword> KEYWORD_FLOAT
-%token <keyword> KEYWORD_DOUBLE
-%token <keyword> KEYWORD_SIGNED
-%token <keyword> KEYWORD_UNSIGNED
+%token <keyword>     KEYWORD_VOID
+%token <keyword>     KEYWORD_CHAR
+%token <keyword>     KEYWORD_SHORT
+%token <keyword>     KEYWORD_INT
+%token <keyword>     KEYWORD_LONG
+%token <keyword>     KEYWORD_FLOAT
+%token <keyword>     KEYWORD_DOUBLE
+%token <keyword>     KEYWORD_SIGNED
+%token <keyword>     KEYWORD_UNSIGNED
 
-%token <keyword> KEYWORD_STRUCT                   ;
-%token <keyword> KEYWORD_UNION                    ;
+%token <keyword>     KEYWORD_STRUCT                   ;
+%token <keyword>     KEYWORD_UNION                    ;
 
-%token <keyword> KEYWORD_CONST                    ;
-%token <keyword> KEYWORD_VOLATILE                 ;
+%token <keyword>     KEYWORD_CONST                    ;
+%token <keyword>     KEYWORD_VOLATILE                 ;
 
-%token <void> END TOKEN_EOF 0
+%token <void>        END TOKEN_EOF 0
 
-%token <state>       STATE              ;
+%token <state>       STATE                        ;
 %token <string>      TOKEN_IDENTIFIER         ;
 %token <char>        TOKEN_CHAR               ;
 %token <string>      TOKEN_STRING             ;
@@ -215,6 +217,8 @@ fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
 %type <typeQualifier>                     typeQualifier;
 %type <typeQualifierList>                 typeQualifierList;
 %type <typeSpecifier>                     typeSpecifier;
+%type <structUnionSpecifier>              structUnionSpecifier;
+%type <structUnion>                       structUnion;
 %type <specifierQualifierList>            specifierQualifierList;
 %type <typeName>                          typeName;
 %type <abstractDeclarator>                abstractDeclarator;
@@ -866,10 +870,9 @@ typeSpecifier
     {
       $$ = new FSM::TypeSpecifier(FSM::TypeSpecifier::Type::UNSIGNED);
     }
-  | struct_or_union_specifier
+  | structUnionSpecifier
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
-      YYABORT;
+      // nothing to do
     }
   | enum_specifier
     {
@@ -883,34 +886,31 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.colu
     }
   ;
 
-struct_or_union_specifier
-  : struct_or_union TOKEN_IDENTIFIER '{' struct_declarationList '}'
+structUnionSpecifier
+  : structUnion TOKEN_IDENTIFIER '{' struct_declarationList '}'
     {
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
-  | struct_or_union '{' struct_declarationList '}'
+  | structUnion '{' struct_declarationList '}'
     {
 fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
-  | struct_or_union TOKEN_IDENTIFIER
+  | structUnion TOKEN_IDENTIFIER
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
-      YYABORT;
+      $$ = new FSM::TypeSpecifier($1,std::string($2));
     }
   ;
 
-struct_or_union
+structUnion
   : KEYWORD_STRUCT
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
-      YYABORT;
+      $$ = FSM::TypeSpecifier::Type::STRUCT;
     }
   | KEYWORD_UNION
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
-      YYABORT;
+      $$ = FSM::TypeSpecifier::Type::UNION;
     }
   ;
 

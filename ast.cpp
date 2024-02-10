@@ -319,6 +319,15 @@ class PrintVisitor : public Visitor
       }
     }
 
+    void accept(const StructUnionSpecifier &structUnionSpecifier) override
+    {
+      switch (structUnionSpecifier.type)
+      {
+        case StructUnionSpecifier::Type::STRUCT: output << " 'struct' "; break;
+        case StructUnionSpecifier::Type::UNION:  output << " 'union' "; break;
+      }
+    }
+
     void accept(const StorageClassDeclarationSpecifiers &storageClassDeclarationSpecifiers) override
     {
       bool first = true;

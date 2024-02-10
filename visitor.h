@@ -29,6 +29,7 @@ class StateList;
 class StorageClassSpecifier;
 class TypeQualifier;
 class TypeSpecifier;
+class StructUnionSpecifier;
 class DeclarationSpecifier;
 class SpecifierQualifierList;
 class AbstractDeclarator;
@@ -115,6 +116,7 @@ class Visitor
     ACCEPT(StorageClassSpecifier);
     ACCEPT(TypeQualifier);
     ACCEPT(TypeSpecifier);
+    ACCEPT(StructUnionSpecifier);
     ACCEPT(DeclarationSpecifier);
     ACCEPT(SpecifierQualifierList);
     ACCEPT(AbstractDeclarator);

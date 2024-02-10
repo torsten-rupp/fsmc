@@ -251,11 +251,21 @@ class TypeSpecifier : public DeclarationSpecifier
       DOUBLE,
       SIGNED,
       UNSIGNED,
+
+      STRUCT,
+      UNION,
+
       IDENTIFIER
     };
 
     Type             type;
     const Identifier identifier;
+
+    TypeSpecifier(Type type, const Identifier &identifier)
+      : type(type)
+      , identifier(identifier)
+    {
+    }
 
     TypeSpecifier(Type type)
       : type(type)
@@ -269,6 +279,34 @@ class TypeSpecifier : public DeclarationSpecifier
     }
 
     TypeSpecifier()
+    {
+    }
+
+    void traverse(Visitor &visitor) const override
+    {
+      visitor.accept(*this);
+    }
+};
+
+class StructUnionSpecifier : public DeclarationSpecifier
+{
+  public:
+    enum class Type
+    {
+      STRUCT,
+      UNION
+    };
+
+    Type             type;
+    const Identifier identifier;
+
+    StructUnionSpecifier(Type type, const Identifier &identifier)
+      : type(type)
+      , identifier(identifier)
+    {
+    }
+
+    StructUnionSpecifier()
     {
     }
 
