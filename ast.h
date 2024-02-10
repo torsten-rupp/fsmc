@@ -2073,7 +2073,7 @@ class NewStateStatement : public Location, public Statement
       , options(new Options())
     {
     }
-    
+
     ~NewStateStatement() override
     {
       delete(options);
@@ -2108,6 +2108,11 @@ class Initially : VisitorInterface
     Location                location;
     const CompoundStatement *compoundStatement;
 
+    Initially()
+      : compoundStatement(nullptr)
+    {
+    }
+
     void traverse(Visitor &visitor) const override
     {
       try
@@ -2127,6 +2132,11 @@ class Finally : VisitorInterface
   public:
     Location                location;
     const CompoundStatement *compoundStatement;
+
+    Finally()
+      : compoundStatement(nullptr)
+    {
+    }
 
     void traverse(Visitor &visitor) const override
     {
@@ -2220,7 +2230,7 @@ class StateList : public std::vector<State*>
       }
     }
 };
-  
+
 class AST
 {
   public:
@@ -2300,7 +2310,7 @@ class AST
      * @return default state or nullptr
      */
     const State* getDefaultState() const;
-    
+
     /** get FSM initially statement
      * @return initially or nullptr
      */
@@ -2377,7 +2387,7 @@ class AST
     {
       this->startState = startState;
     }
-    
+
     /** set initially code block
      * @param state state
      */
