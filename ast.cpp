@@ -65,7 +65,7 @@ void AST::validateStates() const
 
 bool AST::isStackRequired() const
 {
-  for (const std::pair<const std::string,const NewStateStatement*> &pair : stateTransitions)
+  for (const std::pair<const Identifier,const NewStateStatement*> &pair : stateTransitions)
   {
     const NewStateStatement *newStateStatement = pair.second;
     if (   (newStateStatement->type == NewStateStatement::Type::POP)
@@ -132,7 +132,7 @@ for (const std::pair<const std::string,const NewStateStatement*> &p : stateTrans
 fprintf(stderr,"%s:%d: ----\n",__FILE__,__LINE__);
 #endif
 
-  for (const std::pair<const std::string,const NewStateStatement*> &pair : stateTransitions)
+  for (const std::pair<const Identifier,const NewStateStatement*> &pair : stateTransitions)
   {
     switch (pair.second->type)
     {
@@ -177,7 +177,7 @@ void AST::doStateTransitions(const State                                        
 
 void AST::doStateTransitions(std::function<void(const NewStateStatement &newStateStatement)> handler) const
 {
-  for (const std::pair<Identifier,const NewStateStatement*> &pair : stateTransitions)
+  for (const std::pair<const Identifier,const NewStateStatement*> &pair : stateTransitions)
   {
     handler(*pair.second);
   }
@@ -297,8 +297,9 @@ class PrintVisitor : public Visitor
     {
       switch (typeQualifier.type)
       {
-        case TypeQualifier::Type::CONST:    output << " 'const' "; break;
+        case TypeQualifier::Type::CONST:    output << " 'const' ";    break;
         case TypeQualifier::Type::VOLATILE: output << " 'volatile' "; break;
+        case TypeQualifier::Type::STRUCT:   output << " 'struct' ";   break;
       }
     }
 
@@ -315,6 +316,10 @@ class PrintVisitor : public Visitor
         case TypeSpecifier::Type::DOUBLE:     output << " 'double' "; break;
         case TypeSpecifier::Type::SIGNED:     output << " 'signed' "; break;
         case TypeSpecifier::Type::UNSIGNED:   output << " 'unsigned' "; break;
+
+        case TypeSpecifier::Type::STRUCT:     output << " 'struct' "; break;
+        case TypeSpecifier::Type::UNION:      output << " 'union' "; break;
+
         case TypeSpecifier::Type::IDENTIFIER: output << "'" << typeSpecifier.identifier << "'"; break;
       }
     }
@@ -430,6 +435,11 @@ class PrintVisitor : public Visitor
           postfixExpression.structure->traverse(*this);
           output << " '.' " << *postfixExpression.identifier;
           break;
+        case PostfixExpression::Type::POINTER:
+        case PostfixExpression::Type::INCREMENT:
+        case PostfixExpression::Type::DECREMENT:
+          throw std::logic_error("NYI");
+          break;
       }
     }
 
@@ -444,6 +454,12 @@ class PrintVisitor : public Visitor
         case UnaryExpression::Operator::MINUS:       output << " '-' "; break;
         case UnaryExpression::Operator::NOT:         output << " '~' "; break;
         case UnaryExpression::Operator::LOGICAL_NOT: output << " '!' "; break;
+
+        case UnaryExpression::Operator::INCREMENT:
+        case UnaryExpression::Operator::DECREMENT:
+        case UnaryExpression::Operator::SIZEOF:
+          throw std::logic_error("NYI");
+          break;
       }
       unaryExpression.expression->traverse(*this);
     }
@@ -462,6 +478,7 @@ class PrintVisitor : public Visitor
       {
         case MultiplicativeExpression::Type::MULTIPLY: output << " '*' "; break;
         case MultiplicativeExpression::Type::DIVIDE:   output << " '/' "; break;
+        case MultiplicativeExpression::Type::MODULO:   output << " '%' "; break;
       }
       multiplicativeExpression.b->traverse(*this);
     }
@@ -498,6 +515,8 @@ class PrintVisitor : public Visitor
       output << "RelationalExpression: ";
       switch (relationalExpression.type)
       {
+        case RelationalExpression::Type::NONE:
+          break;
         case RelationalExpression::Type::LOWER:
           relationalExpression.a->traverse(*this);
           output << " '<' ";

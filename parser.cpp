@@ -37,6 +37,8 @@ using namespace FSM;
 Parser::Parser(const std::string &inputFilePath, FSM::Scanner &scanner, FSM::AST &ast, bool debug)
 {
   extern int yydebug;
+  
+  (void)yydebug;  // Note: avoid warning
 
   ::inputFilePath = &inputFilePath;
   ::scanner = &scanner;

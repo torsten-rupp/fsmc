@@ -25,7 +25,7 @@
   using namespace std;
 
   // terminate macro
-  #define yyterminate() TOKEN_EOF
+  #define yyterminate() return TOKEN_EOF
 
   // track current scanner location
   #define YY_USER_ACTION \
@@ -287,14 +287,14 @@
 
 <STRING>
 {
-  "\"" { 
+  "\"" {
     yy_pop_state();
     yytext[strlen(yytext)-1] = '\0';
     yylval.string = strdup(yytext);
     return TOKEN_STRING;
   }
   [^"] {
-    yymore(); 
+    yymore();
   }
 }
 

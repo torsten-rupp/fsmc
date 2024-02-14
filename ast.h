@@ -36,6 +36,10 @@ class VisitorInterface
 {
   public:
     virtual void traverse(Visitor &visitor) const = 0;
+
+    virtual ~VisitorInterface()
+    {
+    }
 };
 
 class Identifier : public std::string
@@ -196,7 +200,7 @@ class TypeQualifier : public DeclarationSpecifier
     TypeQualifier()
     {
     }
-
+    
     void traverse(Visitor &visitor) const override
     {
       visitor.accept(*this);
@@ -772,9 +776,15 @@ class PostfixExpression : public Expression
 
       switch (type)
       {
+        case Type::SUBSCRIPT:
+          throw std::logic_error("NYI");
+          break;
         case Type::FUNCTION_CALL:
           call = expression;
           argumentExpressionList = nullptr;
+          break;
+        case Type::MEMBER:
+          throw std::logic_error("NYI");
           break;
         case Type::POINTER:
         case Type::INCREMENT:
@@ -807,6 +817,10 @@ class PostfixExpression : public Expression
         case Type::MEMBER:
           delete(identifier);
           delete(structure);
+          break;
+        case Type::POINTER:
+        case Type::INCREMENT:
+        case Type::DECREMENT:
           break;
       }
     }

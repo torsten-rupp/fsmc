@@ -425,6 +425,7 @@ break;
       {
         case MultiplicativeExpression::Type::MULTIPLY: output << " * "; break;
         case MultiplicativeExpression::Type::DIVIDE:   output << " / "; break;
+        case MultiplicativeExpression::Type::MODULO:   output << " % "; break;
       }
       multiplicativeExpression.b->traverse(*this);
     }
@@ -461,6 +462,8 @@ break;
 //output << "relationalExpression";
       switch (relationalExpression.type)
       {
+        case RelationalExpression::Type::NONE:
+          break;
         case RelationalExpression::Type::LOWER:
           relationalExpression.a->traverse(*this);
           output << " < ";

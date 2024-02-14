@@ -40,10 +40,13 @@
   {
     return scanner->get_next_token();
   }
-int yywrap(){
+
+static int yywrap()
+{
 fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
     return 1;
 }
+
   static void yyerror(const YYLTYPE *location, const char *s, ...)
   {
     va_list arguments;
@@ -121,30 +124,31 @@ fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
   FSM::NewStateStatement                 *newStateStatement;
   FSM::NewStateStatement::PrefixOperator newStateStatementPrefixOperator;
   FSM::NewStateStatement::Options        *newStateStatementOptions;
+
   double                                 number;
 }
 
-%token <kewword>     KEYWORD_FSM                      ;
-%token <kewword>     KEYWORD_END                      ;
+%token <kewword>     KEYWORD_FSM
+%token <kewword>     KEYWORD_END
 
-%token <keyword>     KEYWORD_IF                       ;
-%token <keyword>     KEYWORD_ELSE                     ;
-%token <keyword>     KEYWORD_FOR                      ;
-%token <keyword>     KEYWORD_WHILE                    ;
-%token <keyword>     KEYWORD_DO                       ;
-%token <keyword>     KEYWORD_SWITCH                   ;
-%token <keyword>     KEYWORD_CASE                     ;
-%token <keyword>     KEYWORD_DEFAULT                  ;
-%token <keyword>     KEYWORD_BREAK                    ;
-%token <keyword>     KEYWORD_CONTINUE                 ;
-%token <keyword>     KEYWORD_RETURN                   ;
-%token <keyword>     KEYWORD_SIZEOF                   ;
+%token <keyword>     KEYWORD_IF
+%token <keyword>     KEYWORD_ELSE
+%token <keyword>     KEYWORD_FOR
+%token <keyword>     KEYWORD_WHILE
+%token <keyword>     KEYWORD_DO
+%token <keyword>     KEYWORD_SWITCH
+%token <keyword>     KEYWORD_CASE
+%token <keyword>     KEYWORD_DEFAULT
+%token <keyword>     KEYWORD_BREAK
+%token <keyword>     KEYWORD_CONTINUE
+%token <keyword>     KEYWORD_RETURN
+%token <keyword>     KEYWORD_SIZEOF
 
-%token <keyword>     KEYWORD_AUTO                     ;
-%token <keyword>     KEYWORD_REGISTER                 ;
-%token <keyword>     KEYWORD_STATIC                   ;
-%token <keyword>     KEYWORD_EXTERN                   ;
-%token <keyword>     KEYWORD_TYPEDEF                  ;
+%token <keyword>     KEYWORD_AUTO
+%token <keyword>     KEYWORD_REGISTER
+%token <keyword>     KEYWORD_STATIC
+%token <keyword>     KEYWORD_EXTERN
+%token <keyword>     KEYWORD_TYPEDEF
 
 %token <keyword>     KEYWORD_VOID
 %token <keyword>     KEYWORD_CHAR
@@ -156,21 +160,21 @@ fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
 %token <keyword>     KEYWORD_SIGNED
 %token <keyword>     KEYWORD_UNSIGNED
 
-%token <keyword>     KEYWORD_STRUCT                   ;
-%token <keyword>     KEYWORD_UNION                    ;
+%token <keyword>     KEYWORD_STRUCT
+%token <keyword>     KEYWORD_UNION
 
-%token <keyword>     KEYWORD_CONST                    ;
-%token <keyword>     KEYWORD_VOLATILE                 ;
+%token <keyword>     KEYWORD_CONST
+%token <keyword>     KEYWORD_VOLATILE
 
 %token <void>        END TOKEN_EOF 0
 
-%token <state>       STATE                        ;
-%token <string>      TOKEN_IDENTIFIER         ;
-%token <char>        TOKEN_CHAR               ;
-%token <string>      TOKEN_STRING             ;
-%token <float_>      TOKEN_FLOAT              ;
-%token <integer>     TOKEN_INTEGER            ;
-%token <enum_>       TOKEN_ENUM               ;
+%token <state>       STATE
+%token <string>      TOKEN_IDENTIFIER
+%token <char>        TOKEN_CHAR
+%token <string>      TOKEN_STRING
+%token <float_>      TOKEN_FLOAT
+%token <integer>     TOKEN_INTEGER
+%token <enum_>       TOKEN_ENUM
 
 %token               TOKEN_MULTIPLY_ASSIGN
 %token               TOKEN_DIVIDE_ASSIGN
@@ -267,6 +271,7 @@ fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
 %type <newStateStatement>                 newStateStatement;
 %type <newStateStatementPrefixOperator>   newStateStatementPrefixOperator;
 %type <newStateStatementOptions>          newStateStatementOptions;
+
 %type <float_>                            number;
 
 %start start
@@ -281,7 +286,7 @@ start:
     }
   | start KEYWORD_FSM TOKEN_IDENTIFIER stateDefinitions KEYWORD_END
     {
-      ast->setFSMName(std::string($3));
+      ast->setFSMName(FSM::Identifier($3));
     }
   ;
 
@@ -459,11 +464,11 @@ postfixExpression
     }
   | postfixExpression '.' TOKEN_IDENTIFIER
     {
-      $$ = new FSM::PostfixExpression(FSM::PostfixExpression::Type::MEMBER,$1,std::string($3));
+      $$ = new FSM::PostfixExpression(FSM::PostfixExpression::Type::MEMBER,$1,FSM::Identifier($3));
     }
   | postfixExpression TOKEN_POINTER TOKEN_IDENTIFIER
     {
-      $$ = new FSM::PostfixExpression(FSM::PostfixExpression::Type::POINTER,$1,std::string($3));
+      $$ = new FSM::PostfixExpression(FSM::PostfixExpression::Type::POINTER,$1,FSM::Identifier($3));
     }
   | postfixExpression TOKEN_INCREMENT
     {
@@ -882,7 +887,7 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.colu
   //| typeName
   | TOKEN_IDENTIFIER
     {
-      $$ = new FSM::TypeSpecifier(std::string($1));
+      $$ = new FSM::TypeSpecifier(FSM::Identifier($1));
     }
   ;
 
@@ -899,7 +904,7 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.colu
     }
   | structUnion TOKEN_IDENTIFIER
     {
-      $$ = new FSM::TypeSpecifier($1,std::string($2));
+      $$ = new FSM::TypeSpecifier($1,FSM::Identifier($2));
     }
   ;
 
@@ -1068,7 +1073,7 @@ declarator
 directDeclarator
   : TOKEN_IDENTIFIER
     {
-      $$ = new FSM::DirectDeclarator(std::string($1));
+      $$ = new FSM::DirectDeclarator(FSM::Identifier($1));
     }
   | '(' declarator ')'
     {
@@ -1429,37 +1434,37 @@ jumpStatement
 newStateStatement
   : TOKEN_POINTER newStateStatementPrefixOperator TOKEN_IDENTIFIER '(' newStateStatementOptions ')' ';' [YYVALID;]
     {
-      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,std::string($3),$2,$5);
+      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,FSM::Identifier($3),$2,$5);
       ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
   | TOKEN_POINTER newStateStatementPrefixOperator TOKEN_IDENTIFIER '(' ')' ';' [YYVALID;]
     {
-      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,std::string($3),$2);
+      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,FSM::Identifier($3),$2);
       ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
   | TOKEN_POINTER newStateStatementPrefixOperator TOKEN_IDENTIFIER ';' [YYVALID;]
     {
-      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,std::string($3),$2);
+      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,FSM::Identifier($3),$2);
       ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
   | TOKEN_POINTER TOKEN_IDENTIFIER '(' newStateStatementOptions ')' ';' [YYVALID;]
     {
-      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,std::string($2),$4);
+      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,FSM::Identifier($2),$4);
       ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
   | TOKEN_POINTER TOKEN_IDENTIFIER '(' ')' ';' [YYVALID;]
     {
-      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,std::string($2));
+      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,FSM::Identifier($2));
       ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
   | TOKEN_POINTER TOKEN_IDENTIFIER ';' [YYVALID;]
     {
-      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,std::string($2));
+      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,FSM::Identifier($2));
       ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
@@ -1468,11 +1473,11 @@ newStateStatement
 newStateStatementPrefixOperator
   : TOKEN_IDENTIFIER ','
     {
-      if      (std::string($1) == "push")
+      if      (FSM::Identifier($1) == "push")
       {
         $$ = FSM::NewStateStatement::PrefixOperator::PUSH;
       }
-      else if (std::string($1) == "reset")
+      else if (FSM::Identifier($1) == "reset")
       {
         $$ = FSM::NewStateStatement::PrefixOperator::RESET;
       }
@@ -1488,11 +1493,11 @@ newStateStatementPrefixOperator
 newStateStatementOptions
   : TOKEN_STRING ',' TOKEN_IDENTIFIER ',' number
     {
-      $$ = new FSM::NewStateStatement::Options(std::string($1), std::string($3), $5);
+      $$ = new FSM::NewStateStatement::Options(std::string($1), FSM::Identifier($3), $5);
     }
   | TOKEN_STRING ',' TOKEN_IDENTIFIER
     {
-      $$ = new FSM::NewStateStatement::Options(std::string($1), std::string($3));
+      $$ = new FSM::NewStateStatement::Options(std::string($1), FSM::Identifier($3));
     }
   | TOKEN_STRING
     {
