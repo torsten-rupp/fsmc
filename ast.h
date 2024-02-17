@@ -200,7 +200,7 @@ class TypeQualifier : public DeclarationSpecifier
     TypeQualifier()
     {
     }
-    
+
     void traverse(Visitor &visitor) const override
     {
       visitor.accept(*this);
@@ -2151,6 +2151,83 @@ class NewStateStatement : public Location, public Statement
       else if (name == "default") return NewStateStatement::Type::DEFAULT;
       else if (name == "pop")     return NewStateStatement::Type::POP;
       else                        return NewStateStatement::Type::CUSTOM;
+    }
+};
+
+class CPPIfStatement : public Location, public Statement
+{
+  public:
+    enum class Type
+    {
+      IFDEF,
+      IFNDEF,
+      IF
+    };
+
+    Type                           type;
+    const Identifier               identifier;
+    const Expression               *condition;
+    const DeclarationStatementList *ifDeclarationStatementList;
+    const DeclarationStatementList *elseDeclarationStatementList;
+
+    CPPIfStatement(const Location &location, Type type, const Identifier &identifier, DeclarationStatementList *ifDeclarationStatementList, DeclarationStatementList *elseDeclarationStatementList)
+      : Location(location)
+      , type(type)
+      , identifier(identifier)
+      , condition(nullptr)
+      , ifDeclarationStatementList(ifDeclarationStatementList)
+      , elseDeclarationStatementList(elseDeclarationStatementList)
+    {
+    }
+
+    CPPIfStatement(const Location &location, Type type, const Identifier &identifier, DeclarationStatementList *ifDeclarationStatementList)
+      : Location(location)
+      , type(type)
+      , identifier(identifier)
+      , condition(nullptr)
+      , ifDeclarationStatementList(ifDeclarationStatementList)
+      , elseDeclarationStatementList(nullptr)
+    {
+    }
+
+    CPPIfStatement(const Location &location, Expression *condition)
+      : Location(location)
+      , type(Type::IF)
+      , condition(condition)
+      , ifDeclarationStatementList(nullptr)
+      , elseDeclarationStatementList(nullptr)
+    {
+    }
+
+    ~CPPIfStatement() override
+    {
+      delete(elseDeclarationStatementList);
+      delete(ifDeclarationStatementList);
+      delete(condition);
+    }
+
+    virtual void traverse(Visitor &visitor) const
+    {
+      try
+      {
+        visitor.accept(*this);
+      }
+      catch (const Visitor::Exception &)
+      {
+        visitor.accept(Visitor::Phases::PRE, *this);
+        switch (type)
+        {
+          case Type::IFDEF:
+          case Type::IFNDEF:
+            ifDeclarationStatementList->traverse(visitor);
+            if (elseDeclarationStatementList != nullptr) elseDeclarationStatementList->traverse(visitor);
+            break;
+          case Type::IF:
+            condition->traverse(visitor);
+            break;
+        }
+        visitor.accept(Visitor::Phases::POST, *this);
+      }
     }
 };
 

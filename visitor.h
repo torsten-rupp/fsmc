@@ -78,6 +78,8 @@ class ExpressionStatement;
 class JumpStatement;
 class NewStateStatement;
 
+class CPPIfStatement;
+
 class AST;
 
 class Visitor
@@ -162,6 +164,8 @@ class Visitor
     ACCEPT(ExpressionStatement);
     ACCEPT(JumpStatement);
     ACCEPT(NewStateStatement);
+
+    ACCEPT(CPPIfStatement);
   private:
 };
 

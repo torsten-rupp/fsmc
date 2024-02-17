@@ -125,6 +125,8 @@ fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
   FSM::NewStateStatement::PrefixOperator newStateStatementPrefixOperator;
   FSM::NewStateStatement::Options        *newStateStatementOptions;
 
+  FSM::Statement                         *cppSelectionStatement;
+
   double                                 number;
 }
 
@@ -165,6 +167,13 @@ fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
 
 %token <keyword>     KEYWORD_CONST
 %token <keyword>     KEYWORD_VOLATILE
+
+%token <keyword>     KEYWORD_CPP_IF
+%token <keyword>     KEYWORD_CPP_ELIF
+%token <keyword>     KEYWORD_CPP_IFDEF
+%token <keyword>     KEYWORD_CPP_IFNDEF
+%token <keyword>     KEYWORD_CPP_ELSE
+%token <keyword>     KEYWORD_CPP_ENDIF
 
 %token <void>        END TOKEN_EOF 0
 
@@ -271,6 +280,8 @@ fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
 %type <newStateStatement>                 newStateStatement;
 %type <newStateStatementPrefixOperator>   newStateStatementPrefixOperator;
 %type <newStateStatementOptions>          newStateStatementOptions;
+
+%type <statement>                         cppSelectionStatement;
 
 %type <float_>                            number;
 
@@ -1326,6 +1337,10 @@ statement
     {
       $$ = $1;
     }
+  | cppSelectionStatement
+    {
+      $$ = $1;
+    }
   ;
 
 labeledStatement
@@ -1511,6 +1526,61 @@ newStateStatementOptions
 //| declarator declarationList compoundStatement
 //| declarator compoundStatement
 //;
+
+cppSelectionStatement
+  : KEYWORD_CPP_IF
+    {
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+      YYABORT;
+    }
+  | KEYWORD_CPP_IFDEF TOKEN_IDENTIFIER declarationStatementList KEYWORD_CPP_ENDIF
+    {
+      $$ = new FSM::CPPIfStatement(@$,
+                                   FSM::CPPIfStatement::Type::IFDEF,
+                                   FSM::Identifier($2),
+                                   $3
+                                  );
+    }
+  | KEYWORD_CPP_IFDEF TOKEN_IDENTIFIER declarationStatementList KEYWORD_CPP_ELSE declarationStatementList KEYWORD_CPP_ENDIF
+    {
+      $$ = new FSM::CPPIfStatement(@$,
+                                   FSM::CPPIfStatement::Type::IFDEF,
+                                   FSM::Identifier($2),
+                                   $3,
+                                   $5
+                                  );
+    }
+  | KEYWORD_CPP_IFNDEF TOKEN_IDENTIFIER declarationStatementList KEYWORD_CPP_ENDIF
+    {
+      $$ = new FSM::CPPIfStatement(@$,
+                                   FSM::CPPIfStatement::Type::IFNDEF,
+                                   FSM::Identifier($2),
+                                   $3
+                                  );
+    }
+  | KEYWORD_CPP_IFNDEF TOKEN_IDENTIFIER declarationStatementList KEYWORD_CPP_ELSE declarationStatementList KEYWORD_CPP_ENDIF
+    {
+      $$ = new FSM::CPPIfStatement(@$,
+                                   FSM::CPPIfStatement::Type::IFNDEF,
+                                   FSM::Identifier($2),
+                                   $3,
+                                   $5
+                                  );
+    }
+  ;
+
+cppElifStatementList
+  : cppElifStatementList KEYWORD_CPP_ELIF condition declarationStatementList
+    {
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+      YYABORT;
+    }
+  | KEYWORD_CPP_ELIF condition declarationStatementList
+    {
+fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+      YYABORT;
+    }
+  ;
 
 // ---------------------------------------------------------------------
 

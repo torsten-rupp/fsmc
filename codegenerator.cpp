@@ -152,7 +152,7 @@ class CVisitor : public Visitor
             // states
             output << indentSpaces() << "typedef enum" << std::endl;
             output << indentSpaces() <<"{" << std::endl;
-            indent([&]()
+            indent([this]()
             {
               ast.doStates([&](const State *state)
               {
@@ -617,7 +617,7 @@ break;
     {
       output << "#line " << compoundStatement.first.line << " \"" << filePath << "\"" << std::endl;
       output << indentSpaces() << "{" << std::endl;
-      indent([&]()
+      indent([this,&compoundStatement]()
       {
         if (compoundStatement.declarationStatementList != nullptr)
         {
@@ -787,7 +787,7 @@ break;
             {
               output << indentSpaces() << "if (" << name("stateStackIndex") << " > 0)" << std::endl;
               output << indentSpaces() << "{" << std::endl;
-              indent([&]()
+              indent([this]()
               {
                 output << indentSpaces() << name("stateStackIndex") << "--;" << std::endl;
                 output << indentSpaces() << name("state") << " = " << name("stateStack") << "[" << name("stateStackIndex") << "];" << std::endl;
@@ -812,6 +812,61 @@ break;
       output << indentSpaces() << "}" << std::endl;
       output << indentSpaces() << "while (0);" << std::endl;
       output << indentSpaces() << "#line " << newStateStatement.first.line << " \"" << filePath << "\"" << std::endl;
+    }
+
+    void accept(const CPPIfStatement &cppIfStatement) override
+    {
+      switch (cppIfStatement.type)
+      {
+        case CPPIfStatement::Type::IFDEF:
+          output << "#ifdef " << cppIfStatement.identifier << std::endl;
+          indent([this,&cppIfStatement]()
+          {
+            cppIfStatement.ifDeclarationStatementList->traverse(*this);
+          });
+          if (cppIfStatement.elseDeclarationStatementList != nullptr)
+          {
+            output << indentSpaces() << "#else" << std::endl;
+            indent([this,&cppIfStatement]()
+            {
+              cppIfStatement.elseDeclarationStatementList->traverse(*this);
+            });
+          }
+          output << indentSpaces() << "#endif" << std::endl;
+          break;
+        case CPPIfStatement::Type::IFNDEF:
+          output << "#ifndef " << cppIfStatement.identifier << std::endl;
+          indent([this,&cppIfStatement]()
+          {
+            cppIfStatement.ifDeclarationStatementList->traverse(*this);
+          });
+          if (cppIfStatement.elseDeclarationStatementList != nullptr)
+          {
+            output << indentSpaces() << "#else" << std::endl;
+            indent([this,&cppIfStatement]()
+            {
+              cppIfStatement.elseDeclarationStatementList->traverse(*this);
+            });
+          }
+          output << indentSpaces() << "#endif" << std::endl;
+          break;
+        case CPPIfStatement::Type::IF:
+          output << "#if " << cppIfStatement.identifier << std::endl;
+          indent([this,&cppIfStatement]()
+          {
+            cppIfStatement.ifDeclarationStatementList->traverse(*this);
+          });
+          if (cppIfStatement.elseDeclarationStatementList != nullptr)
+          {
+            output << indentSpaces() << "#else" << std::endl;
+            indent([this,&cppIfStatement]()
+            {
+              cppIfStatement.elseDeclarationStatementList->traverse(*this);
+            });
+          }
+          output << indentSpaces() << "#endif" << std::endl;
+          break;
+      }
     }
 
   private:
@@ -844,7 +899,7 @@ void CodeGenerator::generate(const AST &ast)
   CVisitor visitor(output, ast, filePath, indentCount, logFunction);
 
   visitor.indent(startIndentCount);
-  visitor.indent([&]()
+  visitor.indent([this,&visitor,&ast]()
   {
     output << visitor.indentSpaces() << "" << std::endl;
     output << visitor.indentSpaces() << "// FSM start " << ast.getFSMName() << std::endl;

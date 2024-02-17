@@ -93,6 +93,7 @@
 
 /* scanner state list */
 %s LINE_COMMENT BLOCK_COMMENT
+%s CPP
 %s STRING
 
 %%
@@ -109,11 +110,38 @@
     yylloc.first.column = 0;
   }
 
+  /* comments */
   "//" {
     yy_push_state(LINE_COMMENT);
   }
   "/*" {
     yy_push_state(BLOCK_COMMENT);
+  }
+
+  /* preprocess keyword */
+  #if {
+    yy_push_state(CPP);
+    return KEYWORD_CPP_IF;
+  }
+  #elif {
+    yy_push_state(CPP);
+    return KEYWORD_CPP_ELIF;
+  }
+  #ifdef {
+    yy_push_state(CPP);
+    return KEYWORD_CPP_IFDEF;
+  }
+  #ifndef {
+    yy_push_state(CPP);
+    return KEYWORD_CPP_IFNDEF;
+  }
+  #else {
+    yy_push_state(CPP);
+    return KEYWORD_CPP_ELSE;
+  }
+  #endif {
+    yy_push_state(CPP);
+    return KEYWORD_CPP_ENDIF;
   }
 
   /* FSM begin/end */
@@ -282,6 +310,38 @@
 
   /* ignored */
   . {
+  }
+}
+
+<CPP>
+{
+  /* ignore white spaces */
+  [\t ] {
+  }
+
+  /* LF */
+  \n {
+    yy_pop_state();
+    yylloc.first.line++;
+    yylloc.first.column = 0;
+  }
+
+  /* identifier */
+  [A-Za-z_][A-Za-z_0-9]* {
+//fprintf(stderr,"%s, %d: IDENTIFIER %s %d\n",__FILE__,__LINE__,yytext,yylloc.first.line);
+    yylval.string = strdup(yytext);
+    return TOKEN_IDENTIFIER;
+  }
+
+  /* any character */
+  . {
+    return yytext[0];
+  }
+
+  /* end of file */
+  <<EOF>> {
+    yy_pop_state();
+    return TOKEN_EOF;
   }
 }
 
