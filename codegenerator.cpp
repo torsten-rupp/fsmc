@@ -41,11 +41,11 @@ class CVisitor : public Visitor
   public:
     CVisitor(std::ostream &output, const AST &ast, const std::string &filePath, uint indentCount, const std::string &logFunction)
       : Visitor()
+      , output(output)
       , ast(ast)
       , filePath(filePath)
       , indentCount(indentCount)
       , logFunction(logFunction)
-      , output(output)
     {
     }
 
