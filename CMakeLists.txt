@@ -35,10 +35,10 @@ endif()
 
 # compiler/linker flags
 string(JOIN " " CMAKE_C_FLAGS                ${CMAKE_C_FLAGS}           "-Wall")
-string(JOIN " " CMAKE_C_FLAGS_DEBUG          ${CMAKE_CXX_FLAGS}                )
-string(JOIN " " CMAKE_C_FLAGS_RELEASE        ${CMAKE_CXX_FLAGS}                )
+string(JOIN " " CMAKE_C_FLAGS_DEBUG          ${CMAKE_C_FLAGS_DEBUG}            )
+string(JOIN " " CMAKE_C_FLAGS_RELEASE        ${CMAKE_C_FLAGS_RELEASE}          )
 string(JOIN " " CMAKE_CXX_FLAGS              ${CMAKE_CXX_FLAGS}         "-Wall")
-string(JOIN " " CMAKE_CXX_FLAGS_DEBUG        ${CMAKE_CXX_FLAGS_RELEASE}        )
+string(JOIN " " CMAKE_CXX_FLAGS_DEBUG        ${CMAKE_CXX_FLAGS_DEBUG}          )
 string(JOIN " " CMAKE_CXX_FLAGS_RELEASE      ${CMAKE_CXX_FLAGS_RELEASE}        )
 string(JOIN " " CMAKE_EXE_LINKER_FLAGS       ${CMAKE_EXE_LINKER_FLAGS}         )
 string(JOIN " " CMAKE_EXE_LINKER_FLAGS_DEBUG ${CMAKE_EXE_LINKER_FLAGS_DEBUG}   )
