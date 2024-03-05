@@ -98,7 +98,7 @@ add_dependencies(fsmc
 # install
 install(PROGRAMS
   ${CMAKE_CURRENT_BINARY_DIR}/fsmc
-  DESTINATION .
+  DESTINATION bin
   COMPONENT runtime
 )
 
