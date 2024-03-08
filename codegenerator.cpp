@@ -909,6 +909,7 @@ void CodeGenerator::generate(const AST &ast)
     visitor.unindent();
     output << visitor.indentSpaces() << "}" << std::endl;
     output << visitor.indentSpaces() << "// FSM end" << std::endl;
+    output << visitor.indentSpaces() << "#line " << ast.getFSMLocation().last.line << " \"" << filePath << "\"" << std::endl;
   });
   visitor.unindent();
 }

@@ -2390,6 +2390,14 @@ class AST
     {
       return fsmName;
     }
+    
+    /** get FSM location
+     * @return location
+     */
+    const Location& getFSMLocation() const
+    {
+      return fsmLocation;
+    }
 
     /** validate states
      */
@@ -2507,11 +2515,12 @@ class AST
     friend class Visitor;
     friend int ::yyparse();
 
-    void setFSMName(const std::string &fsmName)
+    void setFSM(const std::string &name, const Location &location)
     {
-      this->fsmName = fsmName;
+      this->fsmName     = name;
+      this->fsmLocation = location;
     }
-
+    
     void setStartState(const Identifier &startState)
     {
       this->startState = startState;
@@ -2576,6 +2585,7 @@ class AST
     uint               stateStackSize;
     bool               asserts;
     std::string        fsmName;
+    Location           fsmLocation;
 
     Identifier         startState;
 

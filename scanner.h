@@ -51,7 +51,7 @@ class Scanner : public yyFlexLexer
   public:
     virtual int get_next_token();
 
-    void setLineNumber(uint lineNb);
+    void setLineNumber(uint startLineNb, uint endLineNb);
 
     std::string getFileName();
     uint getLine();

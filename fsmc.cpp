@@ -176,6 +176,7 @@ int main(int argc, const char *argv[])
     bool  fsm            = false;
     uint  fsmIndent      = 0;
     uint  fsmStartLineNb = 0;
+    uint  fsmEndLineNb   = 0;
     while (!input->eof())
     {
       // scan for FSM
@@ -215,7 +216,8 @@ int main(int argc, const char *argv[])
         else if (std::regex_match(s, match, FSM_END))
         {
           fsmSource << line << std::endl;
-          fsm = false;
+          fsm            = false;
+          fsmEndLineNb   = lineNb;
           break;
         }
         else if (fsm)
@@ -240,11 +242,17 @@ int main(int argc, const char *argv[])
         // init scanner
         Scanner scanner;
         scanner.switch_streams(&fsmSource, nullptr);
-        scanner.setLineNumber(fsmStartLineNb);
+        scanner.setLineNumber(fsmStartLineNb, fsmEndLineNb);
 
         // parse FSM
         AST ast(stateStackSize,asserts);
-        Parser parser(!inputFilePath.empty() ? inputFilePath : "<stdin>", scanner, ast, debug);
+        Parser parser(!inputFilePath.empty()
+                        ? inputFilePath
+                        : "<stdin>",
+                      scanner,
+                      ast,
+                      debug
+                     );
         parser.parse();
 
         // validate
@@ -253,7 +261,14 @@ int main(int argc, const char *argv[])
         if (!dumpAST)
         {
           // generate code
-          CodeGenerator codeGenerator(*output, !inputFilePath.empty() ? inputFilePath : "<stdin>", fsmIndent, 2, logFunction);
+          CodeGenerator codeGenerator(*output,
+                                      !inputFilePath.empty()
+                                        ? inputFilePath
+                                        : "<stdin>",
+                                      fsmIndent,
+                                      2,
+                                      logFunction
+                                     );
           codeGenerator.generate(ast);
           
           // generate .dot file

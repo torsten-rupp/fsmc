@@ -50,6 +50,20 @@ class Location
       uint line;
       uint column;
     } last;
+
+    Location(uint firstLine,
+             uint firstColumn,
+             uint lastLine,
+             uint lastColumn
+            )
+    {
+      first.line   = firstLine;
+      first.column = firstColumn;
+      last.line    = lastLine;
+      last.column  = lastColumn;
+    }
+    
+    Location() = default;
 };
 
 /***************************** Variables *******************************/

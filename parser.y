@@ -130,8 +130,8 @@ fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
   double                                 number;
 }
 
-%token <kewword>     KEYWORD_FSM
-%token <kewword>     KEYWORD_END
+%token <keyword>     KEYWORD_FSM
+%token <keyword>     KEYWORD_END
 
 %token <keyword>     KEYWORD_IF
 %token <keyword>     KEYWORD_ELSE
@@ -297,7 +297,8 @@ start:
     }
   | start KEYWORD_FSM TOKEN_IDENTIFIER stateDefinitions KEYWORD_END
     {
-      ast->setFSMName(FSM::Identifier($3));
+      Location location(@$.first.line,@$.first.column,@$.last.line,@$.last.column);
+      ast->setFSM(FSM::Identifier($3), @$);
     }
   ;
 

@@ -363,9 +363,9 @@
 namespace FSM
 {
 
-void Scanner::setLineNumber(uint lineNb)
+void Scanner::setLineNumber(uint startLineNb, uint endLineNb)
 {
-  yylineno = lineNb;
+  yylineno = startLineNb;
 }
 
 std::string Scanner::getFileName()
