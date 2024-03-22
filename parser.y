@@ -14,11 +14,12 @@
 }
 
 %{
-  static const std::string *inputFilePath;
-  static FSM::Scanner      *scanner;
-  static FSM::AST          *ast;
+  static const std::string               *inputFilePath;
+  static FSM::Scanner                    *scanner;
+  static FSM::AST                        *ast;
 
-  static FSM::Identifier currentStateName;
+  static FSM::NewStateStatement::Context currentStateContext;
+  static FSM::Identifier                 currentStateName;
 
   #define YYERROR_DETAILED
 
@@ -326,6 +327,19 @@ stateDefinitions:
 stateDefinition:
     '*' TOKEN_IDENTIFIER
     {
+//TODO: keyword instead of string compare?
+      if      (std::string($2) == "initially")
+      {
+        currentStateContext = FSM::NewStateStatement::Context::INITIALLY;
+      }
+      else if (std::string($2) == "finally")
+      {
+        currentStateContext = FSM::NewStateStatement::Context::FINALLY;
+      }
+      else
+      {
+        currentStateContext = FSM::NewStateStatement::Context::NONE;
+      }
       currentStateName = FSM::Identifier($2);
     }
     compoundStatement
@@ -334,27 +348,41 @@ stateDefinition:
     }
   | TOKEN_IDENTIFIER
     {
+//TODO: keyword instead of string compare?
+      if      (std::string($1) == "initially")
+      {
+        currentStateContext = FSM::NewStateStatement::Context::INITIALLY;
+      }
+      else if (std::string($1) == "finally")
+      {
+        currentStateContext = FSM::NewStateStatement::Context::FINALLY;
+      }
+      else
+      {
+        currentStateContext = FSM::NewStateStatement::Context::NONE;
+      }
       currentStateName = FSM::Identifier($1);
     }
     compoundStatement
     {
-      if (currentStateName == "initially")
+      switch (currentStateContext)
       {
-        ast->setInitially(@$,$3);
-      }
-      if (currentStateName == "finally")
-      {
-        ast->setFinally(@$,$3);
-      }
-      else
-      {
-        ast->addState(new FSM::State(@$,FSM::State::Type::CUSTOM,currentStateName,$3));
+        case FSM::NewStateStatement::Context::NONE:
+          ast->addState(new FSM::State(@$,FSM::State::Type::CUSTOM,currentStateName,$3));
+          break;
+        case FSM::NewStateStatement::Context::INITIALLY:
+          ast->setInitially(@$,$3);
+          break;
+        case FSM::NewStateStatement::Context::FINALLY:
+          ast->setFinally(@$,$3);
+          break;
       }
     }
     // special case: default keyword
   | KEYWORD_DEFAULT
     {
-      currentStateName = FSM::Identifier("default");
+      currentStateContext = FSM::NewStateStatement::Context::NONE;
+      currentStateName    = FSM::Identifier("default");
     }
     compoundStatement
     {
@@ -1450,37 +1478,37 @@ jumpStatement
 newStateStatement
   : TOKEN_POINTER newStateStatementPrefixOperator TOKEN_IDENTIFIER '(' newStateStatementOptions ')' ';' [YYVALID;]
     {
-      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,FSM::Identifier($3),$2,$5);
+      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,currentStateContext,FSM::Identifier($3),$2,$5);
       ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
   | TOKEN_POINTER newStateStatementPrefixOperator TOKEN_IDENTIFIER '(' ')' ';' [YYVALID;]
     {
-      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,FSM::Identifier($3),$2);
+      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,currentStateContext,FSM::Identifier($3),$2);
       ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
   | TOKEN_POINTER newStateStatementPrefixOperator TOKEN_IDENTIFIER ';' [YYVALID;]
     {
-      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,FSM::Identifier($3),$2);
+      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,currentStateContext,FSM::Identifier($3),$2);
       ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
   | TOKEN_POINTER TOKEN_IDENTIFIER '(' newStateStatementOptions ')' ';' [YYVALID;]
     {
-      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,FSM::Identifier($2),$4);
+      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,currentStateContext,FSM::Identifier($2),$4);
       ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
   | TOKEN_POINTER TOKEN_IDENTIFIER '(' ')' ';' [YYVALID;]
     {
-      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,FSM::Identifier($2));
+      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,currentStateContext,FSM::Identifier($2));
       ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }
   | TOKEN_POINTER TOKEN_IDENTIFIER ';' [YYVALID;]
     {
-      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,FSM::Identifier($2));
+      FSM::NewStateStatement *newStateStatement = new FSM::NewStateStatement(@$,currentStateContext,FSM::Identifier($2));
       ast->addStateTransition(currentStateName,newStateStatement);
       $$ = newStateStatement;
     }

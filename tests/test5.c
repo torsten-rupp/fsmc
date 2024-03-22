@@ -6,6 +6,16 @@ int main(int argc, const char *argv[])
   printf("FSM test4\n");
 
   #fsm demo
+    initially
+    {
+      if (a > 10)
+      -> TEST;
+    }
+
+    finally
+    {
+    }
+
     *INIT
     {
       int a;
@@ -98,6 +108,12 @@ int main(int argc, const char *argv[])
     {
       printf("foo");
      -> start;
+    }
+    
+    TEST
+    {
+      if (a > 100)
+        -> INIT;
     }
 
     default

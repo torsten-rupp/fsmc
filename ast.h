@@ -2034,6 +2034,13 @@ class JumpStatement : public Location, public Statement
 class NewStateStatement : public Location, public Statement
 {
   public:
+    enum class Context
+    {
+      NONE,
+      INITIALLY,
+      FINALLY
+    };
+
     enum class Type
     {
       START,
@@ -2085,13 +2092,15 @@ class NewStateStatement : public Location, public Statement
       }
     };
 
+    Context        context;
     Type           type;
     Identifier     name;
     PrefixOperator prefixOperator;
     const Options  *options;
 
-    NewStateStatement(const Location &location, const Identifier &name, PrefixOperator prefixOperator, const Options *options)
+    NewStateStatement(const Location &location, Context context, const Identifier &name, PrefixOperator prefixOperator, const Options *options)
       : Location(location)
+      , context(context)
       , type(getType(name))
       , name(name)
       , prefixOperator(prefixOperator)
@@ -2099,8 +2108,9 @@ class NewStateStatement : public Location, public Statement
     {
     }
 
-    NewStateStatement(const Location &location, const Identifier &name, PrefixOperator prefixOperator)
+    NewStateStatement(const Location &location, Context context, const Identifier &name, PrefixOperator prefixOperator)
       : Location(location)
+      , context(context)
       , type(getType(name))
       , name(name)
       , prefixOperator(prefixOperator)
@@ -2108,8 +2118,9 @@ class NewStateStatement : public Location, public Statement
     {
     }
 
-    NewStateStatement(const Location &location, const Identifier &name, const Options *options)
+    NewStateStatement(const Location &location, Context context, const Identifier &name, const Options *options)
       : Location(location)
+      , context(context)
       , type(getType(name))
       , name(name)
       , prefixOperator(PrefixOperator::NONE)
@@ -2117,8 +2128,9 @@ class NewStateStatement : public Location, public Statement
     {
     }
 
-    NewStateStatement(const Location &location, const Identifier &name)
+    NewStateStatement(const Location &location, Context context, const Identifier &name)
       : Location(location)
+      , context(context)
       , type(getType(name))
       , name(name)
       , prefixOperator(PrefixOperator::NONE)
@@ -2363,8 +2375,8 @@ class StateList : public std::vector<State*>
 class AST
 {
   public:
-    typedef std::unordered_multimap<Identifier,
-                                    const NewStateStatement*,
+    typedef std::unordered_multimap<Identifier,                // from state name
+                                    const NewStateStatement*,  // new state statement
                                     std::hash<std::string>
                                    > StateTransitionMap;
 

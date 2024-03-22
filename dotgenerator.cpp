@@ -67,6 +67,21 @@ void DotGenerator::generate(const AST &ast)
   output << "{" << std::endl;
   for (const State *state : ast.getStateList())
   {
+    // initially/finally state transitions
+    ast.doStateTransitions([&](const NewStateStatement &newStateStatement)
+    {
+      if (   !state->name.empty()
+          && (state->name != newStateStatement.name)
+          && (   (newStateStatement.context == FSM::NewStateStatement::Context::INITIALLY)
+              || (newStateStatement.context == FSM::NewStateStatement::Context::FINALLY)
+             )
+         )
+      {
+        output << "  " << state->name << " -> " << newStateStatement.name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
+      }
+    });
+
+    // state transitions
     ast.doStateTransitions(state,[&](const NewStateStatement &newStateStatement)
     {
       if (state->type != State::Type::DEFAULT)
