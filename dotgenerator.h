@@ -9,6 +9,7 @@
 
 /****************************** Includes *******************************/
 #include <iostream>
+#include <set>
 #include <vector>
 
 #include "ast.h"
@@ -24,15 +25,17 @@ namespace FSM
 class DotGenerator
 {
   public:
-    DotGenerator(std::ostream &output)
+    DotGenerator(std::ostream &output, const std::set<std::string> &ignoreStates)
       : output(output)
+      , ignoreStates(ignoreStates)
     {
     }
 
   void generate(const AST &ast);
 
   private:
-    std::ostream &output;
+    std::ostream                &output;
+    const std::set<std::string> &ignoreStates;
 
     std::vector<const State*> getPushStates(const AST &ast, const State *state) const;
 };

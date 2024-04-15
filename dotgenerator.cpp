@@ -67,47 +67,57 @@ void DotGenerator::generate(const AST &ast)
   output << "{" << std::endl;
   for (const State *state : ast.getStateList())
   {
-    // initially/finally state transitions
-    ast.doStateTransitions([&](const NewStateStatement &newStateStatement)
+    if (ignoreStates.find(state->name) == ignoreStates.end())
     {
-      if (   !state->name.empty()
-          && (state->name != newStateStatement.name)
-          && (   (newStateStatement.context == FSM::NewStateStatement::Context::INITIALLY)
-              || (newStateStatement.context == FSM::NewStateStatement::Context::FINALLY)
-             )
-         )
+      // initially/finally state transitions
+      ast.doStateTransitions([&](const NewStateStatement &newStateStatement)
       {
-        output << "  " << state->name << " -> " << newStateStatement.name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
-      }
-    });
-
-    // state transitions
-    ast.doStateTransitions(state,[&](const NewStateStatement &newStateStatement)
-    {
-      if (state->type != State::Type::DEFAULT)
-      {
-        switch (newStateStatement.type)
+        if (   !state->name.empty()
+            && (state->name != newStateStatement.name)
+            && (ignoreStates.find(newStateStatement.name) == ignoreStates.end())
+            && (   (newStateStatement.context == FSM::NewStateStatement::Context::INITIALLY)
+                || (newStateStatement.context == FSM::NewStateStatement::Context::FINALLY)
+               )
+           )
         {
-          case NewStateStatement::Type::START:
-            output << "  " << state->name << " -> " << ast.getStartState()->name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
-            break;
-          case NewStateStatement::Type::DEFAULT:
-            output << "  " << state->name << " -> " << ast.getDefaultState()->name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
-            break;
-          case NewStateStatement::Type::POP:
-            {
-              for (const State *pushState : getPushStates(ast, ast.getState(state->name)))
-              {
-                output << "  " << state->name << " -> " << pushState->name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
-              }
-            }
-            break;
-          case NewStateStatement::Type::CUSTOM:
-            output << "  " << state->name << " -> " << newStateStatement.name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
-            break;
+          output << "  " << state->name << " -> " << newStateStatement.name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
         }
-      }
-    });
+      });
+
+      // state transitions
+      ast.doStateTransitions(state,[&](const NewStateStatement &newStateStatement)
+      {
+        if (ignoreStates.find(newStateStatement.name) == ignoreStates.end())
+        {
+          if (state->type != State::Type::DEFAULT)
+          {
+            switch (newStateStatement.type)
+            {
+              case NewStateStatement::Type::START:
+                output << "  " << state->name << " -> " << ast.getStartState()->name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
+                break;
+              case NewStateStatement::Type::DEFAULT:
+                output << "  " << state->name << " -> " << ast.getDefaultState()->name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
+                break;
+              case NewStateStatement::Type::POP:
+                {
+                  for (const State *pushState : getPushStates(ast, ast.getState(state->name)))
+                  {
+                    if (ignoreStates.find(pushState->name) == ignoreStates.end())
+                    {
+                      output << "  " << state->name << " -> " << pushState->name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
+                    }
+                  }
+                }
+                break;
+              case NewStateStatement::Type::CUSTOM:
+                output << "  " << state->name << " -> " << newStateStatement.name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
+                break;
+            }
+          }
+        }
+      });
+    }
   }
   output << "}" << std::endl;
 }

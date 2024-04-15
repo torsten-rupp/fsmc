@@ -13,6 +13,7 @@
 #include <exception>
 #include <regex>
 #include <stdexcept>
+#include <set>
 
 #include "scanner.h"
 #include "parser.h"
@@ -47,14 +48,15 @@ int main(int argc, const char *argv[])
   try
   {
     // parse arguments
-    std::string inputFilePath;
-    std::string outputFilePath = "";
-    std::string dotDirectoryPath = "";
-    uint        stateStackSize = 16;
-    std::string logFunction = "";
-    bool        asserts = false;
-    bool        debug = false;
-    bool        dumpAST = false;
+    std::string           inputFilePath;
+    std::string           outputFilePath = "";
+    std::string           dotDirectoryPath = "";
+    std::set<std::string> dotIgnoreStates;
+    uint                  stateStackSize = 16;
+    std::string           logFunction = "";
+    bool                  asserts = false;
+    bool                  debug = false;
+    bool                  dumpAST = false;
     int i = 1;
     while (i < argc)
     {
@@ -66,6 +68,7 @@ int main(int argc, const char *argv[])
         fprintf(stdout, "Options\n");
         fprintf(stdout, "-o|--output <file path>               output file\n");
         fprintf(stdout, "-d|--dot-directory <directory path>   .dot file directory\n");
+        fprintf(stdout, "--dot-ignore-state <name>             ignore state in generated .dot file\n");
         fprintf(stdout, "-n|--state-stack-size <n>             state stack size (default: %d)\n", stateStackSize);
         fprintf(stdout, "-l|--log-function <log function>      log function to call on state change\n");
         fprintf(stdout, "-a|--asserts                          generate asserts\n");
@@ -75,25 +78,31 @@ int main(int argc, const char *argv[])
       }
       else if ((argument == "-o") || (argument == "--output"))
       {
-        if ((i+1) >= argc) throw std::runtime_error("missing parameter for option --output");
+        if ((i+1) >= argc) throw std::runtime_error("missing parameter for option '--output'");
         outputFilePath = argv[i+1];
         i += 2;
       }
       else if ((argument == "-d") || (argument == "--dot"))
       {
-        if ((i+1) >= argc) throw std::runtime_error("missing parameter for option --dot-directory");
+        if ((i+1) >= argc) throw std::runtime_error("missing parameter for option '--dot-directory'");
         dotDirectoryPath = argv[i+1];
+        i += 2;
+      }
+      else if (argument == "--dot-ignore-state")
+      {
+        if ((i+1) >= argc) throw std::runtime_error("missing parameter for option '--dot-ignore-state'");
+        dotIgnoreStates.insert(argv[i+1]);
         i += 2;
       }
       else if ((argument == "-n") || (argument == "--state-stack-size"))
       {
-        if ((i+1) >= argc) throw std::runtime_error("missing parameter for option --state-stack-size");
+        if ((i+1) >= argc) throw std::runtime_error("missing parameter for option '--state-stack-size'");
         stateStackSize = static_cast<uint>(std::atoi(argv[i+1]));
         i += 2;
       }
       else if ((argument == "-l") || (argument == "--log-function"))
       {
-        if ((i+1) >= argc) throw std::runtime_error("missing parameter for option --log-function");
+        if ((i+1) >= argc) throw std::runtime_error("missing parameter for option '--log-function'");
         logFunction = argv[i+1];
         i += 2;
       }
@@ -282,7 +291,7 @@ int main(int argc, const char *argv[])
               throw std::runtime_error("cannot open file '" + filePath + "'");
             }
 
-            DotGenerator dotGenerator(output);
+            DotGenerator dotGenerator(output, dotIgnoreStates);
             dotGenerator.generate(ast);
 
             output.close();
