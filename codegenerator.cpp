@@ -46,6 +46,7 @@ class CVisitor : public Visitor
       , filePath(filePath)
       , indentCount(indentCount)
       , logFunction(logFunction)
+      , currentState(ast.getStartState())
     {
     }
 

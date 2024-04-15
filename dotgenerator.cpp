@@ -40,7 +40,7 @@ static std::string optionsToString(const NewStateStatement &newStateStatement)
   if (!newStateStatement.options->label.empty())
   {
     if (!first) buffer << ", ";
-    buffer << "label=\"" << newStateStatement.options->label << "\"";
+    buffer << "label=\" " << newStateStatement.options->label << " \"";
     first = false;
   }
   if (!newStateStatement.options->color.empty())
@@ -113,24 +113,18 @@ void DotGenerator::generate(const AST &ast)
                 }
                 break;
               case NewStateStatement::Type::POP:
-                {
-                  for (const State *pushState : getPushStates(ast, ast.getState(state->name)))
-                  {
-                    if (ignoreStates.find(pushState->name) == ignoreStates.end())
-                    {
-                      if (transitionSet.find(state->name+pushState->name) == transitionSet.end())
-                      {
-                        output << "  " << state->name << " -> " << pushState->name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
-                        transitionSet.insert(state->name+pushState->name);
-                      }
-                    }
-                  }
-                }
+                // nothing to do: push/pop is implemented by a double direction arrow in push
                 break;
               case NewStateStatement::Type::CUSTOM:
                 if (transitionSet.find(state->name+newStateStatement.name) == transitionSet.end())
                 {
-                  output << "  " << state->name << " -> " << newStateStatement.name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
+                  
+                  output << "  "
+                         << state->name << " -> " << newStateStatement.name << " "
+                         << "["
+                         << ((newStateStatement.prefixOperator == NewStateStatement::PrefixOperator::PUSH) ? "dir=both, " : "" )
+                         << optionsToString(newStateStatement)
+                         << "]" << std::endl;
                   transitionSet.insert(state->name+newStateStatement.name);
                 }
                 break;

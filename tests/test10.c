@@ -6,6 +6,10 @@ int main(int argc, const char *argv[])
   printf("FSM test10\n");
 
   #fsm demo
+    initially
+    {
+    }
+
     *INIT
     {
       -> push,STATE1;
