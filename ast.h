@@ -2384,7 +2384,7 @@ class AST
      * @param stateStackSize state stack size of 0
      * @param asserts true to generate asserts
      */
-    AST(uint stateStackSize, bool asserts);
+    AST(size_t stateStackSize, bool asserts);
 
     /** clear AST
      */
@@ -2431,7 +2431,7 @@ class AST
     /** get FSM state stack size
      * @return state stack size of 0
      */
-    uint getStateStackSize() const
+    size_t getStateStackSize() const
     {
       return stateStackSize;
     }
@@ -2439,7 +2439,7 @@ class AST
     /** check if asserts should be generated
      * @return true iff asserts should be generated
      */
-    uint isAsserts() const
+    size_t isAsserts() const
     {
       return asserts;
     }
@@ -2594,7 +2594,7 @@ class AST
         }
     };
 
-    uint               stateStackSize;
+    size_t             stateStackSize;
     bool               asserts;
     std::string        fsmName;
     Location           fsmLocation;

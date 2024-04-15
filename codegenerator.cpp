@@ -39,7 +39,7 @@ class CVisitor : public Visitor
   #define name(string) "__" << string << suffix << "__"
 
   public:
-    CVisitor(std::ostream &output, const AST &ast, const std::string &filePath, uint indentCount, const std::string &logFunction)
+    CVisitor(std::ostream &output, const AST &ast, const std::string &filePath, size_t indentCount, const std::string &logFunction)
       : Visitor()
       , output(output)
       , ast(ast)
@@ -52,7 +52,7 @@ class CVisitor : public Visitor
     /** indent
      * @param n spaces to indent
      */
-    void indent(uint n)
+    void indent(size_t n)
     {
       indentions.push_back(indentions.back()+n);
 
@@ -182,13 +182,13 @@ class CVisitor : public Visitor
             output << ";" << std::endl;
             if (ast.isStackRequired())
             {
-              uint stateStackSize = ast.getStateStackSize();
+              size_t stateStackSize = ast.getStateStackSize();
               if (stateStackSize == 0)
               {
                 throw std::runtime_error("no state stack defined");
               }
               output << indentSpaces() << "static " << name("States") << " " << name("stateStack") << "[" << stateStackSize << "];" << std::endl;
-              output << indentSpaces() << "static uint " << name("stateStackIndex") << " = 0;" << std::endl;
+              output << indentSpaces() << "static size_t " << name("stateStackIndex") << " = 0;" << std::endl;
             }
             output << std::endl;
 
@@ -870,17 +870,17 @@ break;
     }
 
   private:
-    std::ostream      &output;
-    const AST         &ast;
-    const std::string &filePath;
-    uint              startIndentCount;
-    uint              indentCount;
-    const std::string &logFunction;
-    std::string       suffix;
-    const State       *currentState;
+    std::ostream        &output;
+    const AST           &ast;
+    const std::string   &filePath;
+    size_t              startIndentCount;
+    size_t              indentCount;
+    const std::string   &logFunction;
+    std::string         suffix;
+    const State         *currentState;
 
-    std::vector<uint> indentions{0};
-    std::string       indentString;
+    std::vector<size_t> indentions{0};
+    std::string         indentString;
 
     std::string expandMacros(const std::string &logFunction, const std::string &toStateName)
     {

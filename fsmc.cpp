@@ -52,7 +52,7 @@ int main(int argc, const char *argv[])
     std::string           outputFilePath = "";
     std::string           dotDirectoryPath = "";
     std::set<std::string> dotIgnoreStates;
-    uint                  stateStackSize = 16;
+    size_t                stateStackSize = 16;
     std::string           logFunction = "";
     bool                  asserts = false;
     bool                  debug = false;
@@ -69,7 +69,7 @@ int main(int argc, const char *argv[])
         fprintf(stdout, "-o|--output <file path>               output file\n");
         fprintf(stdout, "-d|--dot-directory <directory path>   .dot file directory\n");
         fprintf(stdout, "--dot-ignore-state <name>             ignore state in generated .dot file\n");
-        fprintf(stdout, "-n|--state-stack-size <n>             state stack size (default: %d)\n", stateStackSize);
+        fprintf(stdout, "-n|--state-stack-size <n>             state stack size (default: %lu)\n", stateStackSize);
         fprintf(stdout, "-l|--log-function <log function>      log function to call on state change\n");
         fprintf(stdout, "-a|--asserts                          generate asserts\n");
         fprintf(stdout, "--debug                               debug output\n");
@@ -97,7 +97,7 @@ int main(int argc, const char *argv[])
       else if ((argument == "-n") || (argument == "--state-stack-size"))
       {
         if ((i+1) >= argc) throw std::runtime_error("missing parameter for option '--state-stack-size'");
-        stateStackSize = static_cast<uint>(std::atoi(argv[i+1]));
+        stateStackSize = static_cast<size_t>(std::atoi(argv[i+1]));
         i += 2;
       }
       else if ((argument == "-l") || (argument == "--log-function"))
@@ -181,11 +181,11 @@ int main(int argc, const char *argv[])
     }
 
     // scan for FSMs and compile
-    uint  lineNb         = 0;
-    bool  fsm            = false;
-    uint  fsmIndent      = 0;
-    uint  fsmStartLineNb = 0;
-    uint  fsmEndLineNb   = 0;
+    size_t lineNb         = 0;
+    bool   fsm            = false;
+    size_t fsmIndent      = 0;
+    size_t fsmStartLineNb = 0;
+    size_t fsmEndLineNb   = 0;
     while (!input->eof())
     {
       // scan for FSM

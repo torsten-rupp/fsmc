@@ -51,11 +51,11 @@ class Scanner : public yyFlexLexer
   public:
     virtual int get_next_token();
 
-    void setLineNumber(uint startLineNb, uint endLineNb);
+    void setLineNumber(size_t startLineNb, size_t endLineNb);
 
     std::string getFileName();
-    uint getLine();
-    uint getColumn();
+    size_t getLine();
+    size_t getColumn();
 
   private:
 };

@@ -363,7 +363,7 @@
 namespace FSM
 {
 
-void Scanner::setLineNumber(uint startLineNb, uint endLineNb)
+void Scanner::setLineNumber(size_t startLineNb, size_t endLineNb)
 {
   yylineno = startLineNb;
 }
@@ -373,12 +373,12 @@ std::string Scanner::getFileName()
 return "";
 }
 
-uint Scanner::getLine()
+size_t Scanner::getLine()
 {
   return yylloc.last.line;
 }
 
-uint Scanner::getColumn()
+size_t Scanner::getColumn()
 {
   return yylloc.last.column;
 }

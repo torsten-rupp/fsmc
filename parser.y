@@ -56,7 +56,7 @@ fprintf(stderr,"%s:%d: _\n",__FILE__,__LINE__);
     fprintf(stderr,"ERROR: ");
     vfprintf(stderr,s,arguments);
     va_end(arguments);
-    fprintf(stderr," at %d:%d\n",location->first.line,location->first.column);
+    fprintf(stderr," at %lu,%lu\n",location->first.line,location->first.column);
   }
 %}
 
@@ -437,7 +437,7 @@ storageClassDeclarationSpecifiers
 //      $2.prepend($1);
       $1->add($2);
       $$ = $1;
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | storageClassSpecifier
@@ -543,7 +543,7 @@ unaryExpression
     }
   | KEYWORD_SIZEOF '(' typeName ')'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | postfixExpression
@@ -811,7 +811,7 @@ constantExpression
 expression
   : expression ',' assignmentExpression
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | assignmentExpression
@@ -921,7 +921,7 @@ typeSpecifier
     }
   | enum_specifier
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   //| typeName
@@ -934,12 +934,12 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.colu
 structUnionSpecifier
   : structUnion TOKEN_IDENTIFIER '{' struct_declarationList '}'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | structUnion '{' struct_declarationList '}'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | structUnion TOKEN_IDENTIFIER
@@ -962,12 +962,12 @@ structUnion
 struct_declarationList
   : struct_declaration
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | struct_declarationList struct_declaration
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   ;
@@ -975,7 +975,7 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.colu
 struct_declaration
   : specifierQualifierList struct_declarator_list ';' [YYVALID;]
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   ;
@@ -1004,12 +1004,12 @@ specifierQualifierList
 struct_declarator_list
   : struct_declarator
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | struct_declarator_list ',' struct_declarator
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   ;
@@ -1017,17 +1017,17 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.colu
 struct_declarator
   : declarator
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | ':' constantExpression
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | declarator ':' constantExpression
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   ;
@@ -1035,17 +1035,17 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.colu
 enum_specifier
   : TOKEN_ENUM '{' enumerator_list '}'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | TOKEN_ENUM TOKEN_IDENTIFIER '{' enumerator_list '}'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | TOKEN_ENUM TOKEN_IDENTIFIER
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   ;
@@ -1053,12 +1053,12 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.colu
 enumerator_list
   : enumerator
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | enumerator_list ',' enumerator
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   ;
@@ -1066,12 +1066,12 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.colu
 enumerator
   : TOKEN_IDENTIFIER
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | TOKEN_IDENTIFIER '=' constantExpression
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   ;
@@ -1117,32 +1117,32 @@ directDeclarator
     }
   | '(' declarator ')'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | directDeclarator '[' constantExpression ']'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | directDeclarator '[' ']'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | directDeclarator '(' parameter_type_list ')'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | directDeclarator '(' identifier_list ')'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | directDeclarator '(' ')'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   ;
@@ -1154,17 +1154,17 @@ pointer
     }
   | '*' typeQualifierList
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | '*' pointer
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | '*' typeQualifierList pointer
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   ;
@@ -1172,12 +1172,12 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.colu
 parameter_type_list
   : parameter_list
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | parameter_list ',' TOKEN_ELLIPSIS
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   ;
@@ -1185,12 +1185,12 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.colu
 parameter_list
   : parameter_list ',' parameter_declaration
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | parameter_declaration
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   ;
@@ -1198,17 +1198,17 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.colu
 parameter_declaration
   : storageClassDeclarationSpecifiers declarator
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | storageClassDeclarationSpecifiers abstractDeclarator
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | storageClassDeclarationSpecifiers
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   ;
@@ -1216,12 +1216,12 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.colu
 identifier_list
   : identifier_list ',' TOKEN_IDENTIFIER
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | TOKEN_IDENTIFIER
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   ;
@@ -1244,12 +1244,12 @@ abstractDeclarator
     }
   | direct_abstractDeclarator
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | pointer direct_abstractDeclarator
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   ;
@@ -1257,47 +1257,47 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.colu
 direct_abstractDeclarator
   : '(' abstractDeclarator ')'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | '[' ']'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | '[' constantExpression ']'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | direct_abstractDeclarator '[' ']'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | direct_abstractDeclarator '[' constantExpression ']'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | '(' ')'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | '(' parameter_type_list ')'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | direct_abstractDeclarator '(' ')'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | direct_abstractDeclarator '(' parameter_type_list ')'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   ;
@@ -1313,12 +1313,12 @@ initializer
     }
   | '{' initializer_list '}'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | '{' initializer_list ',' '}'
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   ;
@@ -1326,12 +1326,12 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.colu
 initializer_list
   : initializer_list ',' initializer
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | initializer
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   ;
@@ -1375,7 +1375,7 @@ statement
 labeledStatement
   : TOKEN_IDENTIFIER ':' statement
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | KEYWORD_CASE constantExpression ':' statement
@@ -1559,7 +1559,7 @@ newStateStatementOptions
 cppSelectionStatement
   : KEYWORD_CPP_IF
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | KEYWORD_CPP_IFDEF TOKEN_IDENTIFIER declarationStatementList KEYWORD_CPP_ENDIF
@@ -1601,12 +1601,12 @@ fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.colu
 cppElifStatementList
   : cppElifStatementList KEYWORD_CPP_ELIF condition declarationStatementList
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   | KEYWORD_CPP_ELIF condition declarationStatementList
     {
-fprintf(stderr,"%s:%d: at %d,%d\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
+fprintf(stderr,"%s:%d: at %lu,%lu\n",__FILE__,__LINE__,@$.first.line,@$.first.column);
       YYABORT;
     }
   ;

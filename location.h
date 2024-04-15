@@ -42,19 +42,19 @@ class Location
   public:
     struct
     {
-      uint line;
-      uint column;
+      size_t line;
+      size_t column;
     } first;
     struct
     {
-      uint line;
-      uint column;
+      size_t line;
+      size_t column;
     } last;
 
-    Location(uint firstLine,
-             uint firstColumn,
-             uint lastLine,
-             uint lastColumn
+    Location(size_t firstLine,
+             size_t firstColumn,
+             size_t lastLine,
+             size_t lastColumn
             )
     {
       first.line   = firstLine;

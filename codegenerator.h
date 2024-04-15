@@ -31,7 +31,7 @@ class CodeGenerator
    * @param indentCount indention
    * @param logFunction log function with macros
    */
-   CodeGenerator(std::ostream &output, const std::string filePath, uint startIndentCount, uint indentCount, const std::string &logFunction)
+   CodeGenerator(std::ostream &output, const std::string filePath, size_t startIndentCount, size_t indentCount, const std::string &logFunction)
       : output(output)
       , filePath(filePath)
       , startIndentCount(startIndentCount)
@@ -45,8 +45,8 @@ class CodeGenerator
   private:
     std::ostream      &output;
     const std::string filePath;
-    uint              startIndentCount;
-    uint              indentCount;
+    size_t            startIndentCount;
+    size_t            indentCount;
     const std::string &logFunction;
 };
 

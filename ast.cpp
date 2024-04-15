@@ -29,7 +29,7 @@ using namespace FSM;
 
 /***************************** Functions *******************************/
 
-AST::AST(uint stateStackSize, bool asserts)
+AST::AST(size_t stateStackSize, bool asserts)
   : stateStackSize(stateStackSize)
   , asserts(asserts)
 {
@@ -768,12 +768,12 @@ class PrintVisitor : public Visitor
     }
 
   private:
-    std::ostream      &output;
-    std::string       suffix;
-    const State       *currentState;
+    std::ostream        &output;
+    std::string         suffix;
+    const State         *currentState;
 
-    std::vector<uint> indentions{0};
-    std::string       indentString;
+    std::vector<size_t> indentions{0};
+    std::string         indentString;
 };
 
 void AST::print() const
