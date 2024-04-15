@@ -65,6 +65,7 @@ void DotGenerator::generate(const AST &ast)
   output << "// FSM " << ast.getFSMName() << std::endl;
   output << "digraph" << std::endl;
   output << "{" << std::endl;
+  std::set<std::string> transitionSet;
   for (const State *state : ast.getStateList())
   {
     if (ignoreStates.find(state->name) == ignoreStates.end())
@@ -80,7 +81,11 @@ void DotGenerator::generate(const AST &ast)
                )
            )
         {
-          output << "  " << state->name << " -> " << newStateStatement.name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
+          if (transitionSet.find(state->name+newStateStatement.name) == transitionSet.end())
+          {
+            output << "  " << state->name << " -> " << newStateStatement.name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
+            transitionSet.insert(state->name+newStateStatement.name);
+          }
         }
       });
 
@@ -94,10 +99,18 @@ void DotGenerator::generate(const AST &ast)
             switch (newStateStatement.type)
             {
               case NewStateStatement::Type::START:
-                output << "  " << state->name << " -> " << ast.getStartState()->name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
+                if (transitionSet.find(state->name+ast.getStartState()->name) == transitionSet.end())
+                {
+                  output << "  " << state->name << " -> " << ast.getStartState()->name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
+                  transitionSet.insert(state->name+ast.getStartState()->name);
+                }
                 break;
               case NewStateStatement::Type::DEFAULT:
-                output << "  " << state->name << " -> " << ast.getDefaultState()->name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
+                if (transitionSet.find(state->name+ast.getDefaultState()->name) == transitionSet.end())
+                {
+                  output << "  " << state->name << " -> " << ast.getDefaultState()->name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
+                  transitionSet.insert(state->name+ast.getDefaultState()->name);
+                }
                 break;
               case NewStateStatement::Type::POP:
                 {
@@ -105,13 +118,21 @@ void DotGenerator::generate(const AST &ast)
                   {
                     if (ignoreStates.find(pushState->name) == ignoreStates.end())
                     {
-                      output << "  " << state->name << " -> " << pushState->name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
+                      if (transitionSet.find(state->name+pushState->name) == transitionSet.end())
+                      {
+                        output << "  " << state->name << " -> " << pushState->name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
+                        transitionSet.insert(state->name+pushState->name);
+                      }
                     }
                   }
                 }
                 break;
               case NewStateStatement::Type::CUSTOM:
-                output << "  " << state->name << " -> " << newStateStatement.name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
+                if (transitionSet.find(state->name+newStateStatement.name) == transitionSet.end())
+                {
+                  output << "  " << state->name << " -> " << newStateStatement.name << " " << "[" << optionsToString(newStateStatement) << "]" << std::endl;
+                  transitionSet.insert(state->name+newStateStatement.name);
+                }
                 break;
             }
           }
