@@ -1671,12 +1671,14 @@ class CompoundStatement : public Location, public Statement
     const DeclarationStatementList *declarationStatementList;
 
     CompoundStatement(const Location &location, const DeclarationStatementList *declarationStatementList)
-      : declarationStatementList(declarationStatementList)
+      : Location(location)
+      , declarationStatementList(declarationStatementList)
     {
     }
 
     CompoundStatement(const Location &location)
-      : declarationStatementList(nullptr)
+      : Location(location)
+      , declarationStatementList(nullptr)
     {
     }
 

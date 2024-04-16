@@ -8,6 +8,7 @@ int main(int argc, const char *argv[])
   #fsm demo
     initially
     {
+      printf("initially\n");
     }
 
     *INIT
