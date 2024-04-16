@@ -236,11 +236,11 @@
     return TOKEN_LOWER;
   }
   ">" {
-    return TOKEN_LOWER_EQUALS;
+    return TOKEN_GREATER;
   }
   */
   "<=" {
-    return TOKEN_GREATER;
+    return TOKEN_LOWER_EQUALS;
   }
   ">=" {
     return TOKEN_GREATER_EQUALS;
