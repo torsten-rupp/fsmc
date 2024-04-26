@@ -206,6 +206,7 @@ class CVisitor : public Visitor
         case Phases::POST:
           {
             output << indentSpaces() <<"}" << std::endl;
+            output << indentSpaces() << name("end") << ":" << std::endl;
 
             const Finally *finally = ast.getFinallyStatement();
             if (finally != nullptr)
@@ -809,6 +810,7 @@ break;
           }
           break;
       }
+      output << indentSpaces() << "goto " << name("end") << ";" << std::endl;
       unindent();
       output << indentSpaces() << "}" << std::endl;
       output << indentSpaces() << "while (0);" << std::endl;
