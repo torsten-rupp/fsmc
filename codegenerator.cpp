@@ -810,7 +810,10 @@ break;
           }
           break;
       }
-      output << indentSpaces() << "goto " << name("end") << ";" << std::endl;
+      if (newStateStatement.context == NewStateStatement::Context::NONE)
+      {
+        output << indentSpaces() << "goto " << name("end") << ";" << std::endl;
+      }
       unindent();
       output << indentSpaces() << "}" << std::endl;
       output << indentSpaces() << "while (0);" << std::endl;

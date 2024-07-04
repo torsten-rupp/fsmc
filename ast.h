@@ -2305,25 +2305,50 @@ class State : public Location
       CUSTOM
     };
 
-    const Type              type;
-    const Identifier        name;
-    const CompoundStatement *compoundStatement;
+    NewStateStatement::Context context;
+    const Type                 type;
+    const Identifier           name;
+    const CompoundStatement    *compoundStatement;
 
-    State(const Location &location, Type type, const Identifier &name, const CompoundStatement *compoundStatement)
+    State(const Location &location, NewStateStatement::Context context, Type type, const Identifier &name, const CompoundStatement *compoundStatement)
       : Location(location)
+      , context(context)
       , type(type)
       , name(name)
       , compoundStatement(compoundStatement)
     {
     }
 
-    State(const Location &location, Type type, const CompoundStatement *compoundStatement)
+#if 0
+    State(const Location &location, Type type, const Identifier &name, const CompoundStatement *compoundStatement)
       : Location(location)
+      , type(type)
+      , name(name)
+      , context(NewStateStatement::Context::NONE)
+      , compoundStatement(compoundStatement)
+    {
+    }
+#endif
+
+    State(const Location &location, NewStateStatement::Context context, Type type, const CompoundStatement *compoundStatement)
+      : Location(location)
+      , context(context)
       , type(type)
       , name()
       , compoundStatement(compoundStatement)
     {
     }
+
+#if 0
+    State(const Location &location, Type type, const CompoundStatement *compoundStatement)
+      : Location(location)
+      , type(type)
+      , name()
+      , context(NewStateStatement::Context::NONE)
+      , compoundStatement(compoundStatement)
+    {
+    }
+#endif
 
     virtual ~State()
     {

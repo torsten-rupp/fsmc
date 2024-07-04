@@ -26,11 +26,12 @@ help:
 	@echo "test3 [DEBUG=1]"
 	@echo "test4 [DEBUG=1]"
 	@echo "test5 [DEBUG=1]"
+	@echo "test6 [DEBUG=1]"
 
 .PHONY: all
 all: \
   test0 \
-  $(foreach i,1 2 3 4 5 10,test$i) \
+  $(foreach i,1 2 3 4 5 6 10,test$i) \
 
 .PHONY: clean
 clean:
@@ -45,6 +46,8 @@ tests: \
   test2 \
   test3 \
   test4 \
+  test5 \
+  test6
 
 # --- simple tests
 .PHONY: test0

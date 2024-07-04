@@ -344,7 +344,7 @@ stateDefinition:
     }
     compoundStatement
     {
-      ast->addState(new FSM::State(@$,FSM::State::Type::START,currentStateName,$4));
+      ast->addState(new FSM::State(@$,currentStateContext,FSM::State::Type::START,currentStateName,$4));
     }
   | TOKEN_IDENTIFIER
     {
@@ -368,7 +368,7 @@ stateDefinition:
       switch (currentStateContext)
       {
         case FSM::NewStateStatement::Context::NONE:
-          ast->addState(new FSM::State(@$,FSM::State::Type::CUSTOM,currentStateName,$3));
+          ast->addState(new FSM::State(@$,currentStateContext,FSM::State::Type::CUSTOM,currentStateName,$3));
           break;
         case FSM::NewStateStatement::Context::INITIALLY:
           ast->setInitially(@$,$3);
@@ -386,7 +386,7 @@ stateDefinition:
     }
     compoundStatement
     {
-      ast->addState(new FSM::State(@$,FSM::State::Type::DEFAULT,$3));
+      ast->addState(new FSM::State(@$,currentStateContext,FSM::State::Type::DEFAULT,$3));
     }
   ;
 
